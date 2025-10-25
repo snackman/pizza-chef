@@ -24,7 +24,7 @@ Pizza Chef is a fast-paced arcade-style game built with React, TypeScript, and V
 
 ## Project Structure
 
-```
+```a
 project/
 ├── public/                          # Static assets
 │   ├── Sprites/                     # Game sprite images
