@@ -317,7 +317,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       // But only freeze customers that aren't already manually unfrozen
       newState.customers = newState.customers.map(customer => {
         // If ice cream is active and customer isn't explicitly unfrozen, freeze them
-        if (hasIceCream && customer.frozen !== false) {
+         // Don't freeze departing customers (served, disappointed, or vomit)
+        const isDeparting = customer.served || customer.disappointed || customer.vomit;
+        if (hasIceCream && customer.frozen !== false && !isDeparting) {
           return { ...customer, frozen: true };
         }
         // If ice cream is not active, unfreeze everyone
