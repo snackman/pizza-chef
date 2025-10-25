@@ -508,8 +508,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         }
       });
 
-      // Move power-ups (only if not frozen) and remove caught ones
-      if (!hasIceCream) {
+      // Move power-ups and remove caught ones
         newState.powerUps = newState.powerUps
           .filter(powerUp => !caughtPowerUpIds.has(powerUp.id))
           .map(powerUp => ({
@@ -517,10 +516,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             position: powerUp.position - (powerUp.speed),
           }))
           .filter(powerUp => powerUp.position > 10);
-      } else {
-        // Even when frozen, remove caught power-ups
-        newState.powerUps = newState.powerUps.filter(powerUp => !caughtPowerUpIds.has(powerUp.id));
-      }
 
       // Move pizza slices
       newState.pizzaSlices = newState.pizzaSlices.map(slice => ({
