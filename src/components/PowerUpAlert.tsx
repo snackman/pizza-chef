@@ -11,8 +11,8 @@ const PowerUpAlert: React.FC<PowerUpAlertProps> = ({ powerUpType, chefLane }) =>
     switch (powerUpType) {
       case 'doge':
         return {
-          image: 'https://i.imgur.com/VgoeQo4.png',
-          scale: 3, // 2x size multiplier
+          image: 'https://i.imgur.com/n0FtlUg.png',
+          scale: 3, // 3x size multiplier
         };
       case 'nyan':
         return {
