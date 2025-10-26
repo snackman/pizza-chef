@@ -13,8 +13,6 @@ const PowerUpAlert: React.FC<PowerUpAlertProps> = ({ powerUpType, chefLane }) =>
         return {
           image: 'https://i.imgur.com/VgoeQo4.png',
           scale: 3, // 2x size multiplier
-          backgroundColor: 'bg-yellow-100',
-          textColor: 'text-yellow-800'
         };
       case 'nyan':
         return {
