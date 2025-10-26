@@ -50,7 +50,7 @@ const PowerUp: React.FC<PowerUpProps> = ({ powerUp }) => {
       case 'doge':
         return 'https://i.imgur.com/TqnVUzO.png';
       case 'nyan':
-        return 'https://i.imgur.com/12gRN2t.png';
+        return 'https://i.imgur.com/hZ3eixZ.png';
       case 'star':
       default:
         return null;

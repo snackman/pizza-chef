@@ -10,11 +10,7 @@ const PowerUpAlert: React.FC<PowerUpAlertProps> = ({ powerUpType }) => {
     switch (powerUpType) {
       case 'doge':
         return {
-          image: 'https://images.com/image.png', // Using the provided Doge image
-          title: 'much wow',
-          subtitle: '2x bonus!',
-          backgroundColor: 'bg-black',
-          textColor: 'text-white'
+          image: 'https://i.imgur.com/VgoeQo4.png', // Using the provided Doge image
         };
       case 'nyan':
         return {
@@ -39,12 +35,14 @@ const PowerUpAlert: React.FC<PowerUpAlertProps> = ({ powerUpType }) => {
           <img 
             src={content.image} 
             alt={powerUpType} 
-            className="w-24 h-24 mx-auto object-contain"
+            className="w-32 h-32 mx-auto object-contain"
           />
         </div>
-        <h2 className="text-3xl font-bold mb-2" style={{ color: '#3B82F6' }}>
-          {content.title}
-        </h2>
+        {content.title && (
+          <h2 className="text-3xl font-bold mb-2" style={{ color: '#3B82F6' }}>
+            {content.title}
+          </h2>
+        )}
         <p className="text-xl font-semibold" style={{ color: '#10B981' }}>
           {content.subtitle}
         </p>
