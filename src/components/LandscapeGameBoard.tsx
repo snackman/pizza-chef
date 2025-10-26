@@ -120,6 +120,16 @@ const LandscapeGameBoard: React.FC<LandscapeGameBoardProps> = ({ gameState }) =>
           zIndex: gameState.gameOver ? 19 : 10
         }}
       >
+        {/* Nyan Cat rainbow trail effect */}
+        {gameState.activePowerUps.some(p => p.type === 'nyan') && !gameState.gameOver && (
+          <div className="absolute inset-0 animate-pulse" style={{ 
+            background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3)',
+            borderRadius: '50%',
+            opacity: 0.3,
+            transform: 'scale(1.5)',
+            zIndex: -1
+          }} />
+        )}
         {gameState.gameOver ? (
           <div style={{ fontSize: 'clamp(1rem, 2vw, 1.5rem)' }}>🧟</div>
         ) : (

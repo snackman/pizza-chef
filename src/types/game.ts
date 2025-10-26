@@ -31,7 +31,7 @@ export interface EmptyPlate {
   speed: number;
 }
 
-export type PowerUpType = 'honey' | 'ice-cream' | 'beer' | 'star';
+export type PowerUpType = 'honey' | 'ice-cream' | 'beer' | 'star' | 'doge' | 'nyan';
 
 export interface PowerUp {
   id: string;

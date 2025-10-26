@@ -57,7 +57,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     if (now - lastPowerUpSpawn < 8000) return; // Spawn power-up every 8 seconds minimum
 
     const lane = Math.floor(Math.random() * 4);
-    const powerUpTypes: PowerUpType[] = ['honey', 'ice-cream', 'beer'];
+    const powerUpTypes: PowerUpType[] = ['honey', 'ice-cream', 'beer', 'doge', 'nyan'];
     const rand = Math.random();
     const randomType = rand < 0.1 ? 'star' : powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
 
@@ -312,6 +312,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       const hasHoney = newState.activePowerUps.some(p => p.type === 'honey');
       const hasIceCream = newState.activePowerUps.some(p => p.type === 'ice-cream');
       const hasStar = newState.activePowerUps.some(p => p.type === 'star');
+      const hasDoge = newState.activePowerUps.some(p => p.type === 'doge');
+      const hasNyan = newState.activePowerUps.some(p => p.type === 'nyan');
 
       // Update frozen state on all customers based on ice cream power-up
       // But only freeze customers that aren't already manually unfrozen
@@ -418,15 +420,23 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           // Check if customer is in same lane and close to chef
           if (customer.lane === newState.chefLane && !customer.served && !customer.disappointed && !customer.vomit && Math.abs(customer.position - 15) < 8) {
             soundManager.customerServed();
-            newState.score += 150;
-            newState.bank += 1;
+            const baseScore = 150;
+            const baseBank = 1;
+            const scoreMultiplier = hasDoge ? 2 : 1;
+            const bankMultiplier = hasDoge ? 2 : 1;
+            newState.score += baseScore * scoreMultiplier;
+            newState.bank += baseBank * bankMultiplier;
             newState.happyCustomers += 1;
             newState.availableSlices = Math.max(0, newState.availableSlices - 1);
 
             // Check if we should award a star (every 8 happy customers, max 5 stars)
             if (newState.happyCustomers % 8 === 0 && newState.lives < 5) {
-              soundManager.lifeGained();
-              newState.lives += 1;
+              const starsToAdd = hasDoge ? 2 : 1;
+              const actualStarsToAdd = Math.min(starsToAdd, 5 - newState.lives);
+              newState.lives += actualStarsToAdd;
+              if (actualStarsToAdd > 0) {
+                soundManager.lifeGained();
+              }
             }
 
             // Create empty plate
@@ -450,7 +460,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         if (powerUp.position <= 15 && powerUp.lane === newState.chefLane) {
           // Chef grabbed the power-up - activate it
           soundManager.powerUpCollected(powerUp.type);
-          newState.score += 100;
+          const baseScore = 100;
+          const scoreMultiplier = hasDoge ? 2 : 1;
+          newState.score += baseScore * scoreMultiplier;
           caughtPowerUpIds.add(powerUp.id);
 
           // Activate the power-up
@@ -499,6 +511,18 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             newState.activePowerUps = [
               ...newState.activePowerUps.filter(p => p.type !== 'star'),
               { type: 'star', endTime: now + POWERUP_DURATION }
+            ];
+          } else if (powerUp.type === 'doge') {
+            // Doge power-up doubles dollars, scores, and stars received during duration
+            newState.activePowerUps = [
+              ...newState.activePowerUps.filter(p => p.type !== 'doge'),
+              { type: 'doge', endTime: now + POWERUP_DURATION }
+            ];
+          } else if (powerUp.type === 'nyan') {
+            // Nyan Cat power-up gives speed boost to chef movement
+            newState.activePowerUps = [
+              ...newState.activePowerUps.filter(p => p.type !== 'nyan'),
+              { type: 'nyan', endTime: now + POWERUP_DURATION }
             ];
           } else {
             // Add to active power-ups (hot honey and ice-cream)
@@ -562,14 +586,22 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             // If hot honey is active and customer is affected by it, satisfy them with one slice
             if (hasHoney && customer.hotHoneyAffected) {
               soundManager.customerServed();
-              newState.score += 150;
-              newState.bank += 1;
+              const baseScore = 150;
+              const baseBank = 1;
+              const scoreMultiplier = hasDoge ? 2 : 1;
+              const bankMultiplier = hasDoge ? 2 : 1;
+              newState.score += baseScore * scoreMultiplier;
+              newState.bank += baseBank * bankMultiplier;
               newState.happyCustomers += 1;
 
               // Check if we should award a star (every 8 happy customers, max 5 stars)
               if (newState.happyCustomers % 8 === 0 && newState.lives < 5) {
-                soundManager.lifeGained();
-                newState.lives += 1;
+                const starsToAdd = hasDoge ? 2 : 1;
+                const actualStarsToAdd = Math.min(starsToAdd, 5 - newState.lives);
+                newState.lives += actualStarsToAdd;
+                if (actualStarsToAdd > 0) {
+                  soundManager.lifeGained();
+                }
               }
 
               // Create empty plate
@@ -588,20 +620,32 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             if (currentState === 'normal') {
               // First pizza - becomes drooling
               soundManager.woozyServed();
-              newState.score += 50;
-              newState.bank += 1;
+              const baseScore = 50;
+              const baseBank = 1;
+              const scoreMultiplier = hasDoge ? 2 : 1;
+              const bankMultiplier = hasDoge ? 2 : 1;
+              newState.score += baseScore * scoreMultiplier;
+              newState.bank += baseBank * bankMultiplier;
               return { ...customer, woozyState: 'drooling' };
             } else if (currentState === 'drooling') {
               // Second pizza - becomes satisfied
               soundManager.customerServed();
-              newState.score += 150;
-              newState.bank += 1;
+              const baseScore = 150;
+              const baseBank = 1;
+              const scoreMultiplier = hasDoge ? 2 : 1;
+              const bankMultiplier = hasDoge ? 2 : 1;
+              newState.score += baseScore * scoreMultiplier;
+              newState.bank += baseBank * bankMultiplier;
               newState.happyCustomers += 1;
 
               // Check if we should award a star (every 8 happy customers, max 5 stars)
               if (newState.happyCustomers % 8 === 0 && newState.lives < 5) {
-                soundManager.lifeGained();
-                newState.lives += 1;
+                const starsToAdd = hasDoge ? 2 : 1;
+                const actualStarsToAdd = Math.min(starsToAdd, 5 - newState.lives);
+                newState.lives += actualStarsToAdd;
+                if (actualStarsToAdd > 0) {
+                  soundManager.lifeGained();
+                }
               }
 
               // Create empty plate
@@ -623,8 +667,12 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               Math.abs(customer.position - slice.position) < 5) {
             consumed = true;
             soundManager.customerServed();
-            newState.score += 150; // 100 base + 50 bonus for customer eating pizza
-            newState.bank += 1;
+            const baseScore = 150; // 100 base + 50 bonus for customer eating pizza
+            const baseBank = 1;
+            const scoreMultiplier = hasDoge ? 2 : 1;
+            const bankMultiplier = hasDoge ? 2 : 1;
+            newState.score += baseScore * scoreMultiplier;
+            newState.bank += baseBank * bankMultiplier;
             newState.happyCustomers += 1;
 
             // Check if we should award a star (every 8 happy customers, max 5 stars)

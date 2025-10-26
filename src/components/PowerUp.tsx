@@ -47,6 +47,10 @@ const PowerUp: React.FC<PowerUpProps> = ({ powerUp }) => {
         return sundaeImg;
       case 'beer':
         return beerImg;
+      case 'doge':
+        return 'https://images.com/image.png';
+      case 'nyan':
+        return 'https://images.com/image.png';
       case 'star':
       default:
         return null;
@@ -70,7 +74,13 @@ const PowerUp: React.FC<PowerUpProps> = ({ powerUp }) => {
       }}
     >
       {image ? (
-        <img src={image} alt={powerUp.type} className="w-full h-full object-contain" />
+        <img 
+          src={image} 
+          alt={powerUp.type} 
+          className={`w-full h-full object-contain ${
+            powerUp.type === 'nyan' ? 'animate-bounce' : ''
+          }`} 
+        />
       ) : (
         <div
           style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}
