@@ -526,7 +526,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               { type: 'doge', endTime: now + POWERUP_DURATION }
             ];
             // Show Doge alert for 2 seconds
-            newState.powerUpAlert = { type: 'doge', endTime: now + 2000 };
+            newState.powerUpAlert = { type: 'doge', endTime: now + 2000, chefLane: newState.chefLane };
           } else if (powerUp.type === 'nyan') {
             // Nyan Cat power-up gives speed boost to chef movement
             newState.activePowerUps = [

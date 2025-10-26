@@ -138,6 +138,11 @@ function App() {
       <div className="fixed inset-0 bg-gradient-to-br from-orange-200 via-yellow-100 to-red-200 overflow-hidden">
         <div className="relative w-full h-full">
           <LandscapeGameBoard gameState={gameState} />
+          
+          {gameState.powerUpAlert && (
+            <PowerUpAlert powerUpType={gameState.powerUpAlert.type} chefLane={gameState.powerUpAlert.chefLane} />
+          )}
+          
           <LandscapeScoreBoard gameState={gameState} onShowInstructions={() => setShowInstructions(true)} />
           <LandscapeControls
             gameOver={gameState.gameOver}
@@ -271,6 +276,10 @@ function App() {
           >
             <GameBoard gameState={gameState} />
 
+            {gameState.powerUpAlert && (
+              <PowerUpAlert powerUpType={gameState.powerUpAlert.type} chefLane={gameState.powerUpAlert.chefLane} />
+            )}
+
             {gameState.gameOver && (
               <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center rounded-lg z-20">
                 <div className="flex flex-col items-center gap-4 p-4 max-h-[90vh] overflow-y-auto">
@@ -388,10 +397,6 @@ function App() {
             ovens={gameState.ovens}
             ovenSpeedUpgrades={gameState.ovenSpeedUpgrades}
           />
-        )}
-
-        {gameState.powerUpAlert && (
-          <PowerUpAlert powerUpType={gameState.powerUpAlert.type} />
         )}
       </div>
     </div>
