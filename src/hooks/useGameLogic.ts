@@ -333,7 +333,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       // Move customers that are not frozen (or ice cream is not active)
       newState.customers = newState.customers.map(customer => {
         // Mark customers as affected by hot honey (including woozy customers)
-        const nowHotHoneyAffected = hasHoney && !customer.frozen && !customer.served && !customer.disappointed && !customer.vomit;
+        const nowHotHoneyAffected = hasHoney && !customer.served && !customer.disappointed && !customer.vomit;
 
         // Skip frozen customers
         if (customer.frozen) {
