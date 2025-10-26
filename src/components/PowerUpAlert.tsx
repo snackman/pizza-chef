@@ -54,7 +54,7 @@ const PowerUpAlert: React.FC<PowerUpAlertProps> = ({ powerUpType, chefLane }) =>
         transformOrigin: 'center center',
       }}
     >
-      <div className={`p-4 rounded-xl shadow-2xl text-center animate-pulse`}>
+      <div className={`p-4 text-center animate-pulse`}>
         <div className="mb-2">
           <img 
             src={content.image} 
