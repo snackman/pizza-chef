@@ -54,7 +54,7 @@ const PowerUpAlert: React.FC<PowerUpAlertProps> = ({ powerUpType, chefLane }) =>
         transformOrigin: 'center center',
       }}
     >
-      <div className={`${content.backgroundColor} ${content.textColor} p-4 rounded-xl shadow-2xl text-center animate-pulse`}>
+      <div className={`p-4 rounded-xl shadow-2xl text-center animate-pulse`}>
         <div className="mb-2">
           <img 
             src={content.image} 
@@ -62,16 +62,6 @@ const PowerUpAlert: React.FC<PowerUpAlertProps> = ({ powerUpType, chefLane }) =>
             className="w-16 h-16 mx-auto object-contain"
           />
         </div>
-        {content.title && (
-          <h2 className="text-lg font-bold mb-1" style={{ color: '#3B82F6' }}>
-            {content.title}
-          </h2>
-        )}
-        {content.subtitle && (
-          <p className="text-sm font-semibold" style={{ color: '#10B981' }}>
-            {content.subtitle}
-          </p>
-        )}
       </div>
     </div>
   );
