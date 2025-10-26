@@ -10,6 +10,7 @@ import SplashScreen from './components/SplashScreen';
 import SubmitScore from './components/SubmitScore';
 import HighScores from './components/HighScores';
 import ItemStore from './components/ItemStore';
+import PowerUpAlert from './components/PowerUpAlert';
 import { useGameLogic } from './hooks/useGameLogic';
 import { Info } from 'lucide-react';
 
@@ -387,6 +388,10 @@ function App() {
             ovens={gameState.ovens}
             ovenSpeedUpgrades={gameState.ovenSpeedUpgrades}
           />
+        )}
+
+        {gameState.powerUpAlert && (
+          <PowerUpAlert powerUpType={gameState.powerUpAlert.type} />
         )}
       </div>
     </div>

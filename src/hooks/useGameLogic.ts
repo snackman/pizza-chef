@@ -40,6 +40,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     showStore: false,
     lastStoreLevelShown: 0,
     fallingPizza: undefined,
+    starPowerActive: false,
+    powerUpAlert: undefined,
   });
 
   const [lastCustomerSpawn, setLastCustomerSpawn] = useState(0);
@@ -308,6 +310,11 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         newState.starPowerActive = false;
       }
 
+      // Clear expired power-up alerts
+      if (newState.powerUpAlert && now >= newState.powerUpAlert.endTime) {
+        newState.powerUpAlert = undefined;
+      }
+
       // Check active power-ups
       const hasHoney = newState.activePowerUps.some(p => p.type === 'honey');
       const hasIceCream = newState.activePowerUps.some(p => p.type === 'ice-cream');
@@ -518,6 +525,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               ...newState.activePowerUps.filter(p => p.type !== 'doge'),
               { type: 'doge', endTime: now + POWERUP_DURATION }
             ];
+            // Show Doge alert for 2 seconds
+            newState.powerUpAlert = { type: 'doge', endTime: now + 2000 };
           } else if (powerUp.type === 'nyan') {
             // Nyan Cat power-up gives speed boost to chef movement
             newState.activePowerUps = [

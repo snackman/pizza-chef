@@ -68,4 +68,5 @@ export interface GameState {
   lastStoreLevelShown: number;
   fallingPizza?: { lane: number; y: number };
   starPowerActive?: boolean;
+  powerUpAlert?: { type: PowerUpType; endTime: number };
 }
