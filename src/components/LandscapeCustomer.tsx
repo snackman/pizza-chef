@@ -3,7 +3,7 @@ import { Customer as CustomerType } from '../types/game';
 import droolfaceImg from '/Sprites/droolface.png';
 import yumfaceImg from '/Sprites/yumface.png';
 import frozenfaceImg from '/Sprites/frozenface.png';
-const spicyfaceImg = "https://i.imgur.com/pTg1EQn.png";
+const spicyfaceImg = "https://i.imgur.com/MDS5EVg.png";
 import woozyfaceImg from '/Sprites/woozyface.png';
 
 interface LandscapeCustomerProps {
