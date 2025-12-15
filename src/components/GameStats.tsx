@@ -18,75 +18,72 @@ export default function GameStats({ stats, score, level, onContinue }: GameStats
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-2xl p-3 sm:p-6 max-w-6xl w-full mx-2 sm:mx-4 max-h-[80vh] overflow-y-auto">
-      <div className="flex items-center justify-between mb-2 sm:mb-4 gap-2">
+    <div className="bg-white rounded-xl shadow-2xl p-2 sm:p-6 max-w-6xl w-full mx-2 sm:mx-4">
+      <div className="flex items-center justify-between mb-1 sm:mb-4 gap-2">
         <div className="flex-1 min-w-0">
-          <h2 className="text-xl sm:text-3xl font-bold text-red-600">
+          <h2 className="text-lg sm:text-3xl font-bold text-red-600">
             Game Over!
           </h2>
-          <div className="flex flex-wrap gap-2 sm:gap-4 mt-1">
-            <p className="text-sm sm:text-lg text-gray-700">Score: <span className="font-bold text-red-600">{score}</span></p>
-            <p className="text-sm sm:text-lg text-gray-600">Level: {level}</p>
+          <div className="flex flex-wrap gap-2 sm:gap-4">
+            <p className="text-xs sm:text-lg text-gray-700">Score: <span className="font-bold text-red-600">{score}</span></p>
+            <p className="text-xs sm:text-lg text-gray-600">Level: {level}</p>
           </div>
         </div>
         <button
           onClick={onContinue}
-          className="px-3 sm:px-6 py-1.5 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold text-sm sm:text-lg whitespace-nowrap flex-shrink-0"
+          className="px-3 sm:px-6 py-1 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold text-sm sm:text-lg whitespace-nowrap flex-shrink-0"
         >
           Continue
         </button>
       </div>
 
-      <div className="border-t-2 border-gray-200 pt-2 sm:pt-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
+      <div className="border-t border-gray-200 pt-1 sm:pt-4">
+        <div className="grid grid-cols-2 gap-2 sm:gap-6">
           <div>
-            <h3 className="text-base sm:text-xl font-bold mb-2 sm:mb-3 text-gray-800">Game Statistics</h3>
-            <div className="grid grid-cols-3 sm:grid-cols-2 gap-1.5 sm:gap-3">
+            <h3 className="text-xs sm:text-xl font-bold mb-1 sm:mb-3 text-gray-800">Statistics</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-2 gap-1 sm:gap-3">
               <StatCard
                 icon="🍕"
-                label="Slices Baked"
+                label="Baked"
                 value={stats.slicesBaked}
               />
               <StatCard
                 icon="⚙️"
-                label="Oven Upgrades"
+                label="Upgrades"
                 value={stats.ovenUpgradesMade}
               />
               <StatCard
                 icon="😋"
-                label="Customers Served"
+                label="Served"
                 value={stats.customersServed}
               />
               <StatCard
                 icon="🔥"
-                label="Customer Streak"
+                label="Streak"
                 value={stats.longestCustomerStreak}
               />
               <StatCard
                 icon="🍽️"
-                label="Plates Caught"
+                label="Plates"
                 value={stats.platesCaught}
               />
               <StatCard
                 icon="✨"
-                label="Plate Streak"
+                label="P. Streak"
                 value={stats.largestPlateStreak}
               />
             </div>
           </div>
 
           <div>
-            <h4 className="text-base sm:text-xl font-bold mb-2 sm:mb-3 text-gray-800">Power-Ups Used</h4>
-            <div className="grid grid-cols-3 sm:grid-cols-2 gap-1.5 sm:gap-3">
+            <h4 className="text-xs sm:text-xl font-bold mb-1 sm:mb-3 text-gray-800">Power-Ups</h4>
+            <div className="grid grid-cols-2 sm:grid-cols-2 gap-1 sm:gap-3">
               {Object.entries(stats.powerUpsUsed).map(([key, value]) => (
                 <div
                   key={key}
-                  className="bg-gradient-to-br from-orange-100 to-yellow-100 rounded-lg p-1.5 sm:p-3 text-center"
+                  className="bg-gradient-to-br from-orange-100 to-yellow-100 rounded p-1 sm:p-3 text-center"
                 >
-                  <div className="text-lg sm:text-2xl mb-0.5 sm:mb-1">{powerUpNames[key].split(' ')[0]}</div>
-                  <div className="text-[10px] sm:text-xs font-semibold text-gray-700 mb-0.5 sm:mb-1 leading-tight truncate">
-                    {powerUpNames[key].split(' ').slice(1).join(' ')}
-                  </div>
+                  <div className="text-sm sm:text-2xl">{powerUpNames[key].split(' ')[0]}</div>
                   <div className="text-base sm:text-xl font-bold text-red-600">{value}</div>
                 </div>
               ))}
@@ -106,10 +103,10 @@ interface StatCardProps {
 
 function StatCard({ icon, label, value }: StatCardProps) {
   return (
-    <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-lg p-1.5 sm:p-3 text-center border sm:border-2 border-orange-200">
-      <div className="text-lg sm:text-2xl mb-0.5 sm:mb-1">{icon}</div>
-      <div className="text-[10px] sm:text-xs font-semibold text-gray-700 mb-0.5 sm:mb-1 leading-tight">{label}</div>
-      <div className="text-base sm:text-xl font-bold text-red-600">{value}</div>
+    <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded p-1 sm:p-3 text-center border border-orange-200">
+      <div className="text-sm sm:text-2xl">{icon}</div>
+      <div className="text-[8px] sm:text-xs font-semibold text-gray-700 leading-tight">{label}</div>
+      <div className="text-sm sm:text-xl font-bold text-red-600">{value}</div>
     </div>
   );
 }

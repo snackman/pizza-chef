@@ -303,52 +303,7 @@ function App() {
               <StreakDisplay stats={gameState.stats} />
             )}
 
-            {gameState.gameOver && (
-              <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center rounded-lg z-20">
-                <div className="flex flex-col items-center gap-4 p-4 max-h-[90vh] overflow-y-auto">
-                  {showStats && !showScoreSubmit && !showHighScores ? (
-                    <GameStats
-                      stats={gameState.stats}
-                      score={gameState.score}
-                      level={gameState.level}
-                      onContinue={() => {
-                        setShowStats(false);
-                        setShowScoreSubmit(true);
-                      }}
-                    />
-                  ) : showScoreSubmit && !showHighScores ? (
-                    <SubmitScore
-                      score={gameState.score}
-                      onSubmitted={() => {
-                        setShowScoreSubmit(false);
-                        setShowHighScores(true);
-                      }}
-                      onSkip={() => {
-                        setShowScoreSubmit(false);
-                        setShowHighScores(true);
-                      }}
-                    />
-                  ) : showHighScores ? (
-                    <>
-                      <HighScores />
-                      <button
-                        onClick={() => {
-                          resetGame();
-                          setShowHighScores(false);
-                          setShowScoreSubmit(false);
-                          setShowStats(false);
-                        }}
-                        className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
-                      >
-                        Play Again
-                      </button>
-                    </>
-                  ) : null}
-                </div>
-              </div>
-            )}
-
-            {gameState.paused && !gameState.gameOver && !gameState.showStore && (
+              {gameState.paused && !gameState.gameOver && !gameState.showStore && (
               <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
                 <div className="text-center bg-white p-4 sm:p-6 rounded-xl shadow-xl mx-4">
                   <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Paused</h2>
@@ -381,6 +336,51 @@ function App() {
             <DebugPanel onActivatePowerUp={debugActivatePowerUp} />
           )}
         </div>
+
+        {gameState.gameOver && (
+          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-40 p-2">
+            <div className="flex flex-col items-center gap-2 w-full max-w-6xl max-h-[100dvh] overflow-y-auto py-2">
+              {showStats && !showScoreSubmit && !showHighScores ? (
+                <GameStats
+                  stats={gameState.stats}
+                  score={gameState.score}
+                  level={gameState.level}
+                  onContinue={() => {
+                    setShowStats(false);
+                    setShowScoreSubmit(true);
+                  }}
+                />
+              ) : showScoreSubmit && !showHighScores ? (
+                <SubmitScore
+                  score={gameState.score}
+                  onSubmitted={() => {
+                    setShowScoreSubmit(false);
+                    setShowHighScores(true);
+                  }}
+                  onSkip={() => {
+                    setShowScoreSubmit(false);
+                    setShowHighScores(true);
+                  }}
+                />
+              ) : showHighScores ? (
+                <>
+                  <HighScores />
+                  <button
+                    onClick={() => {
+                      resetGame();
+                      setShowHighScores(false);
+                      setShowScoreSubmit(false);
+                      setShowStats(false);
+                    }}
+                    className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+                  >
+                    Play Again
+                  </button>
+                </>
+              ) : null}
+            </div>
+          </div>
+        )}
 
         {showInstructions && (
           <InstructionsModal

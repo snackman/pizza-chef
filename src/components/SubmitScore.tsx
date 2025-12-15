@@ -40,14 +40,14 @@ const SubmitScore: React.FC<SubmitScoreProps> = ({ score, onSubmitted, onSkip })
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
-      <h2 className="text-3xl font-bold text-gray-800 mb-2">Game Over!</h2>
-      <p className="text-xl text-gray-600 mb-6">Your Score: <span className="font-bold text-amber-600">{score}</span></p>
+    <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 max-w-md w-full mx-2">
+      <h2 className="text-xl sm:text-3xl font-bold text-gray-800 mb-1">Submit Score</h2>
+      <p className="text-base sm:text-xl text-gray-600 mb-3 sm:mb-6">Score: <span className="font-bold text-amber-600">{score}</span></p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
         <div>
-          <label htmlFor="playerName" className="block text-sm font-medium text-gray-700 mb-2">
-            Enter your name to save your score:
+          <label htmlFor="playerName" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+            Enter your name:
           </label>
           <input
             type="text"
@@ -56,24 +56,24 @@ const SubmitScore: React.FC<SubmitScoreProps> = ({ score, onSubmitted, onSkip })
             onChange={(e) => setPlayerName(e.target.value)}
             placeholder="Your name"
             maxLength={50}
-            className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none transition-colors"
+            className="w-full px-3 sm:px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none transition-colors text-base"
             disabled={submitting}
           />
-          {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+          {error && <p className="text-red-500 text-xs sm:text-sm mt-1">{error}</p>}
         </div>
 
         <div className="flex gap-2">
           <button
             type="submit"
             disabled={submitting || !playerName.trim()}
-            className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-6 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-1 sm:gap-2 text-sm sm:text-base"
           >
             {submitting ? (
-              'Submitting...'
+              '...'
             ) : (
               <>
-                <Send className="w-5 h-5" />
-                Submit Score
+                <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+                Submit
               </>
             )}
           </button>
@@ -81,9 +81,9 @@ const SubmitScore: React.FC<SubmitScoreProps> = ({ score, onSubmitted, onSkip })
             type="button"
             onClick={onSkip}
             disabled={submitting}
-            className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-1 sm:gap-2 text-sm sm:text-base"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4 sm:w-5 sm:h-5" />
             Skip
           </button>
         </div>
