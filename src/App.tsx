@@ -162,6 +162,7 @@ function App() {
             currentLane={gameState.chefLane}
             availableSlices={gameState.availableSlices}
             ovens={gameState.ovens}
+            ovenSpeedUpgrades={gameState.ovenSpeedUpgrades}
           />
 
           {gameState.gameOver && (
