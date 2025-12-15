@@ -556,7 +556,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               ...newState.activePowerUps.filter(p => p.type !== 'doge'),
               { type: 'doge', endTime: now + POWERUP_DURATION }
             ];
-            // Show Doge alert for 2 seconds
+            // Show Doge alert for 5 seconds
             newState.powerUpAlert = { type: 'doge', endTime: now + 5000, chefLane: newState.chefLane };
           } else if (powerUp.type === 'nyan') {
             if (!newState.nyanSweep?.active) {
