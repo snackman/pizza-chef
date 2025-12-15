@@ -616,6 +616,17 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               Math.abs(customer.position - slice.position) < 5) {
             consumed = true;
             soundManager.customerUnfreeze();
+
+            // Create empty plate for unfreezing slice
+            const newPlate: EmptyPlate = {
+              id: `plate-${Date.now()}-${customer.id}-unfreeze`,
+              lane: customer.lane,
+              position: customer.position,
+              speed: PLATE_SPEED,
+            };
+            newState.emptyPlates = [...newState.emptyPlates, newPlate];
+            platesFromSlices.add(slice.id);
+
             return { ...customer, frozen: false };
           }
 
@@ -678,6 +689,17 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               const bankMultiplier = hasDoge ? 2 : 1;
               newState.score += baseScore * scoreMultiplier;
               newState.bank += baseBank * bankMultiplier;
+
+              // Create empty plate for first slice too
+              const newPlate: EmptyPlate = {
+                id: `plate-${Date.now()}-${customer.id}-first`,
+                lane: customer.lane,
+                position: customer.position,
+                speed: PLATE_SPEED,
+              };
+              newState.emptyPlates = [...newState.emptyPlates, newPlate];
+              platesFromSlices.add(slice.id);
+
               return { ...customer, woozyState: 'drooling' };
             } else if (currentState === 'drooling') {
               // Second pizza - becomes satisfied
