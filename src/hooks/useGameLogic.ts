@@ -563,7 +563,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             if (!newState.nyanSweep?.active) {
               newState.nyanSweep = {
                 active: true,
-                xPosition: 0,
+                xPosition: 15,
                 direction: 1,
                 startTime: now,
                 lastUpdateTime: now,
@@ -828,14 +828,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       // Handle Nyan Cat sweep animation
       if (newState.nyanSweep?.active) {
-        const MAX_X = 100;
+        const MAX_X = 90;
         const UPDATE_INTERVAL = 100; // 0.1 seconds in milliseconds
         const LANE_PATTERN = [0, 1, 2, 3, 2, 1]; // Cycling pattern for lanes
 
         // Check if 0.1 seconds has passed since last update
         if (now - newState.nyanSweep.lastUpdateTime >= UPDATE_INTERVAL) {
           // Update x position: move by (right edge - initial position) / 40
-          const INITIAL_X = 0;
+          const INITIAL_X = 15;
           const increment = (MAX_X - INITIAL_X) / 40;
           newState.nyanSweep.xPosition += increment;
 
