@@ -6,11 +6,13 @@ import frozenfaceImg from '/Sprites/frozenface.png';
 const spicyfaceImg = "https://i.imgur.com/MDS5EVg.png";
 import woozyfaceImg from '/Sprites/woozyface.png';
 
-interface CustomerProps {
+interface LandscapeCustomerProps {
   customer: CustomerType;
 }
 
-const Customer: React.FC<CustomerProps> = ({ customer }) => {
+const LANDSCAPE_LANE_POSITIONS = [20, 40, 60, 80];
+
+const LandscapeCustomer: React.FC<LandscapeCustomerProps> = ({ customer }) => {
   const leftPosition = customer.position;
 
   const getDisplay = () => {
@@ -33,13 +35,13 @@ const Customer: React.FC<CustomerProps> = ({ customer }) => {
       className="absolute w-[8%] aspect-square transition-all duration-100 flex items-center justify-center"
       style={{
         left: `${leftPosition}%`,
-        top: `${customer.lane * 25 + 6}%`,
+        top: `${LANDSCAPE_LANE_POSITIONS[customer.lane]}%`,
       }}
     >
       {display.type === 'image' ? (
         <img src={display.value} alt={display.alt} className="w-full h-full object-contain" />
       ) : (
-        <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
+        <div style={{ fontSize: 'clamp(1rem, 2vw, 1.5rem)' }}>
           {display.value}
         </div>
       )}
@@ -47,4 +49,4 @@ const Customer: React.FC<CustomerProps> = ({ customer }) => {
   );
 };
 
-export default Customer;
+export default LandscapeCustomer;

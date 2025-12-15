@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import GameBoard from './components/GameBoard';
 import ScoreBoard from './components/ScoreBoard';
-import GameControls from './components/GameControls';
+import LandscapeGameBoard from './components/LandscapeGameBoard';
+import LandscapeScoreBoard from './components/LandscapeScoreBoard';
+import LandscapeControls from './components/LandscapeControls';
+import MobileGameControls from './components/MobileGameControls';
 import InstructionsModal from './components/InstructionsModal';
 import SplashScreen from './components/SplashScreen';
 import SubmitScore from './components/SubmitScore';
@@ -35,7 +38,6 @@ function App() {
     setShowSplash(false);
     setGameStarted(true);
   };
-
   useEffect(() => {
     const checkOrientation = () => {
       const mobile = window.innerWidth < 1000;
@@ -130,116 +132,6 @@ function App() {
     }
   };
 
-  const handleResetWithStateCleanup = () => {
-    resetGame();
-    setShowScoreSubmit(false);
-    setShowHighScores(false);
-    setShowStats(false);
-  };
-
-  const renderGameOverOverlay = () => {
-    if (!gameState.gameOver) return null;
-
-    return (
-      <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center rounded-lg z-20">
-        <div className="flex flex-col items-center gap-4 p-4 max-h-[90vh] overflow-y-auto">
-          {showStats && !showScoreSubmit && !showHighScores ? (
-            <GameStats
-              stats={gameState.stats}
-              score={gameState.score}
-              level={gameState.level}
-              onContinue={() => {
-                setShowStats(false);
-                setShowScoreSubmit(true);
-              }}
-            />
-          ) : showScoreSubmit && !showHighScores ? (
-            <SubmitScore
-              score={gameState.score}
-              onSubmitted={() => {
-                setShowScoreSubmit(false);
-                setShowHighScores(true);
-              }}
-              onSkip={() => {
-                setShowScoreSubmit(false);
-                setShowHighScores(true);
-              }}
-            />
-          ) : showHighScores ? (
-            <>
-              <HighScores />
-              <button
-                onClick={handleResetWithStateCleanup}
-                className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
-              >
-                Play Again
-              </button>
-            </>
-          ) : null}
-        </div>
-      </div>
-    );
-  };
-
-  const renderPausedOverlay = () => {
-    if (!gameState.paused || gameState.gameOver || gameState.showStore) return null;
-
-    return (
-      <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
-        <div className="text-center bg-white p-4 sm:p-6 rounded-xl shadow-xl mx-4">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Paused</h2>
-          <p className="text-gray-600">{isLandscape ? 'Tap to continue' : 'Press Space or tap to continue'}</p>
-          <button
-            onClick={togglePause}
-            className="mt-4 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-          >
-            Resume
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  const renderStoreOverlay = () => {
-    if (!gameState.showStore) return null;
-
-    return (
-      <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center rounded-lg z-30">
-        <ItemStore
-          gameState={gameState}
-          onUpgradeOven={upgradeOven}
-          onUpgradeOvenSpeed={upgradeOvenSpeed}
-          onBribeReviewer={bribeReviewer}
-          onBuyPowerUp={buyPowerUp}
-          onClose={closeStore}
-        />
-      </div>
-    );
-  };
-
-  const renderHighScoresModal = () => {
-    if (!showHighScores || gameState.gameOver) return null;
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-        <div className="flex flex-col items-center gap-4 p-4 max-h-[90vh] overflow-y-auto">
-          <HighScores />
-          <button
-            onClick={() => {
-              setShowHighScores(false);
-              if (gameState.paused) {
-                togglePause();
-              }
-            }}
-            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
-          >
-            Resume Game
-          </button>
-        </div>
-      </div>
-    );
-  };
-
   if (showSplash) {
     return <SplashScreen onStart={handleStartGame} />;
   }
@@ -248,7 +140,7 @@ function App() {
     return (
       <div className="fixed inset-0 bg-gradient-to-br from-orange-200 via-yellow-100 to-red-200 overflow-hidden">
         <div className="relative w-full h-full">
-          <GameBoard gameState={gameState} variant="landscape" />
+          <LandscapeGameBoard gameState={gameState} />
 
           {gameState.powerUpAlert && (
             <PowerUpAlert powerUpType={gameState.powerUpAlert.type} chefLane={gameState.powerUpAlert.chefLane} />
@@ -258,8 +150,8 @@ function App() {
             <StreakDisplay stats={gameState.stats} />
           )}
 
-          <ScoreBoard gameState={gameState} onShowInstructions={() => setShowInstructions(true)} variant="landscape" />
-          <GameControls
+          <LandscapeScoreBoard gameState={gameState} onShowInstructions={() => setShowInstructions(true)} />
+          <LandscapeControls
             gameOver={gameState.gameOver}
             paused={gameState.paused}
             onMoveUp={() => moveChef('up')}
@@ -270,18 +162,90 @@ function App() {
             currentLane={gameState.chefLane}
             availableSlices={gameState.availableSlices}
             ovens={gameState.ovens}
-            ovenSpeedUpgrades={gameState.ovenSpeedUpgrades}
-            variant="landscape"
           />
 
-          {renderGameOverOverlay()}
-          {renderPausedOverlay()}
-          {renderStoreOverlay()}
+          {gameState.gameOver && (
+            <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center z-20">
+              <div className="flex flex-col items-center gap-4 p-4 max-h-[90vh] overflow-y-auto">
+                {showStats && !showScoreSubmit && !showHighScores ? (
+                  <GameStats
+                    stats={gameState.stats}
+                    score={gameState.score}
+                    level={gameState.level}
+                    onContinue={() => {
+                      setShowStats(false);
+                      setShowScoreSubmit(true);
+                    }}
+                  />
+                ) : showScoreSubmit && !showHighScores ? (
+                  <SubmitScore
+                    score={gameState.score}
+                    onSubmitted={() => {
+                      setShowScoreSubmit(false);
+                      setShowHighScores(true);
+                    }}
+                    onSkip={() => {
+                      setShowScoreSubmit(false);
+                      setShowHighScores(true);
+                    }}
+                  />
+                ) : showHighScores ? (
+                  <>
+                    <HighScores />
+                    <button
+                      onClick={() => {
+                        resetGame();
+                        setShowHighScores(false);
+                        setShowScoreSubmit(false);
+                        setShowStats(false);
+                      }}
+                      className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+                    >
+                      Play Again
+                    </button>
+                  </>
+                ) : null}
+              </div>
+            </div>
+          )}
+
+          {gameState.paused && !gameState.gameOver && !gameState.showStore && (
+            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+              <div className="text-center bg-white p-4 sm:p-6 rounded-xl shadow-xl mx-4">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Paused</h2>
+                <p className="text-gray-600">Tap to continue</p>
+                <button
+                  onClick={togglePause}
+                  className="mt-4 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Resume
+                </button>
+              </div>
+            </div>
+          )}
+
+          {gameState.showStore && (
+            <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center z-30">
+              <ItemStore
+                gameState={gameState}
+                onUpgradeOven={upgradeOven}
+                onUpgradeOvenSpeed={upgradeOvenSpeed}
+                onBribeReviewer={bribeReviewer}
+                onBuyPowerUp={buyPowerUp}
+                onClose={closeStore}
+              />
+            </div>
+          )}
 
           {showInstructions && (
             <InstructionsModal
               onClose={() => setShowInstructions(false)}
-              onReset={handleResetWithStateCleanup}
+              onReset={() => {
+                resetGame();
+                setShowScoreSubmit(false);
+                setShowHighScores(false);
+                setShowStats(false);
+              }}
               onShowHighScores={() => {
                 setShowHighScores(true);
                 setShowInstructions(false);
@@ -294,7 +258,24 @@ function App() {
             />
           )}
 
-          {renderHighScoresModal()}
+          {showHighScores && !gameState.gameOver && (
+            <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+              <div className="flex flex-col items-center gap-4 p-4 max-h-[90vh] overflow-y-auto">
+                <HighScores />
+                <button
+                  onClick={() => {
+                    setShowHighScores(false);
+                    if (gameState.paused) {
+                      togglePause();
+                    }
+                  }}
+                  className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+                >
+                  Resume Game
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -322,9 +303,78 @@ function App() {
               <StreakDisplay stats={gameState.stats} />
             )}
 
-            {renderGameOverOverlay()}
-            {renderPausedOverlay()}
-            {renderStoreOverlay()}
+            {gameState.gameOver && (
+              <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center rounded-lg z-20">
+                <div className="flex flex-col items-center gap-4 p-4 max-h-[90vh] overflow-y-auto">
+                  {showStats && !showScoreSubmit && !showHighScores ? (
+                    <GameStats
+                      stats={gameState.stats}
+                      score={gameState.score}
+                      level={gameState.level}
+                      onContinue={() => {
+                        setShowStats(false);
+                        setShowScoreSubmit(true);
+                      }}
+                    />
+                  ) : showScoreSubmit && !showHighScores ? (
+                    <SubmitScore
+                      score={gameState.score}
+                      onSubmitted={() => {
+                        setShowScoreSubmit(false);
+                        setShowHighScores(true);
+                      }}
+                      onSkip={() => {
+                        setShowScoreSubmit(false);
+                        setShowHighScores(true);
+                      }}
+                    />
+                  ) : showHighScores ? (
+                    <>
+                      <HighScores />
+                      <button
+                        onClick={() => {
+                          resetGame();
+                          setShowHighScores(false);
+                          setShowScoreSubmit(false);
+                          setShowStats(false);
+                        }}
+                        className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+                      >
+                        Play Again
+                      </button>
+                    </>
+                  ) : null}
+                </div>
+              </div>
+            )}
+
+            {gameState.paused && !gameState.gameOver && !gameState.showStore && (
+              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
+                <div className="text-center bg-white p-4 sm:p-6 rounded-xl shadow-xl mx-4">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Paused</h2>
+                  <p className="text-gray-600">Press Space or tap to continue</p>
+                  <button
+                    onClick={togglePause}
+                    className="mt-4 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    Resume
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {gameState.showStore && (
+              <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center rounded-lg z-30">
+                <ItemStore
+                  gameState={gameState}
+                  onUpgradeOven={upgradeOven}
+                  onUpgradeOvenSpeed={upgradeOvenSpeed}
+                  onBribeReviewer={bribeReviewer}
+                  onBuyPowerUp={buyPowerUp}
+                  onClose={closeStore}
+                />
+              </div>
+            )}
           </div>
 
           {!isMobile && gameStarted && !gameState.gameOver && (
@@ -335,7 +385,12 @@ function App() {
         {showInstructions && (
           <InstructionsModal
             onClose={() => setShowInstructions(false)}
-            onReset={handleResetWithStateCleanup}
+            onReset={() => {
+              resetGame();
+              setShowScoreSubmit(false);
+              setShowHighScores(false);
+              setShowStats(false);
+            }}
             onShowHighScores={() => {
               setShowHighScores(true);
               setShowInstructions(false);
@@ -348,10 +403,27 @@ function App() {
           />
         )}
 
-        {renderHighScoresModal()}
+        {showHighScores && !gameState.gameOver && (
+          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+            <div className="flex flex-col items-center gap-4 p-4 max-h-[90vh] overflow-y-auto">
+              <HighScores />
+              <button
+                onClick={() => {
+                  setShowHighScores(false);
+                  if (gameState.paused) {
+                    togglePause();
+                  }
+                }}
+                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+              >
+                Resume Game
+              </button>
+            </div>
+          </div>
+        )}
 
         {isMobile && !gameState.gameOver && !showInstructions && !showHighScores && !gameState.showStore && (
-          <GameControls
+          <MobileGameControls
             gameOver={gameState.gameOver}
             paused={gameState.paused}
             onMoveUp={() => moveChef('up')}

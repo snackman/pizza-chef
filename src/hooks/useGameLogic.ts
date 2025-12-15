@@ -342,6 +342,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       const hasIceCream = newState.activePowerUps.some(p => p.type === 'ice-cream');
       const hasStar = newState.activePowerUps.some(p => p.type === 'star');
       const hasDoge = newState.activePowerUps.some(p => p.type === 'doge');
+      const hasNyan = newState.activePowerUps.some(p => p.type === 'nyan');
 
       // Update frozen state on all customers based on ice cream power-up
       // But only freeze customers that aren't already manually unfrozen
