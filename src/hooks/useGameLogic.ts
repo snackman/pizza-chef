@@ -565,7 +565,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 active: true,
                 xPosition: 0,
                 direction: 1,
-                startTime: now
+                startTime: now,
+                lastUpdateTime: now,
+                laneIndex: 0
               };
               // Show Nyan alert
               newState.powerUpAlert = { type: 'nyan', endTime: now + 3000, chefLane: newState.chefLane };
@@ -826,19 +828,22 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       // Handle Nyan Cat sweep animation
       if (newState.nyanSweep?.active) {
-        const SWEEP_SPEED = 1.25;
         const MAX_X = 100;
+        const UPDATE_INTERVAL = 100; // 0.1 seconds in milliseconds
+        const LANE_PATTERN = [0, 1, 2, 3, 2, 1]; // Cycling pattern for lanes
 
-        newState.nyanSweep.xPosition += SWEEP_SPEED;
+        // Check if 0.1 seconds has passed since last update
+        if (now - newState.nyanSweep.lastUpdateTime >= UPDATE_INTERVAL) {
+          // Update x position: move by (right edge - current position) / 40
+          const distanceToEdge = MAX_X - newState.nyanSweep.xPosition;
+          newState.nyanSweep.xPosition += distanceToEdge / 40;
 
-        // Calculate zig-zag lane based on x position (sweep through all 4 lanes)
-        const progressRatio = newState.nyanSweep.xPosition / MAX_X;
-        const zigzagPhase = progressRatio * 4;
-        const targetLane = Math.floor(zigzagPhase);
+          // Update lane using cycling pattern
+          newState.nyanSweep.laneIndex = (newState.nyanSweep.laneIndex + 1) % LANE_PATTERN.length;
+          newState.chefLane = LANE_PATTERN[newState.nyanSweep.laneIndex];
 
-        // Update chef lane to follow the zig-zag
-        if (targetLane >= 0 && targetLane < 4) {
-          newState.chefLane = targetLane;
+          // Update last update time
+          newState.nyanSweep.lastUpdateTime = now;
         }
 
         // Check for customers at chef's current position and serve them

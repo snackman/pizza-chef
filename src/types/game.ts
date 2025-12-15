@@ -88,6 +88,6 @@ export interface GameState {
   fallingPizza?: { lane: number; y: number };
   starPowerActive?: boolean;
   powerUpAlert?: { type: PowerUpType; endTime: number; chefLane: number };
-  nyanSweep?: { active: boolean; xPosition: number; direction: 1 | -1; startTime: number };
+  nyanSweep?: { active: boolean; xPosition: number; direction: 1 | -1; startTime: number; lastUpdateTime: number; laneIndex: number };
   stats: GameStats;
 }
