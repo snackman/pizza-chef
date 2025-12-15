@@ -593,6 +593,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       const remainingSlices: PizzaSlice[] = [];
       const destroyedPowerUpIds = new Set<string>();
       const platesFromSlices = new Set<string>();
+      let sliceWentOffScreen = false;
 
       newState.pizzaSlices.forEach(slice => {
         let consumed = false;
@@ -762,6 +763,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               destroyedPowerUpIds.add(powerUp.id);
             }
           });
+        } else if (!consumed && slice.position >= 95) {
+          // Slice went off-screen without hitting a customer (no plate created)
+          sliceWentOffScreen = true;
         }
       });
 
@@ -775,11 +779,20 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           return powerUp && powerUp.lane === slice.lane &&
                  Math.abs(powerUp.position - slice.position) < 5;
         });
+        if (hitPowerUp) {
+          // Slice hit a power-up, no plate created
+          sliceWentOffScreen = true;
+        }
         return !hitPowerUp;
       });
 
       newState.pizzaSlices = finalSlices;
       newState.powerUps = newState.powerUps.filter(p => !destroyedPowerUpIds.has(p.id));
+
+      // Reset plate streak if a slice went off-screen without hitting a customer
+      if (sliceWentOffScreen) {
+        newState.stats.currentPlateStreak = 0;
+      }
 
       // Move empty plates
       newState.emptyPlates = newState.emptyPlates.map(plate => ({
