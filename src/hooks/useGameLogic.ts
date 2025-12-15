@@ -1111,7 +1111,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           ...newState.activePowerUps.filter(p => p.type !== 'doge'),
           { type: 'doge', endTime: now + POWERUP_DURATION }
         ];
-        newState.powerUpAlert = { type: 'doge', endTime: now + 2000, chefLane: newState.chefLane };
+        newState.powerUpAlert = { type: 'doge', endTime: now + 5000, chefLane: newState.chefLane };
       } else if (type === 'nyan') {
         if (!newState.nyanSweep?.active) {
           newState.nyanSweep = {
