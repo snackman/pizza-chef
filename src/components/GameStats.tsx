@@ -18,7 +18,7 @@ export default function GameStats({ stats, score, level, onContinue }: GameStats
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-2xl p-2 sm:p-6 max-w-6xl w-full mx-2 sm:mx-4">
+    <div className="bg-white rounded-xl shadow-2xl p-2 sm:p-6 w-full max-w-full">
       <div className="flex items-center justify-between mb-1 sm:mb-4 gap-2">
         <div className="flex-1 min-w-0">
           <h2 className="text-lg sm:text-3xl font-bold text-red-600">
