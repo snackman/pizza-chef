@@ -925,9 +925,12 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               Math.abs(customer.position - newState.nyanSweep!.xPosition) < 10) {
             soundManager.customerServed();
             const baseScore = 150;
+            const baseBank = 1;
+            const dogeMultiplier = hasDoge ? 2 : 1;
+            const bankMultiplier = hasDoge ? 2 : 1;
             const customerStreakMultiplier = getStreakMultiplier(newState.stats.currentCustomerStreak);
-            newState.score += Math.floor(baseScore * customerStreakMultiplier);
-            newState.bank += 1;
+            newState.score += Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
+            newState.bank += baseBank * bankMultiplier;
             newState.happyCustomers += 1;
             newState.stats.customersServed += 1;
             newState.stats.currentCustomerStreak += 1;
@@ -937,8 +940,12 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
             // Check if we should award a star
             if (newState.happyCustomers % 8 === 0 && newState.lives < 5) {
-              soundManager.lifeGained();
-              newState.lives += 1;
+              const starsToAdd = hasDoge ? 2 : 1;
+              const actualStarsToAdd = Math.min(starsToAdd, 5 - newState.lives);
+              newState.lives += actualStarsToAdd;
+              if (actualStarsToAdd > 0) {
+                soundManager.lifeGained();
+              }
             }
 
             return { ...customer, served: true, hasPlate: false, woozy: false };
