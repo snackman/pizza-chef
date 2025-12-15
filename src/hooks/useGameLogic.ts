@@ -835,10 +835,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           newState.nyanSweep.xPosition += increment;
 
           let newLane = newState.chefLane + newState.nyanSweep.laneDirection;
-          if (newLane > 2) {
-            newLane = 1;
+          if (newLane > 3) {
+            newLane = 2;
             newState.nyanSweep.laneDirection = -1;
-          } else if (newLane < 1) {
+          } else if (newLane < 0) {
             newLane = 1;
             newState.nyanSweep.laneDirection = 1;
           }
