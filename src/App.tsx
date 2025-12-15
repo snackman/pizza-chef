@@ -12,6 +12,7 @@ import HighScores from './components/HighScores';
 import ItemStore from './components/ItemStore';
 import PowerUpAlert from './components/PowerUpAlert';
 import GameStats from './components/GameStats';
+import StreakDisplay from './components/StreakDisplay';
 import { useGameLogic } from './hooks/useGameLogic';
 import { Info } from 'lucide-react';
 
@@ -140,11 +141,15 @@ function App() {
       <div className="fixed inset-0 bg-gradient-to-br from-orange-200 via-yellow-100 to-red-200 overflow-hidden">
         <div className="relative w-full h-full">
           <LandscapeGameBoard gameState={gameState} />
-          
+
           {gameState.powerUpAlert && (
             <PowerUpAlert powerUpType={gameState.powerUpAlert.type} chefLane={gameState.powerUpAlert.chefLane} />
           )}
-          
+
+          {!gameState.gameOver && !gameState.paused && !gameState.showStore && (
+            <StreakDisplay stats={gameState.stats} />
+          )}
+
           <LandscapeScoreBoard gameState={gameState} onShowInstructions={() => setShowInstructions(true)} />
           <LandscapeControls
             gameOver={gameState.gameOver}
@@ -292,6 +297,10 @@ function App() {
 
             {gameState.powerUpAlert && (
               <PowerUpAlert powerUpType={gameState.powerUpAlert.type} chefLane={gameState.powerUpAlert.chefLane} />
+            )}
+
+            {!gameState.gameOver && !gameState.paused && !gameState.showStore && (
+              <StreakDisplay stats={gameState.stats} />
             )}
 
             {gameState.gameOver && (
