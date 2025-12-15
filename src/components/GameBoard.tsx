@@ -127,12 +127,12 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
             <>
               {/* Rainbow trail behind chef */}
               <div className="absolute h-[150%]" style={{
-                right: '100%',
+                right: '50%',
                 width: '300px',
-                backgroundImage: 'url(/Sprites/rainbow.png)',
-                backgroundSize: 'cover',
+                backgroundImage: 'url(https://i.imgur.com/kwzeXGK.png)',
+                backgroundSize: 'contain',
                 backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right center',
+                backgroundPosition: 'center',
                 zIndex: -1,
                 opacity: 0.9
               }} />
