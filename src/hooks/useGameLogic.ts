@@ -826,7 +826,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       // Handle Nyan Cat sweep animation
       if (newState.nyanSweep?.active) {
-        const SWEEP_SPEED = 2.5;
+        const SWEEP_SPEED = 1.25;
         const MAX_X = 100;
 
         newState.nyanSweep.xPosition += SWEEP_SPEED;
@@ -885,6 +885,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         // End sweep when reaching the right side
         if (newState.nyanSweep.xPosition >= MAX_X) {
           newState.nyanSweep = undefined;
+          newState.chefLane = 0;
         }
       }
 
