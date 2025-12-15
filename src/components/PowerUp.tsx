@@ -74,18 +74,15 @@ const PowerUp: React.FC<PowerUpProps> = ({ powerUp }) => {
       }}
     >
       {image ? (
-        <img 
-          src={image} 
-          alt={powerUp.type} 
+        <img
+          src={image}
+          alt={powerUp.type}
           className={`w-full h-full object-contain ${
             powerUp.type === 'nyan' ? 'animate-bounce' : ''
-          }`} 
+          }`}
         />
       ) : (
-        <div
-          style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}
-          className={powerUp.type === 'star' ? 'animate-pulse' : ''}
-        >
+        <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
           ⭐
         </div>
       )}
