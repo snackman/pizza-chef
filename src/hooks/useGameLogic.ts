@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { GameState, Customer, PizzaSlice, EmptyPlate, PowerUp, PowerUpType } from '../types/game';
 import { soundManager } from '../utils/sounds';
+import { getStreakMultiplier } from '../components/StreakDisplay';
 
 const CUSTOMER_SPAWN_RATE = 2.5;
 const PIZZA_SPEED = 3;
@@ -456,9 +457,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             soundManager.customerServed();
             const baseScore = 150;
             const baseBank = 1;
-            const scoreMultiplier = hasDoge ? 2 : 1;
+            const dogeMultiplier = hasDoge ? 2 : 1;
             const bankMultiplier = hasDoge ? 2 : 1;
-            newState.score += baseScore * scoreMultiplier;
+            const customerStreakMultiplier = getStreakMultiplier(newState.stats.currentCustomerStreak);
+            newState.score += Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
             newState.bank += baseBank * bankMultiplier;
             newState.happyCustomers += 1;
             newState.stats.customersServed += 1;
@@ -651,9 +653,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               soundManager.customerServed();
               const baseScore = 150;
               const baseBank = 1;
-              const scoreMultiplier = hasDoge ? 2 : 1;
+              const dogeMultiplier = hasDoge ? 2 : 1;
               const bankMultiplier = hasDoge ? 2 : 1;
-              newState.score += baseScore * scoreMultiplier;
+              const customerStreakMultiplier = getStreakMultiplier(newState.stats.currentCustomerStreak);
+              newState.score += Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
               newState.bank += baseBank * bankMultiplier;
               newState.happyCustomers += 1;
               newState.stats.customersServed += 1;
@@ -690,9 +693,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               soundManager.woozyServed();
               const baseScore = 50;
               const baseBank = 1;
-              const scoreMultiplier = hasDoge ? 2 : 1;
+              const dogeMultiplier = hasDoge ? 2 : 1;
               const bankMultiplier = hasDoge ? 2 : 1;
-              newState.score += baseScore * scoreMultiplier;
+              const customerStreakMultiplier = getStreakMultiplier(newState.stats.currentCustomerStreak);
+              newState.score += Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
               newState.bank += baseBank * bankMultiplier;
 
               // Create empty plate for first slice too
@@ -711,9 +715,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               soundManager.customerServed();
               const baseScore = 150;
               const baseBank = 1;
-              const scoreMultiplier = hasDoge ? 2 : 1;
+              const dogeMultiplier = hasDoge ? 2 : 1;
               const bankMultiplier = hasDoge ? 2 : 1;
-              newState.score += baseScore * scoreMultiplier;
+              const customerStreakMultiplier = getStreakMultiplier(newState.stats.currentCustomerStreak);
+              newState.score += Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
               newState.bank += baseBank * bankMultiplier;
               newState.happyCustomers += 1;
               newState.stats.customersServed += 1;
@@ -753,9 +758,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             soundManager.customerServed();
             const baseScore = 150; // 100 base + 50 bonus for customer eating pizza
             const baseBank = 1;
-            const scoreMultiplier = hasDoge ? 2 : 1;
+            const dogeMultiplier = hasDoge ? 2 : 1;
             const bankMultiplier = hasDoge ? 2 : 1;
-            newState.score += baseScore * scoreMultiplier;
+            const customerStreakMultiplier = getStreakMultiplier(newState.stats.currentCustomerStreak);
+            newState.score += Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
             newState.bank += baseBank * bankMultiplier;
             newState.happyCustomers += 1;
             newState.stats.customersServed += 1;
@@ -835,7 +841,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         if (plate.position <= 10 && plate.lane === newState.chefLane && !newState.nyanSweep?.active) {
           // Chef caught the plate - it disappears immediately (but not during nyan sweep)
           soundManager.plateCaught();
-          newState.score += 50;
+          const baseScore = 50;
+          const plateStreakMultiplier = getStreakMultiplier(newState.stats.currentPlateStreak);
+          newState.score += Math.floor(baseScore * plateStreakMultiplier);
           newState.stats.platesCaught += 1;
           newState.stats.currentPlateStreak += 1;
           if (newState.stats.currentPlateStreak > newState.stats.largestPlateStreak) {
@@ -891,7 +899,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               Math.abs(customer.position - newState.nyanSweep!.xPosition) < 10) {
             soundManager.customerServed();
             const baseScore = 150;
-            newState.score += baseScore;
+            const customerStreakMultiplier = getStreakMultiplier(newState.stats.currentCustomerStreak);
+            newState.score += Math.floor(baseScore * customerStreakMultiplier);
             newState.bank += 1;
             newState.happyCustomers += 1;
             newState.stats.customersServed += 1;
