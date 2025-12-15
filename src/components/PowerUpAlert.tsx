@@ -12,12 +12,7 @@ const PowerUpAlert: React.FC<PowerUpAlertProps> = ({ powerUpType, chefLane }) =>
       case 'doge':
         return {
           image: 'https://i.imgur.com/n0FtlUg.png',
-          scale: 3, // 3x size multiplier
-        };
-      case 'nyan':
-        return {
-          image: '/Sprites/nyancat.png',
-          scale: 3
+          scale: 3,
         };
       default:
         return null;
