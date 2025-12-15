@@ -623,6 +623,31 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             consumed = true;
             soundManager.customerUnfreeze();
 
+            // Give score for serving frozen customer with customer streak multiplier
+            const baseScore = 150;
+            const baseBank = 1;
+            const dogeMultiplier = hasDoge ? 2 : 1;
+            const bankMultiplier = hasDoge ? 2 : 1;
+            const customerStreakMultiplier = getStreakMultiplier(newState.stats.currentCustomerStreak);
+            newState.score += Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
+            newState.bank += baseBank * bankMultiplier;
+            newState.happyCustomers += 1;
+            newState.stats.customersServed += 1;
+            newState.stats.currentCustomerStreak += 1;
+            if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) {
+              newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
+            }
+
+            // Check if we should award a star (every 8 happy customers, max 5 stars)
+            if (newState.happyCustomers % 8 === 0 && newState.lives < 5) {
+              const starsToAdd = hasDoge ? 2 : 1;
+              const actualStarsToAdd = Math.min(starsToAdd, 5 - newState.lives);
+              newState.lives += actualStarsToAdd;
+              if (actualStarsToAdd > 0) {
+                soundManager.lifeGained();
+              }
+            }
+
             // Create empty plate for unfreezing slice
             const newPlate: EmptyPlate = {
               id: `plate-${Date.now()}-${customer.id}-unfreeze`,
@@ -634,7 +659,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             platesFromSlices.add(slice.id);
 
             // Mark as unfrozen this period so they won't refreeze until ice cream expires
-            return { ...customer, frozen: false, unfrozenThisPeriod: true };
+            return { ...customer, frozen: false, unfrozenThisPeriod: true, served: true, hasPlate: false };
           }
 
           // Skip customers that have crossed the 0% line (but allow unfreezing above)
@@ -842,8 +867,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           // Chef caught the plate - it disappears immediately (but not during nyan sweep)
           soundManager.plateCaught();
           const baseScore = 50;
+          const dogeMultiplier = hasDoge ? 2 : 1;
           const plateStreakMultiplier = getStreakMultiplier(newState.stats.currentPlateStreak);
-          newState.score += Math.floor(baseScore * plateStreakMultiplier);
+          newState.score += Math.floor(baseScore * dogeMultiplier * plateStreakMultiplier);
           newState.stats.platesCaught += 1;
           newState.stats.currentPlateStreak += 1;
           if (newState.stats.currentPlateStreak > newState.stats.largestPlateStreak) {
