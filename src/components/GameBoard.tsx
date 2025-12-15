@@ -110,34 +110,46 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
         );
       })}
 
-      {/* Kitchen/Chef Area */}
-      <div className="absolute top-0 h-full flex flex-col items-center justify-center" style={{ width: '7.5%', left: '9%' }}>
-        {/* Chef positioned at current lane */}
+      {/* Kitchen/Chef Area - only shown when NOT in nyan sweep */}
+      {!gameState.nyanSweep?.active && (
+        <div className="absolute top-0 h-full flex flex-col items-center justify-center" style={{ width: '7.5%', left: '9%' }}>
+          <div
+            className="absolute w-[8%] aspect-square flex items-center justify-center"
+            style={{
+              top: `${gameState.chefLane * 25 + 13}%`,
+              left: '10%',
+              transition: 'all 0.2s',
+              zIndex: gameState.gameOver ? 19 : 10
+            }}
+          >
+            {gameState.gameOver ? (
+              <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>🧟</div>
+            ) : (
+              <img src={"https://i.imgur.com/EPCSa79.png"} alt="chef" className="w-full h-full object-contain" style={{ transform: 'scale(15)' }} />
+            )}
+            <div
+              className={`absolute ${gameState.starPowerActive ? 'animate-pulse' : ''}`}
+              style={{ width: '1360%', height: '1360%', top: '-10%', left: '100%'}}
+            >
+              <PizzaSliceStack sliceCount={gameState.availableSlices} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Nyan Cat Chef - positioned directly on game board during sweep */}
+      {gameState.nyanSweep?.active && (
         <div
           className="absolute w-[8%] aspect-square flex items-center justify-center"
           style={{
             top: `${gameState.chefLane * 25 + 13}%`,
-            left: gameState.nyanSweep?.active ? `${gameState.nyanSweep.xPosition - 5}%` : '10%',
-            transition: gameState.nyanSweep?.active ? 'none' : 'all 0.2s',
-            zIndex: gameState.gameOver ? 19 : (gameState.nyanSweep?.active ? 20 : 10)
+            left: `${gameState.nyanSweep.xPosition}%`,
+            zIndex: 20
           }}
         >
-          {gameState.gameOver ? (
-            <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>🧟</div>
-          ) : gameState.nyanSweep?.active ? (
-            <img src="https://i.imgur.com/fGPU4Pu.png" alt="nyan cat" className="w-full h-full object-contain" style={{ transform: 'scale(15)' }} />
-          ) : (
-            <img src={"https://i.imgur.com/EPCSa79.png"} alt="chef" className="w-full h-full object-contain" style={{ transform: 'scale(15)' }} />
-          )}
-          {/* Pizza slices held by chef */}
-          <div
-            className={`absolute ${gameState.starPowerActive ? 'animate-pulse' : ''}`}
-            style={{ width: '1360%', height: '1360%', top: '-10%', left: '100%'}}
-          >
-            <PizzaSliceStack sliceCount={gameState.availableSlices} />
-          </div>
+          <img src="https://i.imgur.com/fGPU4Pu.png" alt="nyan cat" className="w-full h-full object-contain" style={{ transform: 'scale(15)' }} />
         </div>
-      </div>
+      )}
 
       {/* Serving Counters */}
       {lanes.map((lane) => (
