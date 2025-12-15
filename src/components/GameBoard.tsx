@@ -114,22 +114,32 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
       <div className="absolute top-0 h-full flex flex-col items-center justify-center" style={{ width: '7.5%', left: '9%' }}>
         {/* Chef positioned at current lane */}
         <div
-          className="absolute w-[8%] aspect-square flex items-center justify-center transition-all duration-200"
+          className="absolute w-[8%] aspect-square flex items-center justify-center"
           style={{
             top: `${gameState.chefLane * 25 + 13}%`,
-            left: '10%',
-            zIndex: gameState.gameOver ? 19 : 10
+            left: gameState.nyanSweep?.active ? `${10 + gameState.nyanSweep.xPosition * 0.75}%` : '10%',
+            transition: gameState.nyanSweep?.active ? 'none' : 'all 0.2s',
+            zIndex: gameState.gameOver ? 19 : (gameState.nyanSweep?.active ? 20 : 10)
           }}
         >
           {/* Nyan Cat rainbow trail effect */}
-          {gameState.activePowerUps.some(p => p.type === 'nyan') && !gameState.gameOver && (
-            <div className="absolute inset-0 animate-pulse" style={{ 
-              background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3)',
-              borderRadius: '50%',
-              opacity: 0.3,
-              transform: 'scale(1.5)',
-              zIndex: -1
-            }} />
+          {gameState.nyanSweep?.active && !gameState.gameOver && (
+            <>
+              <div className="absolute inset-0 animate-pulse" style={{
+                background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3)',
+                borderRadius: '50%',
+                opacity: 0.4,
+                transform: 'scale(2)',
+                zIndex: -1
+              }} />
+              {/* Rainbow trail behind chef */}
+              <div className="absolute h-full" style={{
+                right: '100%',
+                width: '200px',
+                background: 'linear-gradient(to left, rgba(255,0,0,0.6), rgba(255,127,0,0.5), rgba(255,255,0,0.4), rgba(0,255,0,0.3), rgba(0,0,255,0.2), rgba(75,0,130,0.1), rgba(148,0,211,0.05), transparent)',
+                zIndex: -2
+              }} />
+            </>
           )}
           {gameState.gameOver ? (
             <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>🧟</div>

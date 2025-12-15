@@ -16,12 +16,8 @@ const PowerUpAlert: React.FC<PowerUpAlertProps> = ({ powerUpType, chefLane }) =>
         };
       case 'nyan':
         return {
-          image: 'https://images.com/image.png',
-          title: 'Nyan Cat',
-          subtitle: 'Rainbow Trail!',
-          backgroundColor: 'bg-gradient-to-r from-purple-500 to-pink-500',
-          textColor: 'text-white',
-          scale: 1
+          image: '/Sprites/nyancat.png',
+          scale: 3
         };
       default:
         return null;

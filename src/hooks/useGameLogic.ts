@@ -133,7 +133,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
   }, [lastCustomerSpawn, gameState.level, gameState.activePowerUps]);
 
   const servePizza = useCallback(() => {
-    if (gameState.gameOver || gameState.paused || gameState.availableSlices <= 0) return;
+    if (gameState.gameOver || gameState.paused || gameState.availableSlices <= 0 || gameState.nyanSweep?.active) return;
 
     soundManager.servePizza();
 
@@ -149,10 +149,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       pizzaSlices: [...prev.pizzaSlices, newSlice],
       availableSlices: prev.availableSlices - 1,
     }));
-  }, [gameState.gameOver, gameState.paused, gameState.chefLane, gameState.availableSlices]);
+  }, [gameState.gameOver, gameState.paused, gameState.chefLane, gameState.availableSlices, gameState.nyanSweep?.active]);
 
   const moveChef = useCallback((direction: 'up' | 'down') => {
-    if (gameState.gameOver || gameState.paused) return;
+    if (gameState.gameOver || gameState.paused || gameState.nyanSweep?.active) return;
 
     setGameState(prev => {
       let newLane = prev.chefLane;
@@ -163,7 +163,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       }
       return { ...prev, chefLane: newLane };
     });
-  }, [gameState.gameOver, gameState.paused]);
+  }, [gameState.gameOver, gameState.paused, gameState.nyanSweep?.active]);
 
   const useOven = useCallback(() => {
     if (gameState.gameOver || gameState.paused) return;
@@ -559,11 +559,17 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             // Show Doge alert for 2 seconds
             newState.powerUpAlert = { type: 'doge', endTime: now + 2000, chefLane: newState.chefLane };
           } else if (powerUp.type === 'nyan') {
-            // Nyan Cat power-up gives speed boost to chef movement
-            newState.activePowerUps = [
-              ...newState.activePowerUps.filter(p => p.type !== 'nyan'),
-              { type: 'nyan', endTime: now + POWERUP_DURATION }
-            ];
+            // Nyan Cat power-up makes chef sweep across the board
+            if (!newState.nyanSweep?.active) {
+              newState.nyanSweep = {
+                active: true,
+                xPosition: 0,
+                direction: 1,
+                startTime: now
+              };
+              // Show Nyan alert
+              newState.powerUpAlert = { type: 'nyan', endTime: now + 3000, chefLane: newState.chefLane };
+            }
           } else {
             // Add to active power-ups (hot honey and ice-cream)
             newState.activePowerUps = [
@@ -817,6 +823,70 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         }
         return true;
       });
+
+      // Handle Nyan Cat sweep animation
+      if (newState.nyanSweep?.active) {
+        const SWEEP_SPEED = 2.5;
+        const MAX_X = 100;
+
+        newState.nyanSweep.xPosition += SWEEP_SPEED;
+
+        // Calculate zig-zag lane based on x position (sweep through all 4 lanes)
+        const progressRatio = newState.nyanSweep.xPosition / MAX_X;
+        const zigzagPhase = progressRatio * 4;
+        const targetLane = Math.floor(zigzagPhase);
+
+        // Update chef lane to follow the zig-zag
+        if (targetLane >= 0 && targetLane < 4) {
+          newState.chefLane = targetLane;
+        }
+
+        // Check for customers at chef's current position and serve them
+        newState.customers = newState.customers.map(customer => {
+          if (customer.served || customer.disappointed || customer.vomit || customer.frozen) {
+            return customer;
+          }
+
+          // Check if customer is in chef's lane and at approximately the chef's x position
+          if (customer.lane === newState.chefLane &&
+              Math.abs(customer.position - newState.nyanSweep!.xPosition) < 10) {
+            soundManager.customerServed();
+            const baseScore = 150;
+            newState.score += baseScore;
+            newState.bank += 1;
+            newState.happyCustomers += 1;
+            newState.stats.customersServed += 1;
+            newState.stats.currentCustomerStreak += 1;
+            if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) {
+              newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
+            }
+
+            // Check if we should award a star
+            if (newState.happyCustomers % 8 === 0 && newState.lives < 5) {
+              soundManager.lifeGained();
+              newState.lives += 1;
+            }
+
+            // Create empty plate
+            const newPlate: EmptyPlate = {
+              id: `plate-${Date.now()}-${customer.id}`,
+              lane: customer.lane,
+              position: customer.position,
+              speed: PLATE_SPEED,
+            };
+            newState.emptyPlates = [...newState.emptyPlates, newPlate];
+
+            return { ...customer, served: true, hasPlate: false, woozy: false };
+          }
+
+          return customer;
+        });
+
+        // End sweep when reaching the right side
+        if (newState.nyanSweep.xPosition >= MAX_X) {
+          newState.nyanSweep = undefined;
+        }
+      }
 
       // Level progression
       if (newState.score >= newState.level * 500) {
