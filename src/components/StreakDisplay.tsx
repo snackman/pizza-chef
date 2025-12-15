@@ -5,8 +5,8 @@ interface StreakDisplayProps {
 }
 
 export default function StreakDisplay({ stats }: StreakDisplayProps) {
-  const showCustomerStreak = stats.currentCustomerStreak > 5;
-  const showPlateStreak = stats.currentPlateStreak > 5;
+  const showCustomerStreak = stats.currentCustomerStreak >= 5;
+  const showPlateStreak = stats.currentPlateStreak >= 5;
 
   if (!showCustomerStreak && !showPlateStreak) {
     return null;
