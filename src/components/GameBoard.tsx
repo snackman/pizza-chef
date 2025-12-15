@@ -122,24 +122,10 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
             zIndex: gameState.gameOver ? 19 : (gameState.nyanSweep?.active ? 20 : 10)
           }}
         >
-          {/* Nyan Cat rainbow trail effect */}
-          {gameState.nyanSweep?.active && !gameState.gameOver && (
-            <>
-              {/* Rainbow trail behind chef */}
-              <div className="absolute h-[150%]" style={{
-                right: '50%',
-                width: '300px',
-                backgroundImage: 'url(https://i.imgur.com/kwzeXGK.png)',
-                backgroundSize: 'contain',
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'center',
-                zIndex: -1,
-                opacity: 0.9
-              }} />
-            </>
-          )}
           {gameState.gameOver ? (
             <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>🧟</div>
+          ) : gameState.nyanSweep?.active ? (
+            <img src="https://i.imgur.com/fGPU4Pu.png" alt="nyan cat" className="w-full h-full object-contain" style={{ transform: 'scale(15)' }} />
           ) : (
             <img src={"https://i.imgur.com/EPCSa79.png"} alt="chef" className="w-full h-full object-contain" style={{ transform: 'scale(15)' }} />
           )}
