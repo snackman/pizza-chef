@@ -38,56 +38,59 @@ export default function GameStats({ stats, score, level, onContinue }: GameStats
       </div>
 
       <div className="border-t-2 border-gray-200 pt-4">
-        <h3 className="text-xl font-bold mb-3 text-gray-800">Game Statistics</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
+            <h3 className="text-xl font-bold mb-3 text-gray-800">Game Statistics</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <StatCard
+                icon="🍕"
+                label="Slices Baked"
+                value={stats.slicesBaked}
+              />
+              <StatCard
+                icon="⚙️"
+                label="Oven Upgrades"
+                value={stats.ovenUpgradesMade}
+              />
+              <StatCard
+                icon="😋"
+                label="Customers Served"
+                value={stats.customersServed}
+              />
+              <StatCard
+                icon="🔥"
+                label="Longest Customer Streak"
+                value={stats.longestCustomerStreak}
+              />
+              <StatCard
+                icon="🍽️"
+                label="Plates Caught"
+                value={stats.platesCaught}
+              />
+              <StatCard
+                icon="✨"
+                label="Largest Plate Streak"
+                value={stats.largestPlateStreak}
+              />
+            </div>
+          </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
-          <StatCard
-            icon="🍕"
-            label="Slices Baked"
-            value={stats.slicesBaked}
-          />
-          <StatCard
-            icon="⚙️"
-            label="Oven Upgrades"
-            value={stats.ovenUpgradesMade}
-          />
-          <StatCard
-            icon="😋"
-            label="Customers Served"
-            value={stats.customersServed}
-          />
-          <StatCard
-            icon="🔥"
-            label="Longest Customer Streak"
-            value={stats.longestCustomerStreak}
-          />
-          <StatCard
-            icon="🍽️"
-            label="Plates Caught"
-            value={stats.platesCaught}
-          />
-          <StatCard
-            icon="✨"
-            label="Largest Plate Streak"
-            value={stats.largestPlateStreak}
-          />
-        </div>
-
-        <div className="border-t-2 border-gray-200 pt-4">
-          <h4 className="text-lg font-bold mb-3 text-gray-800">Power-Ups Used</h4>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-            {Object.entries(stats.powerUpsUsed).map(([key, value]) => (
-              <div
-                key={key}
-                className="bg-gradient-to-br from-orange-100 to-yellow-100 rounded-lg p-2 text-center"
-              >
-                <div className="text-xl mb-1">{powerUpNames[key].split(' ')[0]}</div>
-                <div className="text-xs font-semibold text-gray-700 mb-1">
-                  {powerUpNames[key].split(' ').slice(1).join(' ')}
+          <div>
+            <h4 className="text-xl font-bold mb-3 text-gray-800">Power-Ups Used</h4>
+            <div className="grid grid-cols-2 gap-3">
+              {Object.entries(stats.powerUpsUsed).map(([key, value]) => (
+                <div
+                  key={key}
+                  className="bg-gradient-to-br from-orange-100 to-yellow-100 rounded-lg p-3 text-center"
+                >
+                  <div className="text-2xl mb-1">{powerUpNames[key].split(' ')[0]}</div>
+                  <div className="text-xs font-semibold text-gray-700 mb-1">
+                    {powerUpNames[key].split(' ').slice(1).join(' ')}
+                  </div>
+                  <div className="text-xl font-bold text-red-600">{value}</div>
                 </div>
-                <div className="text-lg font-bold text-red-600">{value}</div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>
