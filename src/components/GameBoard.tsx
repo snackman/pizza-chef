@@ -118,7 +118,6 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
             style={{
               top: `${gameState.chefLane * 25 + 13}%`,
               left: '10%',
-              transition: 'top 0.2s ease-out',
               zIndex: gameState.gameOver ? 19 : 10
             }}
           >

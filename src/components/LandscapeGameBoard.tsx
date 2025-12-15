@@ -118,7 +118,6 @@ const LandscapeGameBoard: React.FC<LandscapeGameBoardProps> = ({ gameState }) =>
             height: '3%',
             left: '20%',
             top: `${30 + gameState.chefLane * 20}%`,
-            transition: 'top 0.2s ease-out',
             zIndex: gameState.gameOver ? 19 : 10
           }}
         >
