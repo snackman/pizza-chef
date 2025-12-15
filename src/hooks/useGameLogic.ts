@@ -42,6 +42,24 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     fallingPizza: undefined,
     starPowerActive: false,
     powerUpAlert: undefined,
+    stats: {
+      slicesBaked: 0,
+      customersServed: 0,
+      longestCustomerStreak: 0,
+      currentCustomerStreak: 0,
+      platesCaught: 0,
+      largestPlateStreak: 0,
+      currentPlateStreak: 0,
+      powerUpsUsed: {
+        honey: 0,
+        'ice-cream': 0,
+        beer: 0,
+        star: 0,
+        doge: 0,
+        nyan: 0,
+      },
+      ovenUpgradesMade: 0,
+    },
   });
 
   const [lastCustomerSpawn, setLastCustomerSpawn] = useState(0);
@@ -194,6 +212,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             ovens: {
               ...prev.ovens,
               [prev.chefLane]: { cooking: false, startTime: 0, burned: false, cleaningStartTime: 0, sliceCount: 0 }
+            },
+            stats: {
+              ...prev.stats,
+              slicesBaked: prev.stats.slicesBaked + slicesProduced,
             }
           };
         }
@@ -372,6 +394,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             if (newPosition <= 15) {
               soundManager.customerDisappointed();
               soundManager.lifeLost();
+              newState.stats.currentCustomerStreak = 0;
               newState.lives = Math.max(0, newState.lives - 1);
               if (newState.lives === 0) {
                 newState.gameOver = true;
@@ -400,6 +423,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         if (newPosition <= 15) {
           soundManager.customerDisappointed();
           soundManager.lifeLost();
+          newState.stats.currentCustomerStreak = 0;
           newState.lives = Math.max(0, newState.lives - 1);
           if (newState.lives === 0) {
             newState.gameOver = true;
@@ -434,6 +458,11 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             newState.score += baseScore * scoreMultiplier;
             newState.bank += baseBank * bankMultiplier;
             newState.happyCustomers += 1;
+            newState.stats.customersServed += 1;
+            newState.stats.currentCustomerStreak += 1;
+            if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) {
+              newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
+            }
             newState.availableSlices = Math.max(0, newState.availableSlices - 1);
 
             // Check if we should award a star (every 8 happy customers, max 5 stars)
@@ -473,6 +502,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           caughtPowerUpIds.add(powerUp.id);
 
           // Activate the power-up
+          newState.stats.powerUpsUsed[powerUp.type] += 1;
+
           if (powerUp.type === 'beer') {
             // Make all current unsatisfied customers woozy, existing woozy customers become vomit faces
             let livesLost = 0;
@@ -602,6 +633,11 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               newState.score += baseScore * scoreMultiplier;
               newState.bank += baseBank * bankMultiplier;
               newState.happyCustomers += 1;
+              newState.stats.customersServed += 1;
+              newState.stats.currentCustomerStreak += 1;
+              if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) {
+                newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
+              }
 
               // Check if we should award a star (every 8 happy customers, max 5 stars)
               if (newState.happyCustomers % 8 === 0 && newState.lives < 5) {
@@ -646,6 +682,11 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               newState.score += baseScore * scoreMultiplier;
               newState.bank += baseBank * bankMultiplier;
               newState.happyCustomers += 1;
+              newState.stats.customersServed += 1;
+              newState.stats.currentCustomerStreak += 1;
+              if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) {
+                newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
+              }
 
               // Check if we should award a star (every 8 happy customers, max 5 stars)
               if (newState.happyCustomers % 8 === 0 && newState.lives < 5) {
@@ -683,6 +724,11 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             newState.score += baseScore * scoreMultiplier;
             newState.bank += baseBank * bankMultiplier;
             newState.happyCustomers += 1;
+            newState.stats.customersServed += 1;
+            newState.stats.currentCustomerStreak += 1;
+            if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) {
+              newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
+            }
 
             // Check if we should award a star (every 8 happy customers, max 5 stars)
             if (newState.happyCustomers % 8 === 0 && newState.lives < 5) {
@@ -744,10 +790,16 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           // Chef caught the plate - it disappears immediately
           soundManager.plateCaught();
           newState.score += 50;
+          newState.stats.platesCaught += 1;
+          newState.stats.currentPlateStreak += 1;
+          if (newState.stats.currentPlateStreak > newState.stats.largestPlateStreak) {
+            newState.stats.largestPlateStreak = newState.stats.currentPlateStreak;
+          }
           return false;
         } else if (plate.position <= 0) {
           // Plate reached position 0% without being caught - plate hits counter
           soundManager.plateDropped();
+          newState.stats.currentPlateStreak = 0;
           return false;
         }
         return true;
@@ -804,6 +856,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           ovenUpgrades: {
             ...prev.ovenUpgrades,
             [lane]: currentUpgrade + 1
+          },
+          stats: {
+            ...prev.stats,
+            ovenUpgradesMade: prev.stats.ovenUpgradesMade + 1,
           }
         };
       }
@@ -824,6 +880,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           ovenSpeedUpgrades: {
             ...prev.ovenSpeedUpgrades,
             [lane]: currentSpeedUpgrade + 1
+          },
+          stats: {
+            ...prev.stats,
+            ovenUpgradesMade: prev.stats.ovenUpgradesMade + 1,
           }
         };
       }
@@ -908,6 +968,24 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       bank: 0,
       showStore: false,
       lastStoreLevelShown: 0,
+      stats: {
+        slicesBaked: 0,
+        customersServed: 0,
+        longestCustomerStreak: 0,
+        currentCustomerStreak: 0,
+        platesCaught: 0,
+        largestPlateStreak: 0,
+        currentPlateStreak: 0,
+        powerUpsUsed: {
+          honey: 0,
+          'ice-cream': 0,
+          beer: 0,
+          star: 0,
+          doge: 0,
+          nyan: 0,
+        },
+        ovenUpgradesMade: 0,
+      },
     });
     setLastCustomerSpawn(0);
     setLastPowerUpSpawn(0);

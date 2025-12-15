@@ -46,6 +46,25 @@ export interface ActivePowerUp {
   endTime: number;
 }
 
+export interface GameStats {
+  slicesBaked: number;
+  customersServed: number;
+  longestCustomerStreak: number;
+  currentCustomerStreak: number;
+  platesCaught: number;
+  largestPlateStreak: number;
+  currentPlateStreak: number;
+  powerUpsUsed: {
+    honey: number;
+    'ice-cream': number;
+    beer: number;
+    star: number;
+    doge: number;
+    nyan: number;
+  };
+  ovenUpgradesMade: number;
+}
+
 export interface GameState {
   customers: Customer[];
   pizzaSlices: PizzaSlice[];
@@ -69,4 +88,5 @@ export interface GameState {
   fallingPizza?: { lane: number; y: number };
   starPowerActive?: boolean;
   powerUpAlert?: { type: PowerUpType; endTime: number; chefLane: number };
+  stats: GameStats;
 }
