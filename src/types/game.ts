@@ -12,6 +12,7 @@ export interface Customer {
   movingRight?: boolean;
   vomit?: boolean;
   frozen?: boolean;
+  unfrozenThisPeriod?: boolean;
   hotHoneyAffected?: boolean;
 }
 

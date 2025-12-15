@@ -345,17 +345,20 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       const hasNyan = newState.activePowerUps.some(p => p.type === 'nyan');
 
       // Update frozen state on all customers based on ice cream power-up
-      // But only freeze customers that aren't already manually unfrozen
       newState.customers = newState.customers.map(customer => {
-        // If ice cream is active and customer isn't explicitly unfrozen, freeze them
-         // Don't freeze departing customers (served, disappointed, or vomit)
+        // Don't freeze departing customers (served, disappointed, or vomit)
         const isDeparting = customer.served || customer.disappointed || customer.vomit;
-        if (hasIceCream && customer.frozen !== false && !isDeparting) {
-          return { ...customer, frozen: true };
+        if (hasIceCream && !isDeparting) {
+          // Only freeze if not manually unfrozen during THIS ice cream period
+          if (!customer.unfrozenThisPeriod) {
+            return { ...customer, frozen: true };
+          }
         }
-        // If ice cream is not active, unfreeze everyone
-        if (!hasIceCream && customer.frozen) {
-          return { ...customer, frozen: false };
+        // If ice cream is not active, reset all frozen states so next ice cream can freeze everyone
+        if (!hasIceCream) {
+          if (customer.frozen || customer.unfrozenThisPeriod) {
+            return { ...customer, frozen: undefined, unfrozenThisPeriod: undefined };
+          }
         }
         return customer;
       });
@@ -628,7 +631,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             newState.emptyPlates = [...newState.emptyPlates, newPlate];
             platesFromSlices.add(slice.id);
 
-            return { ...customer, frozen: false };
+            // Mark as unfrozen this period so they won't refreeze until ice cream expires
+            return { ...customer, frozen: false, unfrozenThisPeriod: true };
           }
 
           // Skip customers that have crossed the 0% line (but allow unfreezing above)
