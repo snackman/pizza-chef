@@ -116,26 +116,15 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
           <div
             className="absolute w-[8%] aspect-square flex items-center justify-center"
             style={{
-              top: '13%',
+              top: `${gameState.chefLane * 25 + 13}%`,
               left: '10%',
-              transform: `translateY(${gameState.chefLane * 25}vh) translateZ(0)`,
-              willChange: 'transform',
               zIndex: gameState.gameOver ? 19 : 10
             }}
           >
             {gameState.gameOver ? (
               <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>🧟</div>
             ) : (
-              <img
-                src={"https://i.imgur.com/EPCSa79.png"}
-                alt="chef"
-                className="w-full h-full object-contain"
-                style={{
-                  transform: 'scale(15) translateZ(0)',
-                  willChange: 'transform',
-                  imageRendering: 'auto'
-                }}
-              />
+              <img src={"https://i.imgur.com/EPCSa79.png"} alt="chef" className="w-full h-full object-contain" style={{ transform: 'scale(15)' }} />
             )}
             <div
               className={`absolute ${gameState.starPowerActive ? 'animate-pulse' : ''}`}
