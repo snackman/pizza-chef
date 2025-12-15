@@ -37,6 +37,11 @@ export default function GameStats({ stats, score, level, onContinue }: GameStats
             value={stats.slicesBaked}
           />
           <StatCard
+            icon="⚙️"
+            label="Oven Upgrades"
+            value={stats.ovenUpgradesMade}
+          />
+          <StatCard
             icon="😋"
             label="Customers Served"
             value={stats.customersServed}
@@ -56,11 +61,7 @@ export default function GameStats({ stats, score, level, onContinue }: GameStats
             label="Largest Plate Streak"
             value={stats.largestPlateStreak}
           />
-          <StatCard
-            icon="⚙️"
-            label="Oven Upgrades"
-            value={stats.ovenUpgradesMade}
-          />
+
         </div>
 
         <div className="border-t-2 border-gray-200 pt-4">
