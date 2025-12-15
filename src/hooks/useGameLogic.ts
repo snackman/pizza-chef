@@ -827,8 +827,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         ...plate,
         position: plate.position - (plate.speed),
       })).filter(plate => {
-        if (plate.position <= 10 && plate.lane === newState.chefLane) {
-          // Chef caught the plate - it disappears immediately
+        if (plate.position <= 10 && plate.lane === newState.chefLane && !newState.nyanSweep?.active) {
+          // Chef caught the plate - it disappears immediately (but not during nyan sweep)
           soundManager.plateCaught();
           newState.score += 50;
           newState.stats.platesCaught += 1;
@@ -900,15 +900,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               soundManager.lifeGained();
               newState.lives += 1;
             }
-
-            // Create empty plate
-            const newPlate: EmptyPlate = {
-              id: `plate-${Date.now()}-${customer.id}`,
-              lane: customer.lane,
-              position: customer.position,
-              speed: PLATE_SPEED,
-            };
-            newState.emptyPlates = [...newState.emptyPlates, newPlate];
 
             return { ...customer, served: true, hasPlate: false, woozy: false };
           }
