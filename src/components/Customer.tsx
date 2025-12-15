@@ -1,45 +1,31 @@
 import React from 'react';
 import { Customer as CustomerType } from '../types/game';
-import droolfaceImg from '/Sprites/droolface.png';
-import yumfaceImg from '/Sprites/yumface.png';
-import frozenfaceImg from '/Sprites/frozenface.png';
-const spicyfaceImg = "https://i.imgur.com/MDS5EVg.png";
-import woozyfaceImg from '/Sprites/woozyface.png';
+import { getCustomerDisplay, getCustomerTopPosition } from '../utils/customerDisplay';
 
 interface CustomerProps {
   customer: CustomerType;
+  variant?: 'portrait' | 'landscape';
 }
 
-const Customer: React.FC<CustomerProps> = ({ customer }) => {
-  const leftPosition = customer.position;
-
-  const getDisplay = () => {
-    if (customer.frozen) return { type: 'image', value: frozenfaceImg, alt: 'frozen' };
-    if (customer.vomit) return { type: 'emoji', value: '🤮' };
-    if (customer.woozy) {
-      if (customer.woozyState === 'drooling') return { type: 'image', value: droolfaceImg, alt: 'drooling' };
-      return { type: 'image', value: woozyfaceImg, alt: 'woozy' };
-    }
-    if (customer.served) return { type: 'image', value: yumfaceImg, alt: 'yum' };
-    if (customer.disappointed) return { type: 'emoji', value: customer.disappointedEmoji || '😢' };
-    if (customer.hotHoneyAffected) return { type: 'image', value: spicyfaceImg, alt: 'spicy' };
-    return { type: 'image', value: droolfaceImg, alt: 'drool' };
-  };
-
-  const display = getDisplay();
+const Customer: React.FC<CustomerProps> = ({ customer, variant = 'portrait' }) => {
+  const display = getCustomerDisplay(customer);
+  const topPosition = getCustomerTopPosition(customer.lane, variant);
+  const emojiSize = variant === 'landscape'
+    ? 'clamp(1rem, 2vw, 1.5rem)'
+    : 'clamp(2rem, 5vw, 3.5rem)';
 
   return (
     <div
       className="absolute w-[8%] aspect-square transition-all duration-100 flex items-center justify-center"
       style={{
-        left: `${leftPosition}%`,
-        top: `${customer.lane * 25 + 6}%`,
+        left: `${customer.position}%`,
+        top: topPosition,
       }}
     >
       {display.type === 'image' ? (
         <img src={display.value} alt={display.alt} className="w-full h-full object-contain" />
       ) : (
-        <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
+        <div style={{ fontSize: emojiSize }}>
           {display.value}
         </div>
       )}

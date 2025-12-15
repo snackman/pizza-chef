@@ -1,5 +1,4 @@
 import React from 'react';
-import chefImg from '/Sprites/chefemoji.png';
 
 interface SplashScreenProps {
   onStart: () => void;

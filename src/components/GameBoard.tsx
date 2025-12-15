@@ -5,78 +5,37 @@ import EmptyPlate from './EmptyPlate';
 import PowerUp from './PowerUp';
 import PizzaSliceStack from './PizzaSliceStack';
 import { GameState } from '../types/game';
-import pizzaShopBg from '/pizza shop background v2.png';
-import chefImg from '/Sprites/chefemoji.png';
+import { getOvenStatus, getOvenStatusEmoji } from '../utils/ovenStatus';
+import { getLayoutConfig, LayoutVariant } from '../utils/gameLayout';
 
 interface GameBoardProps {
   gameState: GameState;
+  variant?: LayoutVariant;
 }
 
-const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
+const GameBoard: React.FC<GameBoardProps> = ({ gameState, variant = 'portrait' }) => {
   const lanes = [0, 1, 2, 3];
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
+  const layout = getLayoutConfig(variant);
 
   React.useEffect(() => {
     const interval = setInterval(forceUpdate, 100);
     return () => clearInterval(interval);
   }, []);
 
-  const getOvenStatus = (lane: number) => {
-    const oven = gameState.ovens[lane];
-
-    if (oven.burned) {
-      if (oven.cleaningStartTime > 0) {
-        const cleaningElapsed = Date.now() - oven.cleaningStartTime;
-        const halfCleaning = 1500; // 1.5 seconds (half of 3 second cleaning time)
-        if (cleaningElapsed < halfCleaning) {
-          return 'extinguishing';
-        }
-        return 'sweeping';
-      }
-      return 'burned';
-    }
-
-    if (!oven.cooking) return 'empty';
-
-    // Use pausedElapsed if game is paused, otherwise calculate from startTime
-    const elapsed = oven.pausedElapsed !== undefined ? oven.pausedElapsed : Date.now() - oven.startTime;
-
-    // Calculate cook time based on speed upgrades
-    const speedUpgrade = gameState.ovenSpeedUpgrades[lane] || 0;
-    const cookingTime = speedUpgrade === 0 ? 3000 :
-                        speedUpgrade === 1 ? 2500 :
-                        speedUpgrade === 2 ? 2000 : 1500;
-
-    const warningTime = 7000; // 7 seconds (start blinking)
-    const burnTime = 8000; // 8 seconds total
-    const blinkInterval = 250; // 0.25 seconds
-
-    if (elapsed >= burnTime) return 'burning';
-
-    // Blinking phase (between 7-8 seconds)
-    if (elapsed >= warningTime) {
-      const warningElapsed = elapsed - warningTime;
-      const blinkCycle = Math.floor(warningElapsed / blinkInterval);
-      return blinkCycle % 2 === 0 ? 'warning-fire' : 'warning-pizza';
-    }
-
-    if (elapsed >= cookingTime) return 'ready';
-    return 'cooking';
-  };
-
   return (
     <div
-      className="relative w-full aspect-[5/3] border-4 border-amber-600 rounded-lg overflow-hidden"
+      className={layout.containerClassName}
       style={{
-        backgroundImage: `url(${pizzaShopBg})`,
+        backgroundImage: layout.backgroundImage,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }}
     >
-      {/* Pizza Ovens - one per lane */}
       {lanes.map((lane) => {
-        const ovenStatus = getOvenStatus(lane);
         const oven = gameState.ovens[lane];
+        const speedUpgrade = gameState.ovenSpeedUpgrades[lane] || 0;
+        const ovenStatus = getOvenStatus(oven, speedUpgrade);
         const showSlices = oven.cooking && !oven.burned;
 
         return (
@@ -84,52 +43,52 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
             key={lane}
             className="absolute aspect-[2/3] flex items-center justify-center"
             style={{
-              width: '8%',
-              left: '1%',
-              top: `${lane * 25 + 6}%`,
-              fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
+              width: layout.oven.width,
+              height: layout.oven.height,
+              left: layout.oven.left,
+              top: layout.oven.getTop(lane),
+              fontSize: layout.oven.fontSize,
             }}
           >
             {showSlices && (
-              <div className="absolute" style={{ width: '75%', height: '75%', top: '40%', left: '70%', transform: 'translate(-50%, -50%)', zIndex: 1 }}>
+              <div className="absolute" style={layout.oven.sliceStackStyle}>
                 <PizzaSliceStack sliceCount={oven.sliceCount} />
               </div>
             )}
             <div className="relative" style={{ zIndex: 10 }}>
-              {ovenStatus === 'burned' ? '💀' :
-               ovenStatus === 'extinguishing' ? '🧯' :
-               ovenStatus === 'sweeping' ? '🧹' :
-               ovenStatus === 'burning' ? '💀' :
-               ovenStatus === 'warning-fire' ? '🔥' :
-               ovenStatus === 'warning-pizza' ? '⚠️' :
-               ovenStatus === 'ready' ? '♨️' :
-               ovenStatus === 'cooking' ? '🌡️' :
-               ''}
+              {getOvenStatusEmoji(ovenStatus)}
             </div>
           </div>
         );
       })}
 
-      {/* Kitchen/Chef Area - only shown when NOT in nyan sweep */}
       {!gameState.nyanSweep?.active && (
-        <div className="absolute top-0 h-full flex flex-col items-center justify-center" style={{ width: '7.5%', left: '9%' }}>
+        <div
+          className="absolute top-0 h-full flex flex-col items-center justify-center"
+          style={{ width: layout.chef.containerWidth, left: layout.chef.containerLeft }}
+        >
           <div
             className="absolute w-[8%] aspect-square flex items-center justify-center"
             style={{
-              top: `${gameState.chefLane * 25 + 13}%`,
-              left: '10%',
+              top: layout.chef.getTop(gameState.chefLane),
+              left: variant === 'portrait' ? '10%' : undefined,
               transition: 'all 0.2s',
-              zIndex: gameState.gameOver ? 19 : 10
+              zIndex: gameState.gameOver ? 19 : 10,
             }}
           >
             {gameState.gameOver ? (
-              <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>🧟</div>
+              <div style={{ fontSize: layout.chef.gameOverFontSize }}>🧟</div>
             ) : (
-              <img src={"https://i.imgur.com/EPCSa79.png"} alt="chef" className="w-full h-full object-contain" style={{ transform: 'scale(15)' }} />
+              <img
+                src="https://i.imgur.com/EPCSa79.png"
+                alt="chef"
+                className="w-full h-full object-contain"
+                style={{ transform: layout.chef.imageScale }}
+              />
             )}
             <div
               className={`absolute ${gameState.starPowerActive ? 'animate-pulse' : ''}`}
-              style={{ width: '1360%', height: '1360%', top: '-10%', left: '100%'}}
+              style={layout.chef.sliceStackStyle}
             >
               <PizzaSliceStack sliceCount={gameState.availableSlices} />
             </div>
@@ -137,37 +96,40 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
         </div>
       )}
 
-      {/* Nyan Cat Chef - positioned directly on game board during sweep */}
       {gameState.nyanSweep?.active && (
         <div
-          className="absolute w-[8%] aspect-square flex items-center justify-center"
+          className="absolute aspect-square flex items-center justify-center"
           style={{
-            top: `${gameState.chefLane * 25 + 13}%`,
+            width: layout.nyanCat.width,
+            height: layout.nyanCat.height,
+            top: layout.nyanCat.getTop(gameState.chefLane),
             left: `${gameState.nyanSweep.xPosition}%`,
-            zIndex: 20
+            zIndex: 20,
           }}
         >
-          <img src="https://i.imgur.com/fGPU4Pu.png" alt="nyan cat" className="w-full h-full object-contain" style={{ transform: 'scale(1.5)' }} />
+          <img
+            src="https://i.imgur.com/fGPU4Pu.png"
+            alt="nyan cat"
+            className="w-full h-full object-contain"
+            style={{ transform: layout.nyanCat.imageScale }}
+          />
         </div>
       )}
 
-      {/* Serving Counters */}
-      {lanes.map((lane) => (
+      {variant === 'portrait' && lanes.map((lane) => (
         <div
-          key={lane}
+          key={`counter-${lane}`}
           className="absolute w-full h-[20%]"
           style={{ top: `${lane * 25 + 4}%` }}
-        >
-        </div>
+        />
       ))}
 
-      {/* Customer End Area */}
-      <div className="absolute right-0 top-0 w-[10%] h-full flex flex-col items-center justify-center">
-      </div>
+      {variant === 'portrait' && (
+        <div className="absolute right-0 top-0 w-[10%] h-full flex flex-col items-center justify-center" />
+      )}
 
-      {/* Game Elements */}
       {gameState.customers.map((customer) => (
-        <Customer key={customer.id} customer={customer} />
+        <Customer key={customer.id} customer={customer} variant={variant} />
       ))}
 
       {gameState.pizzaSlices.map((slice) => (
@@ -182,16 +144,15 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
         <PowerUp key={powerUp.id} powerUp={powerUp} />
       ))}
 
-      {/* Falling pizza when game over */}
       {gameState.fallingPizza && (
         <div
           className="absolute transition-none"
           style={{
-            left: '13%',
-            top: `calc(${gameState.fallingPizza.lane * 25 + 6}% + ${gameState.fallingPizza.y}px)`,
+            left: layout.fallingPizza.left,
+            top: layout.fallingPizza.getTop(gameState.fallingPizza.lane, gameState.fallingPizza.y),
             transform: `rotate(${gameState.fallingPizza.y * 2}deg)`,
             zIndex: 19,
-            fontSize: 'clamp(1.5rem, 4vw, 2.5rem)',
+            fontSize: layout.fallingPizza.fontSize,
           }}
         >
           🍕
