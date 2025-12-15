@@ -13,8 +13,8 @@ import ItemStore from './components/ItemStore';
 import PowerUpAlert from './components/PowerUpAlert';
 import GameStats from './components/GameStats';
 import StreakDisplay from './components/StreakDisplay';
+import DebugPanel from './components/DebugPanel';
 import { useGameLogic } from './hooks/useGameLogic';
-import { Info } from 'lucide-react';
 
 function App() {
   const [showStats, setShowStats] = useState(false);
@@ -26,7 +26,7 @@ function App() {
   const [isLandscape, setIsLandscape] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  const { gameState, servePizza, moveChef, useOven, cleanOven, resetGame, togglePause, upgradeOven, upgradeOvenSpeed, closeStore, bribeReviewer, buyPowerUp } = useGameLogic(gameStarted);
+  const { gameState, servePizza, moveChef, useOven, cleanOven, resetGame, togglePause, upgradeOven, upgradeOvenSpeed, closeStore, bribeReviewer, buyPowerUp, debugActivatePowerUp } = useGameLogic(gameStarted);
 
   useEffect(() => {
     if (gameState.gameOver && !showStats && !showScoreSubmit && !showHighScores) {
@@ -288,7 +288,7 @@ function App() {
           <ScoreBoard gameState={gameState} onShowInstructions={() => setShowInstructions(true)} />
         </div>
 
-        <div className="flex-1 flex items-center justify-center p-2 sm:p-4">
+        <div className="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 gap-2">
           <div
             className="w-full max-w-6xl aspect-[5/3] sm:relative absolute top-[15%] sm:top-auto"
             onClick={handleGameBoardClick}
@@ -376,6 +376,10 @@ function App() {
               </div>
             )}
           </div>
+
+          {!isMobile && gameStarted && !gameState.gameOver && (
+            <DebugPanel onActivatePowerUp={debugActivatePowerUp} />
+          )}
         </div>
 
         {showInstructions && (

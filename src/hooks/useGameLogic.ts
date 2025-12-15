@@ -1009,7 +1009,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     setGameState(prev => {
       const powerUpCost = 5;
 
-      // Check if player has enough money
       if (prev.bank >= powerUpCost) {
         const lane = prev.chefLane;
         const now = Date.now();
@@ -1029,6 +1028,84 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         };
       }
       return prev;
+    });
+  }, []);
+
+  const debugActivatePowerUp = useCallback((type: PowerUpType) => {
+    setGameState(prev => {
+      if (prev.gameOver) return prev;
+
+      const now = Date.now();
+      let newState = { ...prev };
+
+      newState.stats = {
+        ...newState.stats,
+        powerUpsUsed: {
+          ...newState.stats.powerUpsUsed,
+          [type]: newState.stats.powerUpsUsed[type] + 1,
+        }
+      };
+
+      if (type === 'beer') {
+        let livesLost = 0;
+        newState.customers = newState.customers.map(customer => {
+          if (customer.woozy) {
+            livesLost++;
+            return {
+              ...customer,
+              woozy: false,
+              vomit: true,
+              disappointed: true,
+              movingRight: true,
+            };
+          }
+          if (!customer.served && !customer.vomit && !customer.disappointed) {
+            return {
+              ...customer,
+              woozy: true,
+              woozyState: 'normal',
+              movingRight: true,
+            };
+          }
+          return customer;
+        });
+        newState.lives = Math.max(0, newState.lives - livesLost);
+        if (newState.lives === 0) {
+          newState.gameOver = true;
+        }
+      } else if (type === 'star') {
+        newState.availableSlices = 8;
+        newState.starPowerActive = true;
+        newState.activePowerUps = [
+          ...newState.activePowerUps.filter(p => p.type !== 'star'),
+          { type: 'star', endTime: now + POWERUP_DURATION }
+        ];
+      } else if (type === 'doge') {
+        newState.activePowerUps = [
+          ...newState.activePowerUps.filter(p => p.type !== 'doge'),
+          { type: 'doge', endTime: now + POWERUP_DURATION }
+        ];
+        newState.powerUpAlert = { type: 'doge', endTime: now + 2000, chefLane: newState.chefLane };
+      } else if (type === 'nyan') {
+        if (!newState.nyanSweep?.active) {
+          newState.nyanSweep = {
+            active: true,
+            xPosition: 15,
+            direction: 1,
+            startTime: now,
+            lastUpdateTime: now,
+            laneIndex: 0
+          };
+          newState.powerUpAlert = { type: 'nyan', endTime: now + 3000, chefLane: newState.chefLane };
+        }
+      } else {
+        newState.activePowerUps = [
+          ...newState.activePowerUps.filter(p => p.type !== type),
+          { type: type, endTime: now + POWERUP_DURATION }
+        ];
+      }
+
+      return newState;
     });
   }, []);
 
@@ -1213,5 +1290,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     closeStore,
     bribeReviewer,
     buyPowerUp,
+    debugActivatePowerUp,
   };
 };
