@@ -147,7 +147,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
             zIndex: 20
           }}
         >
-          <img src="https://i.imgur.com/fGPU4Pu.png" alt="nyan cat" className="w-full h-full object-contain" style={{ transform: 'scale(15)' }} />
+          <img src="https://i.imgur.com/fGPU4Pu.png" alt="nyan cat" className="w-full h-full object-contain" style={{ transform: 'scale(1.5)' }} />
         </div>
       )}
 
