@@ -559,17 +559,15 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             // Show Doge alert for 2 seconds
             newState.powerUpAlert = { type: 'doge', endTime: now + 2000, chefLane: newState.chefLane };
           } else if (powerUp.type === 'nyan') {
-            // Nyan Cat power-up makes chef sweep across the board
             if (!newState.nyanSweep?.active) {
               newState.nyanSweep = {
                 active: true,
                 xPosition: 15,
-                direction: 1,
+                laneDirection: 1,
                 startTime: now,
                 lastUpdateTime: now,
-                laneIndex: 0
+                startingLane: newState.chefLane
               };
-              // Show Nyan alert
               newState.powerUpAlert = { type: 'nyan', endTime: now + 3000, chefLane: newState.chefLane };
             }
           } else {
@@ -829,21 +827,23 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       // Handle Nyan Cat sweep animation
       if (newState.nyanSweep?.active) {
         const MAX_X = 90;
-        const UPDATE_INTERVAL = 100; // 0.1 seconds in milliseconds
-        const LANE_PATTERN = [0, 1, 2, 3, 2, 1]; // Cycling pattern for lanes
+        const UPDATE_INTERVAL = 100;
 
-        // Check if 0.1 seconds has passed since last update
         if (now - newState.nyanSweep.lastUpdateTime >= UPDATE_INTERVAL) {
-          // Update x position: move by (right edge - initial position) / 40
           const INITIAL_X = 15;
           const increment = (MAX_X - INITIAL_X) / 40;
           newState.nyanSweep.xPosition += increment;
 
-          // Update lane using cycling pattern
-          newState.nyanSweep.laneIndex = (newState.nyanSweep.laneIndex + 1) % LANE_PATTERN.length;
-          newState.chefLane = LANE_PATTERN[newState.nyanSweep.laneIndex];
+          let newLane = newState.chefLane + newState.nyanSweep.laneDirection;
+          if (newLane > 3) {
+            newLane = 2;
+            newState.nyanSweep.laneDirection = -1;
+          } else if (newLane < 0) {
+            newLane = 1;
+            newState.nyanSweep.laneDirection = 1;
+          }
+          newState.chefLane = newLane;
 
-          // Update last update time
           newState.nyanSweep.lastUpdateTime = now;
         }
 
@@ -888,10 +888,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           return customer;
         });
 
-        // End sweep when reaching the right side
         if (newState.nyanSweep.xPosition >= MAX_X) {
           newState.nyanSweep = undefined;
-          newState.chefLane = 0;
         }
       }
 
@@ -1091,10 +1089,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           newState.nyanSweep = {
             active: true,
             xPosition: 15,
-            direction: 1,
+            laneDirection: 1,
             startTime: now,
             lastUpdateTime: now,
-            laneIndex: 0
+            startingLane: newState.chefLane
           };
           newState.powerUpAlert = { type: 'nyan', endTime: now + 3000, chefLane: newState.chefLane };
         }
