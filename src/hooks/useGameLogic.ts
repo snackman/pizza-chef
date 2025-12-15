@@ -832,19 +832,25 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         if (now - newState.nyanSweep.lastUpdateTime >= UPDATE_INTERVAL) {
           const INITIAL_X = 15;
           const increment = (MAX_X - INITIAL_X) / 40;
-          newState.nyanSweep.xPosition += increment;
+          const newXPosition = newState.nyanSweep.xPosition + increment;
 
           let newLane = newState.chefLane + newState.nyanSweep.laneDirection;
+          let newLaneDirection = newState.nyanSweep.laneDirection;
           if (newLane > 3) {
             newLane = 2;
-            newState.nyanSweep.laneDirection = -1;
+            newLaneDirection = -1;
           } else if (newLane < 0) {
             newLane = 1;
-            newState.nyanSweep.laneDirection = 1;
+            newLaneDirection = 1;
           }
           newState.chefLane = newLane;
 
-          newState.nyanSweep.lastUpdateTime = now;
+          newState.nyanSweep = {
+            ...newState.nyanSweep,
+            xPosition: newXPosition,
+            laneDirection: newLaneDirection,
+            lastUpdateTime: now
+          };
         }
 
         // Check for customers at chef's current position and serve them
