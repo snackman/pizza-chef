@@ -561,7 +561,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           } else if (powerUp.type === 'nyan') {
             // Nyan Cat power-up makes chef sweep across the board
             if (!newState.nyanSweep?.active) {
-              newState.chefLane = 0; // Start at lane 0
               newState.nyanSweep = {
                 active: true,
                 xPosition: 15,
@@ -571,7 +570,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 laneIndex: 0
               };
               // Show Nyan alert
-              newState.powerUpAlert = { type: 'nyan', endTime: now + 3000, chefLane: 0 };
+              newState.powerUpAlert = { type: 'nyan', endTime: now + 3000, chefLane: newState.chefLane };
             }
           } else {
             // Add to active power-ups (hot honey and ice-cream)
@@ -830,14 +829,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       // Handle Nyan Cat sweep animation
       if (newState.nyanSweep?.active) {
         const MAX_X = 90;
-        const UPDATE_INTERVAL = 50; // 50ms per update for smooth animation
+        const UPDATE_INTERVAL = 100; // 0.1 seconds in milliseconds
         const LANE_PATTERN = [0, 1, 2, 3, 2, 1]; // Cycling pattern for lanes
 
-        // Check if interval has passed since last update
+        // Check if 0.1 seconds has passed since last update
         if (now - newState.nyanSweep.lastUpdateTime >= UPDATE_INTERVAL) {
-          // Update x position: move by (right edge - initial position) / 80 (80 updates at 50ms = 4 seconds total)
+          // Update x position: move by (right edge - initial position) / 40
           const INITIAL_X = 15;
-          const increment = (MAX_X - INITIAL_X) / 80;
+          const increment = (MAX_X - INITIAL_X) / 40;
           newState.nyanSweep.xPosition += increment;
 
           // Update lane using cycling pattern
