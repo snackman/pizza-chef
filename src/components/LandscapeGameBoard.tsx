@@ -117,14 +117,25 @@ const LandscapeGameBoard: React.FC<LandscapeGameBoardProps> = ({ gameState }) =>
             width: '3%',
             height: '3%',
             left: '20%',
-            top: `${30 + gameState.chefLane * 20}%`,
+            top: '30%',
+            transform: `translateY(${gameState.chefLane * 20}vh) translateZ(0)`,
+            willChange: 'transform',
             zIndex: gameState.gameOver ? 19 : 10
           }}
         >
           {gameState.gameOver ? (
             <div style={{ fontSize: 'clamp(1rem, 2vw, 1.5rem)' }}>🧟</div>
           ) : (
-            <img src={"https://i.imgur.com/EPCSa79.png"} alt="chef" className="w-full h-full object-contain" style={{ transform: 'scale(5)' }} />
+            <img
+              src={"https://i.imgur.com/EPCSa79.png"}
+              alt="chef"
+              className="w-full h-full object-contain"
+              style={{
+                transform: 'scale(5) translateZ(0)',
+                willChange: 'transform',
+                imageRendering: 'auto'
+              }}
+            />
           )}
           <div
             className={`absolute ${gameState.starPowerActive ? 'animate-pulse' : ''}`}
