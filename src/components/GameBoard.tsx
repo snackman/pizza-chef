@@ -119,15 +119,13 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
               top: `${gameState.chefLane * 25 + 13}%`,
               left: '10%',
               transition: 'top 0.2s ease-out',
-              willChange: 'top',
-              backfaceVisibility: 'hidden',
               zIndex: gameState.gameOver ? 19 : 10
             }}
           >
             {gameState.gameOver ? (
               <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>🧟</div>
             ) : (
-              <img src={"https://i.imgur.com/EPCSa79.png"} alt="chef" className="w-full h-full object-contain" style={{ transform: 'scale(15) translateZ(0)', backfaceVisibility: 'hidden' }} />
+              <img src={"https://i.imgur.com/EPCSa79.png"} alt="chef" className="w-full h-full object-contain" style={{ transform: 'scale(15)' }} />
             )}
             <div
               className={`absolute ${gameState.starPowerActive ? 'animate-pulse' : ''}`}
