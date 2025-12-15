@@ -117,7 +117,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
           className="absolute w-[8%] aspect-square flex items-center justify-center"
           style={{
             top: `${gameState.chefLane * 25 + 13}%`,
-            left: gameState.nyanSweep?.active ? `${10 + gameState.nyanSweep.xPosition * 0.75}%` : '10%',
+            left: gameState.nyanSweep?.active ? `${gameState.nyanSweep.xPosition - 5}%` : '10%',
             transition: gameState.nyanSweep?.active ? 'none' : 'all 0.2s',
             zIndex: gameState.gameOver ? 19 : (gameState.nyanSweep?.active ? 20 : 10)
           }}

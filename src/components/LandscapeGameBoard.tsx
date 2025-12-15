@@ -115,7 +115,7 @@ const LandscapeGameBoard: React.FC<LandscapeGameBoardProps> = ({ gameState }) =>
         style={{
           width: '3%',
           height: '3%',
-          left: gameState.nyanSweep?.active ? `${20 + gameState.nyanSweep.xPosition * 0.6}%` : '20%',
+          left: gameState.nyanSweep?.active ? `${gameState.nyanSweep.xPosition * 0.8 + 8}%` : '20%',
           top: `${30 + gameState.chefLane * 20}%`,
           transition: gameState.nyanSweep?.active ? 'none' : 'all 0.2s',
           zIndex: gameState.gameOver ? 19 : (gameState.nyanSweep?.active ? 20 : 10)
