@@ -178,11 +178,9 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
         <EmptyPlate key={plate.id} plate={plate} />
       ))}
 
-      {gameState.powerUps
-        .filter(powerUp => !(gameState.nyanSweep?.active && powerUp.type === 'nyancat'))
-        .map((powerUp) => (
-          <PowerUp key={powerUp.id} powerUp={powerUp} />
-        ))}
+      {gameState.powerUps.map((powerUp) => (
+        <PowerUp key={powerUp.id} powerUp={powerUp} />
+      ))}
 
       {/* Falling pizza when game over */}
       {gameState.fallingPizza && (
