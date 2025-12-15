@@ -18,8 +18,8 @@ export default function GameStats({ stats, score, level, onContinue }: GameStats
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-2xl p-3 sm:p-6 max-w-6xl w-full mx-2 sm:mx-4 max-h-[80vh] overflow-y-auto">
-      <div className="flex items-center justify-between mb-2 sm:mb-4 gap-2">
+    <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full mx-2 sm:mx-4 max-h-[80vh] flex flex-col">
+      <div className="flex items-center justify-between p-3 sm:p-6 pb-2 sm:pb-4 gap-2 bg-white rounded-t-xl sticky top-0 z-10">
         <div className="flex-1 min-w-0">
           <h2 className="text-xl sm:text-3xl font-bold text-red-600">
             Game Over!
@@ -37,7 +37,7 @@ export default function GameStats({ stats, score, level, onContinue }: GameStats
         </button>
       </div>
 
-      <div className="border-t-2 border-gray-200 pt-2 sm:pt-4">
+      <div className="border-t-2 border-gray-200 pt-2 sm:pt-4 px-3 sm:px-6 pb-3 sm:pb-6 overflow-y-auto flex-1">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
           <div>
             <h3 className="text-base sm:text-xl font-bold mb-2 sm:mb-3 text-gray-800">Game Statistics</h3>
