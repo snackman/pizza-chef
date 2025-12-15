@@ -834,9 +834,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
         // Check if 0.1 seconds has passed since last update
         if (now - newState.nyanSweep.lastUpdateTime >= UPDATE_INTERVAL) {
-          // Update x position: move by (right edge - current position) / 40
-          const distanceToEdge = MAX_X - newState.nyanSweep.xPosition;
-          newState.nyanSweep.xPosition += distanceToEdge / 40;
+          // Update x position: move by (right edge - initial position) / 40
+          const INITIAL_X = 0;
+          const increment = (MAX_X - INITIAL_X) / 40;
+          newState.nyanSweep.xPosition += increment;
 
           // Update lane using cycling pattern
           newState.nyanSweep.laneIndex = (newState.nyanSweep.laneIndex + 1) % LANE_PATTERN.length;
