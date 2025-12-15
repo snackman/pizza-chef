@@ -828,7 +828,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       // Handle Nyan Cat sweep animation
       if (newState.nyanSweep?.active) {
-        const MAX_X = 100;
+        const MAX_X = 90;
         const UPDATE_INTERVAL = 100; // 0.1 seconds in milliseconds
         const LANE_PATTERN = [0, 1, 2, 3, 2, 1]; // Cycling pattern for lanes
 
