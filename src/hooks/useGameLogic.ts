@@ -491,9 +491,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       }
 
       // Check chef-powerup collisions first (chef grabs power-up at position 15 or less)
+      // Don't pick up power-ups while nyan cat sweep is active
       const caughtPowerUpIds = new Set<string>();
       newState.powerUps.forEach(powerUp => {
-        if (powerUp.position <= 15 && powerUp.lane === newState.chefLane) {
+        if (powerUp.position <= 15 && powerUp.lane === newState.chefLane && !newState.nyanSweep?.active) {
           // Chef grabbed the power-up - activate it
           soundManager.powerUpCollected(powerUp.type);
           const baseScore = 100;
