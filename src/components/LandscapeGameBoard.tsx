@@ -147,7 +147,7 @@ const LandscapeGameBoard: React.FC<LandscapeGameBoardProps> = ({ gameState }) =>
             width: '3%',
             height: '3%',
             left: `${gameState.nyanSweep.xPosition}%`,
-            top: `${30 + gameState.chefLane * 20}%`,
+            top: `${23 + gameState.chefLane * 20}%`,
             zIndex: 20
           }}
         >
