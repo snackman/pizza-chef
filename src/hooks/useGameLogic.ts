@@ -364,12 +364,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         return customer;
       });
 
-      // Move customers (with speed modifier if hot honey is active, or frozen if ice cream)
+      // Move customers (with speed modifier if hot honey affected, or frozen if ice cream)
       // Move customers that are not frozen (or ice cream is not active)
       newState.customers = newState.customers.map(customer => {
-        // Mark customers as affected by hot honey (including woozy customers)
-        const nowHotHoneyAffected = hasHoney && !customer.served && !customer.disappointed && !customer.vomit;
-
         // Skip frozen customers
         if (customer.frozen) {
           return { ...customer, hotHoneyAffected: false };
@@ -387,12 +384,12 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             const newPosition = customer.position + (customer.speed * 2);
             // Turn around when reaching pickup zone (85-95%)
             if (newPosition >= 85) {
-              return { ...customer, position: newPosition, movingRight: false, hotHoneyAffected: nowHotHoneyAffected };
+              return { ...customer, position: newPosition, movingRight: false };
             }
-            return { ...customer, position: newPosition, hotHoneyAffected: nowHotHoneyAffected };
+            return { ...customer, position: newPosition };
           } else {
-            // Moving left towards chef
-            const speedModifier = hasHoney ? 0.5 : 1;
+            // Moving left towards chef - only slow if this customer was affected by hot honey
+            const speedModifier = customer.hotHoneyAffected ? 0.5 : 1;
             const newPosition = customer.position - (customer.speed * speedModifier);
             // Mark as disappointed when reaching chef position
             if (newPosition <= 15) {
@@ -411,7 +408,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               }
               return { ...customer, position: newPosition, disappointed: true, movingRight: true, woozy: false, hotHoneyAffected: false };
             }
-            return { ...customer, position: newPosition, hotHoneyAffected: nowHotHoneyAffected };
+            return { ...customer, position: newPosition };
           }
         }
 
@@ -421,7 +418,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           return { ...customer, position: newPosition, hotHoneyAffected: false };
         }
 
-        const speedModifier = hasHoney ? 0.5 : 1;
+        // Normal customers - only slow if this customer was affected by hot honey
+        const speedModifier = customer.hotHoneyAffected ? 0.5 : 1;
         const newPosition = customer.position - (customer.speed * speedModifier);
         // Mark as disappointed when reaching chef position (around 10-15%) and lose a life
         if (newPosition <= 15) {
@@ -440,7 +438,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           }
           return { ...customer, position: newPosition, disappointed: true, movingRight: true, hotHoneyAffected: false };
         }
-        return { ...customer, position: newPosition, hotHoneyAffected: nowHotHoneyAffected };
+        return { ...customer, position: newPosition };
       }).filter(customer => {
         // Remove customers when they exit right
         if (customer.position > 95) {
@@ -583,6 +581,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               ...newState.activePowerUps.filter(p => p.type !== powerUp.type),
               { type: powerUp.type, endTime: now + POWERUP_DURATION }
             ];
+            // If honey, mark all current non-served customers as affected
+            if (powerUp.type === 'honey') {
+              newState.customers = newState.customers.map(c =>
+                (!c.served && !c.disappointed && !c.vomit)
+                  ? { ...c, hotHoneyAffected: true }
+                  : c
+              );
+            }
           }
         }
       });
@@ -1171,6 +1177,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           ...newState.activePowerUps.filter(p => p.type !== type),
           { type: type, endTime: now + POWERUP_DURATION }
         ];
+        // If honey, mark all current non-served customers as affected
+        if (type === 'honey') {
+          newState.customers = newState.customers.map(c =>
+            (!c.served && !c.disappointed && !c.vomit)
+              ? { ...c, hotHoneyAffected: true }
+              : c
+          );
+        }
       }
 
       return newState;
