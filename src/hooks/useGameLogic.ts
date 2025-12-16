@@ -352,25 +352,34 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       const hasNyan = newState.activePowerUps.some(p => p.type === 'nyan');
 
       // Apply power-up state overrides based on priority
-      // Ice cream overrides hot honey and woozy states
-      // Hot honey overrides frozen and woozy states (but ice cream has priority over hot honey)
+      // Hot honey overrides frozen and woozy states
+      // Ice cream overrides hot honey and woozy states (but not if hot honey is active)
+      // Beer (woozy) overrides frozen and hot honey states
       newState.customers = newState.customers.map(customer => {
         const isDeparting = customer.served || customer.disappointed || customer.vomit;
 
-        if (hasIceCream && !isDeparting) {
+        // Hot honey takes priority - if active, customers are unfrozen and sped up
+        if (hasHoney && !isDeparting) {
+          return { ...customer, hotHoneyAffected: true, frozen: false, woozy: false, woozyState: undefined };
+        }
+
+        // Woozy customers (from beer) should not be frozen - beer overrides frozen
+        if (customer.woozy) {
+          return { ...customer, frozen: false, hotHoneyAffected: false };
+        }
+
+        // Ice cream freezes customers only if hot honey is not active and customer is not woozy
+        if (hasIceCream && !isDeparting && !hasHoney) {
           if (!customer.unfrozenThisPeriod) {
             return { ...customer, frozen: true, hotHoneyAffected: false, woozy: false, woozyState: undefined };
           }
         }
 
+        // Reset frozen state when ice cream expires
         if (!hasIceCream) {
           if (customer.frozen || customer.unfrozenThisPeriod) {
             return { ...customer, frozen: undefined, unfrozenThisPeriod: undefined };
           }
-        }
-
-        if (hasHoney && !hasIceCream && !isDeparting) {
-          return { ...customer, hotHoneyAffected: true, frozen: false, woozy: false, woozyState: undefined };
         }
 
         return customer;
