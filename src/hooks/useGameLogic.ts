@@ -387,15 +387,15 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         // Woozy customers - move right until they hit pickup zone, then turn around
         if (customer.woozy) {
           if (customer.movingRight) {
-            const newPosition = customer.position + (customer.speed * 0.5);
+            const newPosition = customer.position + (customer.speed * 0.75);
             // Turn around when reaching pickup zone (85-95%)
             if (newPosition >= 90) {
               return { ...customer, position: newPosition, movingRight: false };
             }
             return { ...customer, position: newPosition };
           } else {
-            // Moving left towards chef - woozy customers always move at hot honey speed
-            const speedModifier = 0.5;
+            // Moving left towards chef
+            const speedModifier = 0.75;
             const newPosition = customer.position - (customer.speed * speedModifier);
             // Mark as disappointed when reaching chef position
             if (newPosition <= 15) {
