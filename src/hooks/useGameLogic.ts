@@ -1024,14 +1024,16 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         }
       }
 
-      // Level progression
-      if (newState.score >= newState.level * 500) {
-        newState.level += 1;
+      // Level progression - calculate final level in one step to avoid multiple store triggers
+      const targetLevel = Math.floor(newState.score / 500) + 1;
+      if (targetLevel > newState.level) {
+        newState.level = targetLevel;
 
-        // Show store every 5 levels
-        if (newState.level % 5 === 0 && newState.level > newState.lastStoreLevelShown) {
+        // Show store if we crossed any 5-level threshold (only once)
+        const highestStoreLevel = Math.floor(targetLevel / 5) * 5;
+        if (highestStoreLevel >= 5 && highestStoreLevel > newState.lastStoreLevelShown) {
           newState.showStore = true;
-          newState.lastStoreLevelShown = newState.level;
+          newState.lastStoreLevelShown = highestStoreLevel;
         }
       }
 
