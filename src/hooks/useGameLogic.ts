@@ -334,17 +334,19 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         newState.customers = newState.customers.map(c => ({ ...c, hotHoneyAffected: false }));
       }
 
-      // Clear expired power-up alerts
-      if (newState.powerUpAlert && now >= newState.powerUpAlert.endTime) {
-        newState.powerUpAlert = undefined;
-      }
-
       // Check active power-ups
       const hasHoney = newState.activePowerUps.some(p => p.type === 'honey');
       const hasIceCream = newState.activePowerUps.some(p => p.type === 'ice-cream');
       const hasStar = newState.activePowerUps.some(p => p.type === 'star');
       const hasDoge = newState.activePowerUps.some(p => p.type === 'doge');
       const hasNyan = newState.activePowerUps.some(p => p.type === 'nyan');
+
+      // Clear expired power-up alerts (but keep doge alert while doge is active)
+      if (newState.powerUpAlert && now >= newState.powerUpAlert.endTime) {
+        if (newState.powerUpAlert.type !== 'doge' || !hasDoge) {
+          newState.powerUpAlert = undefined;
+        }
+      }
 
       // Apply power-up state overrides based on "last activated wins"
       // Compare endTime to determine which was activated most recently
@@ -611,7 +613,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 lastUpdateTime: now,
                 startingLane: newState.chefLane
               };
-              newState.powerUpAlert = { type: 'nyan', endTime: now + 3000, chefLane: newState.chefLane };
+              const dogeActive = newState.activePowerUps.some(p => p.type === 'doge');
+              if (!dogeActive || newState.powerUpAlert?.type !== 'doge') {
+                newState.powerUpAlert = { type: 'nyan', endTime: now + 3000, chefLane: newState.chefLane };
+              }
             }
           } else if (powerUp.type === 'moltobenny') {
             // Moltobenny power-up gives 10,000 points (affected by doge multiplier)
@@ -1225,7 +1230,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             lastUpdateTime: now,
             startingLane: newState.chefLane
           };
-          newState.powerUpAlert = { type: 'nyan', endTime: now + 3000, chefLane: newState.chefLane };
+          const dogeActive = newState.activePowerUps.some(p => p.type === 'doge');
+          if (!dogeActive || newState.powerUpAlert?.type !== 'doge') {
+            newState.powerUpAlert = { type: 'nyan', endTime: now + 3000, chefLane: newState.chefLane };
+          }
         }
       } else {
         newState.activePowerUps = [
