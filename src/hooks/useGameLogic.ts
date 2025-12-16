@@ -627,7 +627,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             if (powerUp.type === 'ice-cream') {
               newState.customers = newState.customers.map(c =>
                 (!c.served && !c.disappointed && !c.vomit)
-                  ? { ...c, shouldBeFrozenByIceCream: true, frozen: false, woozy: false, woozyState: undefined }
+                  ? { ...c, shouldBeFrozenByIceCream: true, frozen: true, hotHoneyAffected: false, woozy: false, woozyState: undefined }
                   : c
               );
             }
@@ -1233,7 +1233,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         if (type === 'ice-cream') {
           newState.customers = newState.customers.map(c =>
             (!c.served && !c.disappointed && !c.vomit)
-              ? { ...c, shouldBeFrozenByIceCream: true, frozen: false, hotHoneyAffected: false, woozy: false, woozyState: undefined }
+              ? { ...c, shouldBeFrozenByIceCream: true, frozen: true, hotHoneyAffected: false, woozy: false, woozyState: undefined }
               : c
           );
         }
