@@ -326,11 +326,17 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       // Remove expired power-ups
       const expiredStarPower = newState.activePowerUps.some(p => p.type === 'star' && now >= p.endTime);
+      const expiredHoney = newState.activePowerUps.some(p => p.type === 'honey' && now >= p.endTime);
       newState.activePowerUps = newState.activePowerUps.filter(powerUp => now < powerUp.endTime);
 
       // If star power expired, disable it
       if (expiredStarPower) {
         newState.starPowerActive = false;
+      }
+
+      // If hot honey expired, clear affected status from all customers
+      if (expiredHoney) {
+        newState.customers = newState.customers.map(c => ({ ...c, hotHoneyAffected: false }));
       }
 
       // Clear expired power-up alerts
