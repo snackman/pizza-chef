@@ -387,7 +387,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         // Woozy customers - move right until they hit pickup zone, then turn around
         if (customer.woozy) {
           if (customer.movingRight) {
-            const newPosition = customer.position + (customer.speed * 2);
+            const newPosition = customer.position + (customer.speed * 0.5);
             // Turn around when reaching pickup zone (85-95%)
             if (newPosition >= 85) {
               return { ...customer, position: newPosition, movingRight: false };
