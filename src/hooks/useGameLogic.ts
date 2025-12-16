@@ -946,20 +946,20 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       // Handle Nyan Cat sweep animation
       if (newState.nyanSweep?.active) {
         const MAX_X = 90;
-        const UPDATE_INTERVAL = 100;
+        const UPDATE_INTERVAL = 50;
 
         if (now - newState.nyanSweep.lastUpdateTime >= UPDATE_INTERVAL) {
           const INITIAL_X = 15;
-          const increment = (MAX_X - INITIAL_X) / 40;
+          const increment = (MAX_X - INITIAL_X) / 80;
           const newXPosition = newState.nyanSweep.xPosition + increment;
 
-          let newLane = newState.chefLane + newState.nyanSweep.laneDirection;
+          let newLane = newState.chefLane + newState.nyanSweep.laneDirection * 0.5;
           let newLaneDirection = newState.nyanSweep.laneDirection;
           if (newLane > 3) {
-            newLane = 2;
+            newLane = 2.5;
             newLaneDirection = -1;
           } else if (newLane < 0) {
-            newLane = 1;
+            newLane = 0.5;
             newLaneDirection = 1;
           }
           newState.chefLane = newLane;
@@ -1013,6 +1013,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         });
 
         if (newState.nyanSweep.xPosition >= MAX_X) {
+          newState.chefLane = Math.round(newState.chefLane);
+          newState.chefLane = Math.max(0, Math.min(3, newState.chefLane));
           newState.nyanSweep = undefined;
         }
       }
