@@ -15,7 +15,6 @@ export default function GameStats({ stats, score, level, onContinue }: GameStats
     star: '⭐ Star Power',
     doge: '🐕 Doge Coin',
     nyan: '🌈 Nyan Cat',
-    moltobenny: '🔥 Moltobenny',
   };
 
   return (

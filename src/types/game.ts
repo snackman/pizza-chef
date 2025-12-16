@@ -15,7 +15,6 @@ export interface Customer {
   unfrozenThisPeriod?: boolean;
   hotHoneyAffected?: boolean;
   shouldBeFrozenByIceCream?: boolean;
-  shouldBeHotHoneyAffected?: boolean;
 }
 
 export interface PizzaSlice {
@@ -34,7 +33,7 @@ export interface EmptyPlate {
   speed: number;
 }
 
-export type PowerUpType = 'honey' | 'ice-cream' | 'beer' | 'star' | 'doge' | 'nyan' | 'moltobenny';
+export type PowerUpType = 'honey' | 'ice-cream' | 'beer' | 'star' | 'doge' | 'nyan';
 
 export interface PowerUp {
   id: string;
@@ -64,7 +63,6 @@ export interface GameStats {
     star: number;
     doge: number;
     nyan: number;
-    moltobenny: number;
   };
   ovenUpgradesMade: number;
 }
