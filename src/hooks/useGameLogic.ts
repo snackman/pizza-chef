@@ -365,8 +365,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         // If both honey and ice cream are active, the one activated last wins
         if (hasHoney && hasIceCream) {
           if (honeyEndTime > iceCreamEndTime) {
-            // Hot honey was activated more recently - unfreeze and speed up
-            return { ...customer, hotHoneyAffected: true, frozen: false };
+            // Hot honey was activated more recently - unfreeze and speed up (only if marked to be affected)
+            if (customer.shouldBeHotHoneyAffected) {
+              return { ...customer, hotHoneyAffected: true, frozen: false };
+            }
           } else {
             // Ice cream was activated more recently - freeze (only if marked to be frozen)
             if (customer.shouldBeFrozenByIceCream && !customer.unfrozenThisPeriod) {
@@ -374,8 +376,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             }
           }
         } else if (hasHoney) {
-          // Only hot honey active - speed up customers
-          return { ...customer, hotHoneyAffected: true, frozen: false };
+          // Only hot honey active - speed up customers (only if marked to be affected)
+          if (customer.shouldBeHotHoneyAffected) {
+            return { ...customer, hotHoneyAffected: true, frozen: false };
+          }
         } else if (hasIceCream) {
           // Only ice cream active - freeze customers (only if marked to be frozen)
           if (customer.shouldBeFrozenByIceCream && !customer.unfrozenThisPeriod) {
@@ -388,7 +392,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           return { ...customer, frozen: undefined, unfrozenThisPeriod: undefined, shouldBeFrozenByIceCream: undefined };
         }
         if (!hasHoney && customer.hotHoneyAffected) {
-          return { ...customer, hotHoneyAffected: false };
+          return { ...customer, hotHoneyAffected: false, shouldBeHotHoneyAffected: undefined };
         }
 
         return customer;
@@ -619,7 +623,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             if (powerUp.type === 'honey') {
               newState.customers = newState.customers.map(c =>
                 (!c.served && !c.disappointed && !c.vomit)
-                  ? { ...c, hotHoneyAffected: true, frozen: false, woozy: false, woozyState: undefined }
+                  ? { ...c, shouldBeHotHoneyAffected: true, hotHoneyAffected: true, frozen: false, woozy: false, woozyState: undefined }
                   : c
               );
             }
@@ -1225,7 +1229,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         if (type === 'honey') {
           newState.customers = newState.customers.map(c =>
             (!c.served && !c.disappointed && !c.vomit)
-              ? { ...c, hotHoneyAffected: true, frozen: false, woozy: false, woozyState: undefined }
+              ? { ...c, shouldBeHotHoneyAffected: true, hotHoneyAffected: true, frozen: false, woozy: false, woozyState: undefined }
               : c
           );
         }
