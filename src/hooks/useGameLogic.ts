@@ -1303,6 +1303,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           star: 0,
           doge: 0,
           nyan: 0,
+          moltobenny: 0,
         },
         ovenUpgradesMade: 0,
       },
