@@ -389,7 +389,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           if (customer.movingRight) {
             const newPosition = customer.position + (customer.speed * 0.5);
             // Turn around when reaching pickup zone (85-95%)
-            if (newPosition >= 85) {
+            if (newPosition >= 90) {
               return { ...customer, position: newPosition, movingRight: false };
             }
             return { ...customer, position: newPosition };
