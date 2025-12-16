@@ -394,8 +394,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             }
             return { ...customer, position: newPosition };
           } else {
-            // Moving left towards chef - only slow if this customer was affected by hot honey
-            const speedModifier = customer.hotHoneyAffected ? 0.5 : 1;
+            // Moving left towards chef - woozy customers always move at hot honey speed
+            const speedModifier = 0.5;
             const newPosition = customer.position - (customer.speed * speedModifier);
             // Mark as disappointed when reaching chef position
             if (newPosition <= 15) {
