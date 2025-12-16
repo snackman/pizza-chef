@@ -538,6 +538,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             newState.lives = Math.max(0, newState.lives - livesLost);
             if (livesLost > 0) {
               soundManager.lifeLost();
+              newState.stats.currentCustomerStreak = 0;
             }
             if (newState.lives === 0) {
               newState.gameOver = true;
@@ -1134,6 +1135,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           return customer;
         });
         newState.lives = Math.max(0, newState.lives - livesLost);
+        if (livesLost > 0) {
+          newState.stats.currentCustomerStreak = 0;
+        }
         if (newState.lives === 0) {
           newState.gameOver = true;
         }
