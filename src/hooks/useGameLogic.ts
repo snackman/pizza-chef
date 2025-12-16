@@ -374,8 +374,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       // Move customers (with speed modifier if hot honey affected, or frozen if ice cream)
       // Move customers that are not frozen (or ice cream is not active)
       newState.customers = newState.customers.map(customer => {
-        // Skip frozen customers
-        if (customer.frozen) {
+        // Skip frozen customers (unless hot honey overrides it)
+        if (customer.frozen && !customer.hotHoneyAffected) {
           return { ...customer, hotHoneyAffected: false };
         }
 
