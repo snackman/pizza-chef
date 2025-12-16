@@ -58,6 +58,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         star: 0,
         doge: 0,
         nyan: 0,
+        moltobenny: 0,
       },
       ovenUpgradesMade: 0,
     },
@@ -78,7 +79,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     if (now - lastPowerUpSpawn < 8000) return; // Spawn power-up every 8 seconds minimum
 
     const lane = Math.floor(Math.random() * 4);
-    const powerUpTypes: PowerUpType[] = ['honey', 'ice-cream', 'beer', 'doge', 'nyan'];
+    const powerUpTypes: PowerUpType[] = ['honey', 'ice-cream', 'beer', 'doge', 'nyan', 'moltobenny'];
     const rand = Math.random();
     const randomType = rand < 0.1 ? 'star' : powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
 
@@ -612,6 +613,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               };
               newState.powerUpAlert = { type: 'nyan', endTime: now + 3000, chefLane: newState.chefLane };
             }
+          } else if (powerUp.type === 'moltobenny') {
+            // Moltobenny power-up gives 10,000 points (affected by doge multiplier)
+            const moltoScore = 10000 * scoreMultiplier;
+            newState.score += moltoScore;
           } else {
             // Add to active power-ups (hot honey and ice-cream)
             newState.activePowerUps = [

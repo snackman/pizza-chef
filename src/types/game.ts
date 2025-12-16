@@ -34,7 +34,7 @@ export interface EmptyPlate {
   speed: number;
 }
 
-export type PowerUpType = 'honey' | 'ice-cream' | 'beer' | 'star' | 'doge' | 'nyan';
+export type PowerUpType = 'honey' | 'ice-cream' | 'beer' | 'star' | 'doge' | 'nyan' | 'moltobenny';
 
 export interface PowerUp {
   id: string;
@@ -64,6 +64,7 @@ export interface GameStats {
     star: number;
     doge: number;
     nyan: number;
+    moltobenny: number;
   };
   ovenUpgradesMade: number;
 }
