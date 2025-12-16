@@ -351,23 +351,28 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       const hasDoge = newState.activePowerUps.some(p => p.type === 'doge');
       const hasNyan = newState.activePowerUps.some(p => p.type === 'nyan');
 
-      // Update frozen state on all customers based on ice cream power-up
+      // Apply power-up state overrides based on priority
       // Ice cream overrides hot honey and woozy states
+      // Hot honey overrides frozen and woozy states (but ice cream has priority over hot honey)
       newState.customers = newState.customers.map(customer => {
-        // Don't freeze departing customers (served, disappointed, or vomit)
         const isDeparting = customer.served || customer.disappointed || customer.vomit;
+
         if (hasIceCream && !isDeparting) {
-          // Only freeze if not manually unfrozen during THIS ice cream period
           if (!customer.unfrozenThisPeriod) {
             return { ...customer, frozen: true, hotHoneyAffected: false, woozy: false, woozyState: undefined };
           }
         }
-        // If ice cream is not active, reset all frozen states so next ice cream can freeze everyone
+
         if (!hasIceCream) {
           if (customer.frozen || customer.unfrozenThisPeriod) {
             return { ...customer, frozen: undefined, unfrozenThisPeriod: undefined };
           }
         }
+
+        if (hasHoney && !hasIceCream && !isDeparting) {
+          return { ...customer, hotHoneyAffected: true, frozen: false, woozy: false, woozyState: undefined };
+        }
+
         return customer;
       });
 
@@ -1147,6 +1152,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               woozy: true,
               woozyState: 'normal',
               movingRight: true,
+              hotHoneyAffected: false,
+              frozen: false,
             };
           }
           return customer;
@@ -1189,10 +1196,11 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           { type: type, endTime: now + POWERUP_DURATION }
         ];
         // If honey, mark all current non-served customers as affected
+        // Hot honey overrides frozen and woozy states
         if (type === 'honey') {
           newState.customers = newState.customers.map(c =>
             (!c.served && !c.disappointed && !c.vomit)
-              ? { ...c, hotHoneyAffected: true }
+              ? { ...c, hotHoneyAffected: true, frozen: false, woozy: false, woozyState: undefined }
               : c
           );
         }
