@@ -58,6 +58,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         star: 0,
         doge: 0,
         nyan: 0,
+        moltobenny: 0,
       },
       ovenUpgradesMade: 0,
     },
@@ -78,7 +79,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     if (now - lastPowerUpSpawn < 8000) return; // Spawn power-up every 8 seconds minimum
 
     const lane = Math.floor(Math.random() * 4);
-    const powerUpTypes: PowerUpType[] = ['honey', 'ice-cream', 'beer', 'doge', 'nyan'];
+    const powerUpTypes: PowerUpType[] = ['honey', 'ice-cream', 'beer', 'doge', 'nyan', 'moltobenny'];
     const rand = Math.random();
     const randomType = rand < 0.1 ? 'star' : powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
 
@@ -365,8 +366,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         // If both honey and ice cream are active, the one activated last wins
         if (hasHoney && hasIceCream) {
           if (honeyEndTime > iceCreamEndTime) {
-            // Hot honey was activated more recently - unfreeze and speed up
-            return { ...customer, hotHoneyAffected: true, frozen: false };
+            // Hot honey was activated more recently - unfreeze and speed up (only if marked to be affected)
+            if (customer.shouldBeHotHoneyAffected) {
+              return { ...customer, hotHoneyAffected: true, frozen: false };
+            }
           } else {
             // Ice cream was activated more recently - freeze (only if marked to be frozen)
             if (customer.shouldBeFrozenByIceCream && !customer.unfrozenThisPeriod) {
@@ -374,8 +377,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             }
           }
         } else if (hasHoney) {
-          // Only hot honey active - speed up customers
-          return { ...customer, hotHoneyAffected: true, frozen: false };
+          // Only hot honey active - speed up customers (only if marked to be affected)
+          if (customer.shouldBeHotHoneyAffected) {
+            return { ...customer, hotHoneyAffected: true, frozen: false };
+          }
         } else if (hasIceCream) {
           // Only ice cream active - freeze customers (only if marked to be frozen)
           if (customer.shouldBeFrozenByIceCream && !customer.unfrozenThisPeriod) {
@@ -388,7 +393,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           return { ...customer, frozen: undefined, unfrozenThisPeriod: undefined, shouldBeFrozenByIceCream: undefined };
         }
         if (!hasHoney && customer.hotHoneyAffected) {
-          return { ...customer, hotHoneyAffected: false };
+          return { ...customer, hotHoneyAffected: false, shouldBeHotHoneyAffected: undefined };
         }
 
         return customer;
@@ -606,8 +611,12 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 lastUpdateTime: now,
                 startingLane: newState.chefLane
               };
-              newState.powerUpAlert = { type: 'nyan', endTime: now + 3000, chefLane: newState.chefLane };
+              newState.powerUpAlert = { type: 'nyan', endTime: now + 4500, chefLane: newState.chefLane };
             }
+          } else if (powerUp.type === 'moltobenny') {
+            // Moltobenny power-up gives 10,000 points (affected by doge multiplier)
+            const moltoScore = 10000 * scoreMultiplier;
+            newState.score += moltoScore;
           } else {
             // Add to active power-ups (hot honey and ice-cream)
             newState.activePowerUps = [
@@ -619,7 +628,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             if (powerUp.type === 'honey') {
               newState.customers = newState.customers.map(c =>
                 (!c.served && !c.disappointed && !c.vomit)
-                  ? { ...c, hotHoneyAffected: true, frozen: false, woozy: false, woozyState: undefined }
+                  ? { ...c, shouldBeHotHoneyAffected: true, hotHoneyAffected: true, frozen: false, woozy: false, woozyState: undefined }
                   : c
               );
             }
@@ -937,11 +946,11 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       // Handle Nyan Cat sweep animation
       if (newState.nyanSweep?.active) {
         const MAX_X = 90;
-        const UPDATE_INTERVAL = 100;
+        const UPDATE_INTERVAL = 150;
 
         if (now - newState.nyanSweep.lastUpdateTime >= UPDATE_INTERVAL) {
           const INITIAL_X = 15;
-          const increment = (MAX_X - INITIAL_X) / 40;
+          const increment = (MAX_X - INITIAL_X) / 30;
           const newXPosition = newState.nyanSweep.xPosition + increment;
 
           let newLane = newState.chefLane + newState.nyanSweep.laneDirection;
@@ -1225,7 +1234,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         if (type === 'honey') {
           newState.customers = newState.customers.map(c =>
             (!c.served && !c.disappointed && !c.vomit)
-              ? { ...c, hotHoneyAffected: true, frozen: false, woozy: false, woozyState: undefined }
+              ? { ...c, shouldBeHotHoneyAffected: true, hotHoneyAffected: true, frozen: false, woozy: false, woozyState: undefined }
               : c
           );
         }
