@@ -368,8 +368,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             // Hot honey was activated more recently - unfreeze and speed up
             return { ...customer, hotHoneyAffected: true, frozen: false };
           } else {
-            // Ice cream was activated more recently - freeze
-            if (!customer.unfrozenThisPeriod) {
+            // Ice cream was activated more recently - freeze (only if marked to be frozen)
+            if (customer.shouldBeFrozenByIceCream && !customer.unfrozenThisPeriod) {
               return { ...customer, frozen: true, hotHoneyAffected: false };
             }
           }
@@ -377,15 +377,15 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           // Only hot honey active - speed up customers
           return { ...customer, hotHoneyAffected: true, frozen: false };
         } else if (hasIceCream) {
-          // Only ice cream active - freeze customers
-          if (!customer.unfrozenThisPeriod) {
+          // Only ice cream active - freeze customers (only if marked to be frozen)
+          if (customer.shouldBeFrozenByIceCream && !customer.unfrozenThisPeriod) {
             return { ...customer, frozen: true, hotHoneyAffected: false };
           }
         }
 
         // Reset states when no conflicting power-ups are active
-        if (!hasIceCream && (customer.frozen || customer.unfrozenThisPeriod)) {
-          return { ...customer, frozen: undefined, unfrozenThisPeriod: undefined };
+        if (!hasIceCream && (customer.frozen || customer.unfrozenThisPeriod || customer.shouldBeFrozenByIceCream)) {
+          return { ...customer, frozen: undefined, unfrozenThisPeriod: undefined, shouldBeFrozenByIceCream: undefined };
         }
         if (!hasHoney && customer.hotHoneyAffected) {
           return { ...customer, hotHoneyAffected: false };
@@ -620,6 +620,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               newState.customers = newState.customers.map(c =>
                 (!c.served && !c.disappointed && !c.vomit)
                   ? { ...c, hotHoneyAffected: true, frozen: false, woozy: false, woozyState: undefined }
+                  : c
+              );
+            }
+            // If ice cream, mark all current non-served customers to be frozen
+            if (powerUp.type === 'ice-cream') {
+              newState.customers = newState.customers.map(c =>
+                (!c.served && !c.disappointed && !c.vomit)
+                  ? { ...c, shouldBeFrozenByIceCream: true, frozen: false, woozy: false, woozyState: undefined }
                   : c
               );
             }
@@ -1225,7 +1233,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         if (type === 'ice-cream') {
           newState.customers = newState.customers.map(c =>
             (!c.served && !c.disappointed && !c.vomit)
-              ? { ...c, frozen: true, hotHoneyAffected: false, woozy: false, woozyState: undefined }
+              ? { ...c, shouldBeFrozenByIceCream: true, frozen: false, hotHoneyAffected: false, woozy: false, woozyState: undefined }
               : c
           );
         }
