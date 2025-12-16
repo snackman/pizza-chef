@@ -611,7 +611,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 lastUpdateTime: now,
                 startingLane: newState.chefLane
               };
-              newState.powerUpAlert = { type: 'nyan', endTime: now + 4500, chefLane: newState.chefLane };
+              newState.powerUpAlert = { type: 'nyan', endTime: now + 3000, chefLane: newState.chefLane };
             }
           } else if (powerUp.type === 'moltobenny') {
             // Moltobenny power-up gives 10,000 points (affected by doge multiplier)
@@ -946,11 +946,11 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       // Handle Nyan Cat sweep animation
       if (newState.nyanSweep?.active) {
         const MAX_X = 90;
-        const UPDATE_INTERVAL = 150;
+        const UPDATE_INTERVAL = 100;
 
         if (now - newState.nyanSweep.lastUpdateTime >= UPDATE_INTERVAL) {
           const INITIAL_X = 15;
-          const increment = (MAX_X - INITIAL_X) / 30;
+          const increment = (MAX_X - INITIAL_X) / 40;
           const newXPosition = newState.nyanSweep.xPosition + increment;
 
           let newLane = newState.chefLane + newState.nyanSweep.laneDirection;
