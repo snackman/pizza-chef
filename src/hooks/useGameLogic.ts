@@ -102,12 +102,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     const now = Date.now();
     if (now - lastCustomerSpawn < 200 - (gameState.level * 20)) return;
 
-    // Don't spawn customers when ice cream power-up is active
-    const hasIceCream = gameState.activePowerUps.some(p => p.type === 'ice-cream');
-    if (hasIceCream) return;
-    
-    // Don't spawn customers when game state is paused
-    //const gamePaused = gameState.paused;
     if (gameState.paused) return;
 
     // Customer spawn choice
