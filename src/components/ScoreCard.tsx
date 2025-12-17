@@ -248,11 +248,11 @@ export default function ScoreCard({ stats, score, level, playerName, gameId, tim
     const iconSize = 40;
     const statsData = [
       { emoji: '\u{1F355}', label: 'Slices Baked', value: stats.slicesBaked },
+      { emoji: '\u{2B06}\u{FE0F}', label: 'Oven Upgrades', value: stats.ovenUpgradesMade },
       { img: images.gotchi, label: 'Customers Served', value: stats.customersServed },
       { emoji: '\u{1F525}', label: 'Best Customer Streak', value: stats.longestCustomerStreak },
       { img: images.plate, label: 'Plates Caught', value: stats.platesCaught },
       { emoji: '\u{1F4AB}', label: 'Best Plate Streak', value: stats.largestPlateStreak },
-      { emoji: '\u{2B06}\u{FE0F}', label: 'Oven Upgrades', value: stats.ovenUpgradesMade },
     ];
 
     statsData.forEach((stat, index) => {
