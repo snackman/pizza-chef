@@ -330,10 +330,11 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
     ]);
 
     if (scoreSuccess && session) {
-      onSubmitted(session, nameToSubmit);
       setSubmittedName(nameToSubmit);
       setScoreSubmitted(true);
       setShowLeaderboard(true);
+      setSubmitting(false);
+      onSubmitted(session, nameToSubmit);
     } else if (scoreSuccess) {
       const fallbackSession: GameSession = {
         id: crypto.randomUUID(),
@@ -349,10 +350,11 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
         power_ups_used: stats.powerUpsUsed,
         created_at: new Date().toISOString()
       };
-      onSubmitted(fallbackSession, nameToSubmit);
       setSubmittedName(nameToSubmit);
       setScoreSubmitted(true);
       setShowLeaderboard(true);
+      setSubmitting(false);
+      onSubmitted(fallbackSession, nameToSubmit);
     } else {
       setError('Failed to submit score. Please try again.');
       setSubmitting(false);
@@ -544,6 +546,17 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
               </button>
             </div>
           </>
+        )}
+
+        {scoreSubmitted && (
+          <button
+            type="button"
+            onClick={() => setShowLeaderboard(true)}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-semibold"
+          >
+            <Trophy className="w-5 h-5" />
+            Leaderboard
+          </button>
         )}
 
         <button
