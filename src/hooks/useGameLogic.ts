@@ -981,7 +981,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
         // Check for customers at chef's current position and serve them
         newState.customers = newState.customers.map(customer => {
-          if (customer.served || customer.disappointed || customer.vomit || customer.frozen) {
+          if (customer.served || customer.disappointed || customer.vomit) {
             return customer;
           }
 
@@ -1013,7 +1013,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               }
             }
 
-            return { ...customer, served: true, hasPlate: false, woozy: false };
+            return { ...customer, served: true, hasPlate: false, woozy: false, frozen: false, unfrozenThisPeriod: undefined };
           }
 
           return customer;
