@@ -956,7 +956,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
         if (now - newState.nyanSweep.lastUpdateTime >= UPDATE_INTERVAL) {
           const INITIAL_X = 15;
-          const increment = ((MAX_X - INITIAL_X) / 80) * 1.1;
+          const increment = ((MAX_X - INITIAL_X) / 80) * 1.25;
           const newXPosition = newState.nyanSweep.xPosition + increment;
 
           let newLane = newState.chefLane + newState.nyanSweep.laneDirection * 0.5;
