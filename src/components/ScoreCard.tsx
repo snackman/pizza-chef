@@ -24,6 +24,7 @@ interface LoadedImages {
   doge: HTMLImageElement | null;
   nyancat: HTMLImageElement | null;
   star: HTMLImageElement | null;
+  moltobenny: HTMLImageElement | null;
 }
 
 function calculateSkillRating(stats: GameStatsType, score: number, level: number): { grade: string; stars: number; description: string } {
@@ -101,6 +102,7 @@ export default function ScoreCard({ stats, score, level, playerName, gameId, tim
     doge: null,
     nyancat: null,
     star: null,
+    moltobenny: null,
   });
 
   const skillRating = calculateSkillRating(stats, score, level);
@@ -123,6 +125,7 @@ export default function ScoreCard({ stats, score, level, playerName, gameId, tim
         doge,
         nyancat,
         star,
+        moltobenny,
       ] = await Promise.all([
         loadImage('https://i.imgur.com/EPCSa79.png'),
         loadImage('/PizzaDAO-Logo-White (2).png'),
@@ -135,6 +138,7 @@ export default function ScoreCard({ stats, score, level, playerName, gameId, tim
         loadImage('/Sprites/doge.png'),
         loadImage('/Sprites/nyancat.png'),
         loadImage('/Sprites/yumface.png'),
+        loadImage('https://i.imgur.com/5goVcAS.png'),
       ]);
 
       imagesRef.current = {
@@ -149,6 +153,7 @@ export default function ScoreCard({ stats, score, level, playerName, gameId, tim
         doge,
         nyancat,
         star,
+        moltobenny,
       };
       setImagesLoaded(true);
     }
@@ -290,10 +295,11 @@ export default function ScoreCard({ stats, score, level, playerName, gameId, tim
       { img: images.beer, count: stats.powerUpsUsed.beer },
       { img: images.doge, count: stats.powerUpsUsed.doge },
       { img: images.nyancat, count: stats.powerUpsUsed.nyan },
+      { img: images.moltobenny, count: stats.powerUpsUsed.moltobenny },
     ];
 
-    const powerUpSize = 55;
-    const powerUpSpacing = 20;
+    const powerUpSize = 50;
+    const powerUpSpacing = 15;
     const totalPowerUpWidth = powerUpIcons.length * powerUpSize + (powerUpIcons.length - 1) * powerUpSpacing;
     const powerUpStartX = (width - totalPowerUpWidth) / 2;
 
