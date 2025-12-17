@@ -197,37 +197,37 @@ ovenReady() {
   }
 
   nyanCatPowerUp() {
-      this.playMultiTone([
-    { frequency: 1480.0, delay: 0,    duration: 0.171, type: 'triangle', volume: 0.22 },
-    { frequency: 1661.2, delay: 171,  duration: 0.086, type: 'triangle', volume: 0.22 },
-    { frequency: 1108.8, delay: 343,  duration: 0.086, type: 'triangle', volume: 0.22 },
-    { frequency: 1244.6, delay: 429,  duration: 0.171, type: 'triangle', volume: 0.22 },
-    { frequency: 987.8,  delay: 600,  duration: 0.043, type: 'triangle', volume: 0.22 },
-
-    { frequency: 1174.6, delay: 686,  duration: 0.086, type: 'triangle', volume: 0.22 },
-    { frequency: 1108.8, delay: 771,  duration: 0.086, type: 'triangle', volume: 0.22 },
-    { frequency: 987.8,  delay: 857,  duration: 0.086, type: 'triangle', volume: 0.22 },
-    { frequency: 987.8,  delay: 1029, duration: 0.086, type: 'triangle', volume: 0.22 },
-
-    { frequency: 1108.8, delay: 1200, duration: 0.171, type: 'triangle', volume: 0.22 },
-    { frequency: 1174.6, delay: 1371, duration: 0.086, type: 'triangle', volume: 0.22 },
-    { frequency: 1174.6, delay: 1543, duration: 0.043, type: 'triangle', volume: 0.22 },
-    { frequency: 1108.8, delay: 1629, duration: 0.043, type: 'triangle', volume: 0.22 },
-
-    { frequency: 987.8,  delay: 1714, duration: 0.086, type: 'triangle', volume: 0.22 },
-    { frequency: 1108.8, delay: 1800, duration: 0.086, type: 'triangle', volume: 0.22 },
-    { frequency: 1244.6, delay: 1886, duration: 0.086, type: 'triangle', volume: 0.22 },
-    { frequency: 1480.0, delay: 1971, duration: 0.086, type: 'triangle', volume: 0.22 },
-    { frequency: 1661.2, delay: 2057, duration: 0.086, type: 'triangle', volume: 0.22 },
-    { frequency: 1244.6, delay: 2143, duration: 0.086, type: 'triangle', volume: 0.22 },
-    { frequency: 1480.0, delay: 2229, duration: 0.086, type: 'triangle', volume: 0.22 },
-    { frequency: 1108.8, delay: 2314, duration: 0.086, type: 'triangle', volume: 0.22 },
-    { frequency: 1174.6, delay: 2400, duration: 0.086, type: 'triangle', volume: 0.22 },
-    { frequency: 987.8,  delay: 2486, duration: 0.086, type: 'triangle', volume: 0.22 },
-
-    { frequency: 1108.8, delay: 2571, duration: 0.086, type: 'triangle', volume: 0.22 },
-
-  ]);
+    this.playMultiTone([
+      { frequency: 740.0, delay: 0, duration: 0.214, type: 'square', volume: 0.22 },
+      { frequency: 830.6, delay: 214, duration: 0.107, type: 'square', volume: 0.22 },
+      { frequency: 554.4, delay: 429, duration: 0.107, type: 'square', volume: 0.22 },
+      { frequency: 622.3, delay: 536, duration: 0.214, type: 'square', volume: 0.22 },
+      { frequency: 493.9, delay: 750, duration: 0.054, type: 'square', volume: 0.22 },
+      { frequency: 587.3, delay: 857, duration: 0.107, type: 'square', volume: 0.22 },
+      { frequency: 554.4, delay: 964, duration: 0.107, type: 'square', volume: 0.22 },
+      { frequency: 493.9, delay: 1071, duration: 0.107, type: 'square', volume: 0.22 },
+      { frequency: 493.9, delay: 1286, duration: 0.107, type: 'square', volume: 0.22 },
+      { frequency: 554.4, delay: 1500, duration: 0.214, type: 'square', volume: 0.22 },
+      { frequency: 587.3, delay: 1714, duration: 0.107, type: 'square', volume: 0.22 },
+      { frequency: 587.3, delay: 1929, duration: 0.054, type: 'square', volume: 0.22 },
+      { frequency: 554.4, delay: 2036, duration: 0.054, type: 'square', volume: 0.22 },
+      { frequency: 493.9, delay: 2143, duration: 0.107, type: 'square', volume: 0.22 },
+      { frequency: 554.4, delay: 2250, duration: 0.107, type: 'square', volume: 0.22 },
+      { frequency: 622.3, delay: 2357, duration: 0.107, type: 'square', volume: 0.22 },
+      { frequency: 740.0, delay: 2464, duration: 0.107, type: 'square', volume: 0.22 },
+      { frequency: 830.6, delay: 2571, duration: 0.107, type: 'square', volume: 0.22 },
+      { frequency: 622.3, delay: 2679, duration: 0.107, type: 'square', volume: 0.22 },
+      { frequency: 740.0, delay: 2786, duration: 0.107, type: 'square', volume: 0.22 },
+      { frequency: 554.4, delay: 2893, duration: 0.107, type: 'square', volume: 0.22 },
+      { frequency: 587.3, delay: 3000, duration: 0.107, type: 'square', volume: 0.22 },
+      { frequency: 493.9, delay: 3107, duration: 0.107, type: 'square', volume: 0.22 },
+      { frequency: 554.4, delay: 3214, duration: 0.107, type: 'square', volume: 0.22 },
+      { frequency: 493.9, delay: 3321, duration: 0.107, type: 'square', volume: 0.22 },
+      { frequency: 622.3, delay: 3429, duration: 0.214, type: 'square', volume: 0.22 },
+      { frequency: 740.0, delay: 3643, duration: 0.107, type: 'square', volume: 0.22 },
+      { frequency: 830.6, delay: 3857, duration: 0.107, type: 'square', volume: 0.22 },
+ 
+    ]);
   }
 
   setMuted(muted: boolean) {
