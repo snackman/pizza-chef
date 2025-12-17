@@ -163,38 +163,21 @@ function App() {
             ovenSpeedUpgrades={gameState.ovenSpeedUpgrades}
           />
 
-          {gameState.gameOver && (
+          {gameState.gameOver && showGameOver && (
             <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center z-20">
               <div className="flex flex-col items-center gap-4 p-4 max-h-[90vh] overflow-y-auto">
-                {showGameOver && !showHighScores ? (
-                  <GameOverScreen
-                    stats={gameState.stats}
-                    score={gameState.score}
-                    level={gameState.level}
-                    onSubmitted={() => {
-                      setShowGameOver(false);
-                      setShowHighScores(true);
-                    }}
-                    onSkip={() => {
-                      setShowGameOver(false);
-                      setShowHighScores(true);
-                    }}
-                  />
-                ) : showHighScores ? (
-                  <>
-                    <HighScores />
-                    <button
-                      onClick={() => {
-                        resetGame();
-                        setShowHighScores(false);
-                        setShowGameOver(false);
-                      }}
-                      className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
-                    >
-                      Play Again
-                    </button>
-                  </>
-                ) : null}
+                <GameOverScreen
+                  stats={gameState.stats}
+                  score={gameState.score}
+                  level={gameState.level}
+                  onSubmitted={() => {
+                    setShowGameOver(false);
+                  }}
+                  onPlayAgain={() => {
+                    resetGame();
+                    setShowGameOver(false);
+                  }}
+                />
               </div>
             </div>
           )}
@@ -326,38 +309,21 @@ function App() {
           )}
         </div>
 
-        {gameState.gameOver && (
+        {gameState.gameOver && showGameOver && (
           <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-40 p-2">
             <div className="flex flex-col items-center gap-2 w-full max-w-6xl max-h-[100dvh] overflow-y-auto py-2">
-              {showGameOver && !showHighScores ? (
-                <GameOverScreen
-                  stats={gameState.stats}
-                  score={gameState.score}
-                  level={gameState.level}
-                  onSubmitted={() => {
-                    setShowGameOver(false);
-                    setShowHighScores(true);
-                  }}
-                  onSkip={() => {
-                    setShowGameOver(false);
-                    setShowHighScores(true);
-                  }}
-                />
-              ) : showHighScores ? (
-                <>
-                  <HighScores />
-                  <button
-                    onClick={() => {
-                      resetGame();
-                      setShowHighScores(false);
-                      setShowGameOver(false);
-                    }}
-                    className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
-                  >
-                    Play Again
-                  </button>
-                </>
-              ) : null}
+              <GameOverScreen
+                stats={gameState.stats}
+                score={gameState.score}
+                level={gameState.level}
+                onSubmitted={() => {
+                  setShowGameOver(false);
+                }}
+                onPlayAgain={() => {
+                  resetGame();
+                  setShowGameOver(false);
+                }}
+              />
             </div>
           </div>
         )}

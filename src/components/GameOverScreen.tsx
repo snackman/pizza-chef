@@ -1,14 +1,15 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, X, Copy, Download, Share2, Check, Image as ImageIcon } from 'lucide-react';
+import { Send, Trophy, Download, Share2, Check, Image as ImageIcon, ArrowLeft, RotateCcw } from 'lucide-react';
 import { submitScore, createGameSession, GameSession } from '../services/highScores';
 import { GameStats } from '../types/game';
+import HighScores from './HighScores';
 
 interface GameOverScreenProps {
   stats: GameStats;
   score: number;
   level: number;
   onSubmitted: (session: GameSession, playerName: string) => void;
-  onSkip: () => void;
+  onPlayAgain: () => void;
 }
 
 interface LoadedImages {
@@ -58,12 +59,13 @@ function loadImage(src: string): Promise<HTMLImageElement | null> {
   });
 }
 
-export default function GameOverScreen({ stats, score, level, onSubmitted, onSkip }: GameOverScreenProps) {
+export default function GameOverScreen({ stats, score, level, onSubmitted, onPlayAgain }: GameOverScreenProps) {
   const [playerName, setPlayerName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [copySuccess, setCopySuccess] = useState<'image' | 'text' | 'link' | null>(null);
   const [imagesLoaded, setImagesLoaded] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imagesRef = useRef<LoadedImages>({
     splashLogo: null,
@@ -398,6 +400,30 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onSki
     }
   };
 
+  if (showLeaderboard) {
+    return (
+      <div className="flex flex-col items-center gap-4 w-full max-w-lg mx-auto">
+        <HighScores />
+        <div className="flex gap-3 w-full">
+          <button
+            onClick={() => setShowLeaderboard(false)}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-semibold"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Back
+          </button>
+          <button
+            onClick={onPlayAgain}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+          >
+            <RotateCcw className="w-5 h-5" />
+            Play Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-xl shadow-2xl p-3 sm:p-6 w-full max-w-lg mx-auto max-h-[95vh] overflow-y-auto">
       <div className="text-center mb-3">
@@ -450,14 +476,23 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onSki
           </button>
           <button
             type="button"
-            onClick={onSkip}
+            onClick={() => setShowLeaderboard(true)}
             disabled={submitting}
             className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-semibold disabled:opacity-50"
           >
-            <X className="w-5 h-5" />
-            Skip
+            <Trophy className="w-5 h-5" />
+            Leaderboard
           </button>
         </div>
+
+        <button
+          type="button"
+          onClick={onPlayAgain}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+        >
+          <RotateCcw className="w-5 h-5" />
+          Play Again
+        </button>
 
         <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-200">
           <button
