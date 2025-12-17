@@ -165,20 +165,17 @@ export default function ScoreCard({ stats, score, level, playerName, gameId, tim
 
     const images = imagesRef.current;
     const width = 600;
-    const height = 850;
+    const height = 980;
     canvas.width = width;
     canvas.height = height;
 
     ctx.fillStyle = '#dc2626';
     ctx.fillRect(0, 0, width, height);
 
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-    ctx.fillRect(0, 0, width, 10);
-
     if (images.splashLogo) {
-      const logoWidth = 140;
+      const logoWidth = 100;
       const logoHeight = (images.splashLogo.height / images.splashLogo.width) * logoWidth;
-      ctx.drawImage(images.splashLogo, (width - logoWidth) / 2, 25, logoWidth, logoHeight);
+      ctx.drawImage(images.splashLogo, (width - logoWidth) / 2, 12, logoWidth, logoHeight);
     }
 
     ctx.fillStyle = '#ffffff';
@@ -187,36 +184,37 @@ export default function ScoreCard({ stats, score, level, playerName, gameId, tim
     ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
     ctx.shadowBlur = 4;
     ctx.shadowOffsetY = 2;
-    ctx.fillText('Pizza Chef', width / 2, 195);
+    ctx.fillText('Pizza Chef', width / 2, 150);
     ctx.shadowBlur = 0;
     ctx.shadowOffsetY = 0;
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.font = '16px system-ui, -apple-system, sans-serif';
-    ctx.fillText('SCORE CARD', width / 2, 220);
-
     if (images.pizzaDAOLogo) {
-      const daoLogoWidth = 120;
+      const daoLogoWidth = 150;
       const daoLogoHeight = (images.pizzaDAOLogo.height / images.pizzaDAOLogo.width) * daoLogoWidth;
-      ctx.drawImage(images.pizzaDAOLogo, (width - daoLogoWidth) / 2, 235, daoLogoWidth, daoLogoHeight);
+      ctx.drawImage(images.pizzaDAOLogo, (width - daoLogoWidth) / 2, 160, daoLogoWidth, daoLogoHeight);
     }
 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
     ctx.beginPath();
-    ctx.roundRect(30, 290, width - 60, 130, 12);
+    ctx.roundRect(30, 210, width - 60, 115, 12);
     ctx.fill();
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 20px system-ui, -apple-system, sans-serif';
-    ctx.fillText(playerName.toUpperCase(), width / 2, 325);
+    ctx.font = 'bold 28px system-ui, -apple-system, sans-serif';
+    ctx.fillText(playerName.toUpperCase(), width / 2, 250);
 
     ctx.fillStyle = '#fbbf24';
-    ctx.font = 'bold 64px system-ui, -apple-system, sans-serif';
-    ctx.fillText(score.toLocaleString(), width / 2, 385);
+    ctx.font = 'bold 56px system-ui, -apple-system, sans-serif';
+    ctx.fillText(score.toLocaleString(), width / 2, 305);
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-    ctx.font = '18px system-ui, -apple-system, sans-serif';
-    ctx.fillText(`Level ${level}`, width / 2, 410);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.beginPath();
+    ctx.roundRect(30, 335, width - 60, 80, 12);
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.font = 'bold 22px system-ui, -apple-system, sans-serif';
+    ctx.fillText(`Level ${level}`, width / 2, 370);
 
     const gradeColors: Record<string, string> = {
       'S+': '#fbbf24',
@@ -228,66 +226,63 @@ export default function ScoreCard({ stats, score, level, playerName, gameId, tim
       'F': '#f87171'
     };
 
+    ctx.fillStyle = gradeColors[skillRating.grade] || '#fbbf24';
+    ctx.font = 'bold 36px system-ui, -apple-system, sans-serif';
+    ctx.fillText(`${skillRating.grade} - ${skillRating.description}`, width / 2, 405);
+
     ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
     ctx.beginPath();
-    ctx.roundRect(30, 430, width - 60, 80, 12);
+    ctx.roundRect(30, 425, width - 60, 280, 12);
     ctx.fill();
-
-    ctx.fillStyle = gradeColors[skillRating.grade] || '#fbbf24';
-    ctx.font = 'bold 42px system-ui, -apple-system, sans-serif';
-    ctx.fillText(skillRating.grade, width / 2, 475);
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.font = '14px system-ui, -apple-system, sans-serif';
-    ctx.fillText(skillRating.description, width / 2, 500);
-
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-    ctx.beginPath();
-    ctx.roundRect(30, 520, width - 60, 180, 12);
-    ctx.fill();
-
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-    ctx.font = 'bold 12px system-ui, -apple-system, sans-serif';
+    ctx.font = 'bold 18px system-ui, -apple-system, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText('STATISTICS', 50, 545);
+    ctx.fillText('STATISTICS', 50, 455);
 
-    const iconSize = 28;
-    const statsWithIcons = [
-      { img: images.pizza, label: 'Baked', value: stats.slicesBaked },
-      { img: images.gotchi, label: 'Served', value: stats.customersServed },
-      { img: images.star, label: 'Streak', value: stats.longestCustomerStreak },
-      { img: images.plate, label: 'Plates', value: stats.platesCaught },
+    const iconSize = 40;
+    const statsData = [
+      { emoji: '\u{1F355}', label: 'Slices Baked', value: stats.slicesBaked },
+      { img: images.gotchi, label: 'Customers Served', value: stats.customersServed },
+      { emoji: '\u{1F525}', label: 'Best Customer Streak', value: stats.longestCustomerStreak },
+      { img: images.plate, label: 'Plates Caught', value: stats.platesCaught },
+      { emoji: '\u{1F4AB}', label: 'Best Plate Streak', value: stats.largestPlateStreak },
+      { emoji: '\u{2B06}\u{FE0F}', label: 'Oven Upgrades', value: stats.ovenUpgradesMade },
     ];
 
-    statsWithIcons.forEach((stat, index) => {
+    statsData.forEach((stat, index) => {
       const col = index % 2;
       const row = Math.floor(index / 2);
-      const x = col === 0 ? 60 : 320;
-      const y = 560 + row * 60;
+      const x = col === 0 ? 50 : 310;
+      const y = 475 + row * 85;
 
-      if (stat.img) {
+      if ('img' in stat && stat.img) {
         ctx.drawImage(stat.img, x, y, iconSize, iconSize);
+      } else if ('emoji' in stat) {
+        ctx.font = '32px system-ui, -apple-system, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(stat.emoji, x + 4, y + 30);
       }
 
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-      ctx.font = '12px system-ui, -apple-system, sans-serif';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.font = '16px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(stat.label, x + iconSize + 8, y + 12);
+      ctx.fillText(stat.label, x + iconSize + 12, y + 15);
 
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 20px system-ui, -apple-system, sans-serif';
-      ctx.fillText(stat.value.toString(), x + iconSize + 8, y + 32);
+      ctx.font = 'bold 32px system-ui, -apple-system, sans-serif';
+      ctx.fillText(stat.value.toString(), x + iconSize + 12, y + 48);
     });
 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
     ctx.beginPath();
-    ctx.roundRect(30, 710, width - 60, 70, 12);
+    ctx.roundRect(30, 715, width - 60, 130, 12);
     ctx.fill();
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-    ctx.font = 'bold 12px system-ui, -apple-system, sans-serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.font = 'bold 18px system-ui, -apple-system, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText('POWER-UPS COLLECTED', 50, 735);
+    ctx.fillText('POWER-UPS COLLECTED', 50, 745);
 
     const powerUpIcons = [
       { img: images.honey, count: stats.powerUpsUsed.honey },
@@ -297,32 +292,37 @@ export default function ScoreCard({ stats, score, level, playerName, gameId, tim
       { img: images.nyancat, count: stats.powerUpsUsed.nyan },
     ];
 
-    const powerUpSize = 32;
-    const powerUpSpacing = 100;
-    const powerUpStartX = (width - (powerUpIcons.length * powerUpSpacing - (powerUpSpacing - powerUpSize))) / 2;
+    const powerUpSize = 55;
+    const powerUpSpacing = 20;
+    const totalPowerUpWidth = powerUpIcons.length * powerUpSize + (powerUpIcons.length - 1) * powerUpSpacing;
+    const powerUpStartX = (width - totalPowerUpWidth) / 2;
 
     powerUpIcons.forEach((powerUp, index) => {
-      const x = powerUpStartX + index * powerUpSpacing;
-      const y = 745;
+      const x = powerUpStartX + index * (powerUpSize + powerUpSpacing);
+      const y = 760;
 
       if (powerUp.img) {
         ctx.drawImage(powerUp.img, x, y, powerUpSize, powerUpSize);
       }
 
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
+      ctx.font = 'bold 20px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(powerUp.count.toString(), x + powerUpSize / 2, y + powerUpSize + 14);
+      ctx.fillText(powerUp.count.toString(), x + powerUpSize / 2, y + powerUpSize + 22);
     });
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-    ctx.font = '11px system-ui, -apple-system, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`${formattedDate} at ${formattedTime}  |  Game: ${gameId.slice(0, 8)}`, width / 2, 815);
-
     ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-    ctx.font = '12px system-ui, -apple-system, sans-serif';
-    ctx.fillText('pizzadao.xyz', width / 2, 835);
+    ctx.font = '16px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${formattedDate} at ${formattedTime}`, width / 2, 900);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.font = '14px system-ui, -apple-system, sans-serif';
+    ctx.fillText(`Game: ${gameId.slice(0, 8)}`, width / 2, 925);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.font = 'bold 16px system-ui, -apple-system, sans-serif';
+    ctx.fillText('pizzadao.xyz', width / 2, 955);
 
     setImageGenerated(true);
   }, [stats, score, level, playerName, gameId, skillRating, formattedDate, formattedTime]);
@@ -421,7 +421,7 @@ Play at: ${shareUrl}`;
         <canvas
           ref={canvasRef}
           className="max-w-full h-auto rounded"
-          style={{ maxHeight: '450px', width: 'auto' }}
+          style={{ maxHeight: '520px', width: 'auto' }}
         />
       </div>
 
