@@ -235,9 +235,12 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
       const row = Math.floor(index / 2);
       const x = col === 0 ? 50 : 310;
       const y = 475 + row * 85;
+      const containerHeight = 85;
+      const containerCenterY = y + containerHeight / 2;
+      const imageCenterY = containerCenterY - iconSize / 2;
 
       if ('img' in stat && stat.img) {
-        ctx.drawImage(stat.img, x, y, iconSize, iconSize);
+        ctx.drawImage(stat.img, x, imageCenterY, iconSize, iconSize);
       } else if ('emoji' in stat) {
         ctx.fillStyle = '#ffffff';
         ctx.font = '32px system-ui, -apple-system, sans-serif';
