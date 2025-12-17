@@ -799,7 +799,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               newState.emptyPlates = [...newState.emptyPlates, newPlate];
               platesFromSlices.add(slice.id);
 
-              return { ...customer, woozyState: 'drooling' };
+              return { ...customer, woozy: false, woozyState: 'drooling' };
             } else if (currentState === 'drooling') {
               // Second pizza - becomes satisfied
               soundManager.customerServed();
