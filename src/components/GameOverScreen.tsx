@@ -418,13 +418,22 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
         <HighScores userScore={{ name: displayNameForScore, score }} />
 
         {scoreSubmitted ? (
-          <button
-            onClick={onPlayAgain}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
-          >
-            <RotateCcw className="w-5 h-5" />
-            Play Again
-          </button>
+          <div className="flex gap-3 w-full">
+            <button
+              onClick={() => setShowLeaderboard(false)}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-semibold"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Back
+            </button>
+            <button
+              onClick={onPlayAgain}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+            >
+              <RotateCcw className="w-5 h-5" />
+              Play Again
+            </button>
+          </div>
         ) : (
           <div className="w-full space-y-3">
             <div className="bg-white rounded-lg shadow-lg p-4">
