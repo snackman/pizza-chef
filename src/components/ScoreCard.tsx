@@ -15,7 +15,7 @@ interface ScoreCardProps {
 interface LoadedImages {
   splashLogo: HTMLImageElement | null;
   pizzaDAOLogo: HTMLImageElement | null;
-  gotchi: HTMLImageElement | null;
+  droolface: HTMLImageElement | null;
   plate: HTMLImageElement | null;
   pizza: HTMLImageElement | null;
   honey: HTMLImageElement | null;
@@ -93,7 +93,7 @@ export default function ScoreCard({ stats, score, level, playerName, gameId, tim
   const imagesRef = useRef<LoadedImages>({
     splashLogo: null,
     pizzaDAOLogo: null,
-    gotchi: null,
+    droolface: null,
     plate: null,
     pizza: null,
     honey: null,
@@ -116,7 +116,7 @@ export default function ScoreCard({ stats, score, level, playerName, gameId, tim
       const [
         splashLogo,
         pizzaDAOLogo,
-        gotchi,
+        droolface,
         plate,
         pizza,
         honey,
@@ -129,7 +129,7 @@ export default function ScoreCard({ stats, score, level, playerName, gameId, tim
       ] = await Promise.all([
         loadImage('https://i.imgur.com/EPCSa79.png'),
         loadImage('/PizzaDAO-Logo-White (2).png'),
-        loadImage('/Sprites/gotchi.png'),
+        loadImage('/Sprites/droolface.png'),
         loadImage('/Sprites/paperplate.png'),
         loadImage('/Sprites/fullpizza.png'),
         loadImage('/Sprites/hothoney.png'),
@@ -144,7 +144,7 @@ export default function ScoreCard({ stats, score, level, playerName, gameId, tim
       imagesRef.current = {
         splashLogo,
         pizzaDAOLogo,
-        gotchi,
+        droolface,
         plate,
         pizza,
         honey,
@@ -249,7 +249,7 @@ export default function ScoreCard({ stats, score, level, playerName, gameId, tim
     const statsData = [
       { emoji: '\u{1F355}', label: 'Slices Baked', value: stats.slicesBaked },
       { emoji: '\u{2B06}\u{FE0F}', label: 'Oven Upgrades', value: stats.ovenUpgradesMade },
-      { img: images.gotchi, label: 'Customers Served', value: stats.customersServed },
+      { img: images.droolface, label: 'Customers Served', value: stats.customersServed },
       { emoji: '\u{1F525}', label: 'Best Customer Streak', value: stats.longestCustomerStreak },
       { img: images.plate, label: 'Plates Caught', value: stats.platesCaught },
       { emoji: '\u{1F4AB}', label: 'Best Plate Streak', value: stats.largestPlateStreak },
