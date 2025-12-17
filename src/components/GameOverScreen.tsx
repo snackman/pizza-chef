@@ -443,34 +443,6 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-2 mb-3">
-        <button
-          type="button"
-          onClick={copyImageToClipboard}
-          className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
-        >
-          {copySuccess === 'image' ? (
-            <>
-              <Check className="w-4 h-4" />
-              Copied!
-            </>
-          ) : (
-            <>
-              <ImageIcon className="w-4 h-4" />
-              Copy Image
-            </>
-          )}
-        </button>
-        <button
-          type="button"
-          onClick={downloadImage}
-          className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
-        >
-          <Download className="w-4 h-4" />
-          Download
-        </button>
-      </div>
-
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
           <label htmlFor="playerName" className="block text-sm font-medium text-gray-700 mb-1">
@@ -521,6 +493,34 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
           <RotateCcw className="w-5 h-5" />
           Play Again
         </button>
+
+        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-200">
+          <button
+            type="button"
+            onClick={copyImageToClipboard}
+            className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+          >
+            {copySuccess === 'image' ? (
+              <>
+                <Check className="w-4 h-4" />
+                Copied!
+              </>
+            ) : (
+              <>
+                <ImageIcon className="w-4 h-4" />
+                Copy Image
+              </>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={downloadImage}
+            className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+          >
+            <Download className="w-4 h-4" />
+            Download
+          </button>
+        </div>
 
         {'share' in navigator && (
           <button
