@@ -30,23 +30,23 @@ interface LoadedImages {
 function calculateSkillRating(stats: GameStatsType, score: number, level: number): { grade: string; stars: number; description: string } {
   let points = 0;
 
-  points += Math.min(score / 200, 100);
-  points += Math.min(level * 0.2, 2);
-  points += Math.min(stats.longestCustomerStreak * 0.1, 2);
-  points += Math.min(stats.largestPlateStreak * 0.1, 1);
+  points += score / 1000;
+  points += Math.min(level * 0.1, 1);
+  points += Math.min(stats.longestCustomerStreak * 0.05, 1);
+  points += Math.min(stats.largestPlateStreak * 0.05, 0.5);
 
   const efficiency = stats.slicesBaked > 0 ? (stats.customersServed / stats.slicesBaked) * 100 : 0;
-  points += Math.min(efficiency / 50, 2);
+  points += Math.min(efficiency / 100, 1);
 
   const totalPowerUps = Object.values(stats.powerUpsUsed).reduce((a, b) => a + b, 0);
-  points += Math.min(totalPowerUps * 0.1, 1);
+  points += Math.min(totalPowerUps * 0.05, 0.5);
 
-  if (points >= 95) return { grade: 'S+', stars: 5, description: 'Legendary Pizzaiolo' };
-  if (points >= 82) return { grade: 'S', stars: 5, description: 'Master Chef' };
-  if (points >= 68) return { grade: 'A', stars: 4, description: 'Expert' };
-  if (points >= 55) return { grade: 'B', stars: 3, description: 'Skilled' };
-  if (points >= 40) return { grade: 'C', stars: 2, description: 'Apprentice' };
-  if (points >= 25) return { grade: 'D', stars: 1, description: 'Novice' };
+  if (points >= 70) return { grade: 'S+', stars: 5, description: 'Legendary Pizzaiolo' };
+  if (points >= 44) return { grade: 'S', stars: 5, description: 'Master Chef' };
+  if (points >= 27) return { grade: 'A', stars: 4, description: 'Expert' };
+  if (points >= 12) return { grade: 'B', stars: 3, description: 'Skilled' };
+  if (points >= 6) return { grade: 'C', stars: 2, description: 'Apprentice' };
+  if (points >= 3) return { grade: 'D', stars: 1, description: 'Novice' };
   return { grade: 'F', stars: 0, description: 'Beginner' };
 }
 
