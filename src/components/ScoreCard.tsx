@@ -453,41 +453,6 @@ Play at: ${shareUrl}`;
             </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={copyTextSummary}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm"
-            >
-              {copySuccess === 'text' ? (
-                <>
-                  <Check className="w-4 h-4 text-green-600" />
-                  <span className="text-green-600">Copied!</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="w-4 h-4" />
-                  Copy Text
-                </>
-              )}
-            </button>
-            <button
-              onClick={copyShareLink}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm"
-            >
-              {copySuccess === 'link' ? (
-                <>
-                  <Check className="w-4 h-4 text-green-600" />
-                  <span className="text-green-600">Copied!</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="w-4 h-4" />
-                  Copy Link
-                </>
-              )}
-            </button>
-          </div>
-
           {'share' in navigator && (
             <button
               onClick={handleNativeShare}
