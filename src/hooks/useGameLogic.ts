@@ -613,6 +613,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 lastUpdateTime: now,
                 startingLane: newState.chefLane
               };
+              soundManager.nyanCatPowerUp();
               const dogeActive = newState.activePowerUps.some(p => p.type === 'doge');
               if (!dogeActive || newState.powerUpAlert?.type !== 'doge') {
                 newState.powerUpAlert = { type: 'nyan', endTime: now + 3000, chefLane: newState.chefLane };
@@ -1232,6 +1233,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             lastUpdateTime: now,
             startingLane: newState.chefLane
           };
+          soundManager.nyanCatPowerUp();
           const dogeActive = newState.activePowerUps.some(p => p.type === 'doge');
           if (!dogeActive || newState.powerUpAlert?.type !== 'doge') {
             newState.powerUpAlert = { type: 'nyan', endTime: now + 3000, chefLane: newState.chefLane };
