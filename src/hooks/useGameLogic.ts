@@ -40,6 +40,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     bank: 0,
     showStore: false,
     lastStoreLevelShown: 0,
+    pendingStoreShow: false,
     fallingPizza: undefined,
     starPowerActive: false,
     powerUpAlert: undefined,
@@ -1022,6 +1023,12 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           newState.chefLane = Math.round(newState.chefLane);
           newState.chefLane = Math.max(0, Math.min(3, newState.chefLane));
           newState.nyanSweep = undefined;
+
+          // Show pending store if one was triggered during nyan sweep
+          if (newState.pendingStoreShow) {
+            newState.showStore = true;
+            newState.pendingStoreShow = false;
+          }
         }
       }
 
@@ -1033,8 +1040,13 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         // Show store if we crossed any 5-level threshold (only once)
         const highestStoreLevel = Math.floor(targetLevel / 5) * 5;
         if (highestStoreLevel >= 5 && highestStoreLevel > newState.lastStoreLevelShown) {
-          newState.showStore = true;
           newState.lastStoreLevelShown = highestStoreLevel;
+          // If nyan sweep is active, delay showing the store until it ends
+          if (newState.nyanSweep?.active) {
+            newState.pendingStoreShow = true;
+          } else {
+            newState.showStore = true;
+          }
         }
       }
 
@@ -1292,6 +1304,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       bank: 0,
       showStore: false,
       lastStoreLevelShown: 0,
+      pendingStoreShow: false,
       stats: {
         slicesBaked: 0,
         customersServed: 0,
