@@ -170,9 +170,7 @@ function App() {
                   stats={gameState.stats}
                   score={gameState.score}
                   level={gameState.level}
-                  onSubmitted={() => {
-                    setShowGameOver(false);
-                  }}
+                  onSubmitted={() => {}}
                   onPlayAgain={() => {
                     resetGame();
                     setShowGameOver(false);
@@ -316,9 +314,7 @@ function App() {
                 stats={gameState.stats}
                 score={gameState.score}
                 level={gameState.level}
-                onSubmitted={() => {
-                  setShowGameOver(false);
-                }}
+                onSubmitted={() => {}}
                 onPlayAgain={() => {
                   resetGame();
                   setShowGameOver(false);
