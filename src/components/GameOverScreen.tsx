@@ -66,6 +66,8 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
   const [copySuccess, setCopySuccess] = useState<'image' | 'text' | 'link' | null>(null);
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [scoreSubmitted, setScoreSubmitted] = useState(false);
+  const [submittedName, setSubmittedName] = useState('');
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imagesRef = useRef<LoadedImages>({
     splashLogo: null,
@@ -329,6 +331,9 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
 
     if (scoreSuccess && session) {
       onSubmitted(session, nameToSubmit);
+      setSubmittedName(nameToSubmit);
+      setScoreSubmitted(true);
+      setShowLeaderboard(true);
     } else if (scoreSuccess) {
       const fallbackSession: GameSession = {
         id: crypto.randomUUID(),
@@ -345,6 +350,9 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
         created_at: new Date().toISOString()
       };
       onSubmitted(fallbackSession, nameToSubmit);
+      setSubmittedName(nameToSubmit);
+      setScoreSubmitted(true);
+      setShowLeaderboard(true);
     } else {
       setError('Failed to submit score. Please try again.');
       setSubmitting(false);
@@ -402,24 +410,34 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
 
   if (showLeaderboard) {
     return (
-      <div className="flex flex-col items-center gap-4 w-full max-w-lg mx-auto">
-        <HighScores />
-        <div className="flex gap-3 w-full">
-          <button
-            onClick={() => setShowLeaderboard(false)}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-semibold"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            Back
-          </button>
+      <div className="flex flex-col items-center gap-4 w-full max-w-4xl mx-auto">
+        <HighScores userScore={scoreSubmitted ? { name: submittedName, score } : undefined} />
+        {scoreSubmitted ? (
           <button
             onClick={onPlayAgain}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
           >
             <RotateCcw className="w-5 h-5" />
             Play Again
           </button>
-        </div>
+        ) : (
+          <div className="flex gap-3 w-full">
+            <button
+              onClick={() => setShowLeaderboard(false)}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-semibold"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Back
+            </button>
+            <button
+              onClick={onPlayAgain}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+            >
+              <RotateCcw className="w-5 h-5" />
+              Play Again
+            </button>
+          </div>
+        )}
       </div>
     );
   }
@@ -444,46 +462,50 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3">
-        <div>
-          <label htmlFor="playerName" className="block text-sm font-medium text-gray-700 mb-1">
-            Enter your name for the leaderboard:
-          </label>
-          <input
-            type="text"
-            id="playerName"
-            value={playerName}
-            onChange={(e) => setPlayerName(e.target.value)}
-            placeholder={DEFAULT_NAME}
-            maxLength={50}
-            className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none transition-colors text-base"
-            disabled={submitting}
-          />
-          {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
-        </div>
+        {!scoreSubmitted && (
+          <>
+            <div>
+              <label htmlFor="playerName" className="block text-sm font-medium text-gray-700 mb-1">
+                Enter your name for the leaderboard:
+              </label>
+              <input
+                type="text"
+                id="playerName"
+                value={playerName}
+                onChange={(e) => setPlayerName(e.target.value)}
+                placeholder={DEFAULT_NAME}
+                maxLength={50}
+                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none transition-colors text-base"
+                disabled={submitting}
+              />
+              {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+            </div>
 
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="submit"
-            disabled={submitting}
-            className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all font-semibold disabled:opacity-50"
-          >
-            {submitting ? '...' : (
-              <>
-                <Send className="w-5 h-5" />
-                Submit Score
-              </>
-            )}
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowLeaderboard(true)}
-            disabled={submitting}
-            className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-semibold disabled:opacity-50"
-          >
-            <Trophy className="w-5 h-5" />
-            Leaderboard
-          </button>
-        </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all font-semibold disabled:opacity-50"
+              >
+                {submitting ? '...' : (
+                  <>
+                    <Send className="w-5 h-5" />
+                    Submit Score
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowLeaderboard(true)}
+                disabled={submitting}
+                className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-semibold disabled:opacity-50"
+              >
+                <Trophy className="w-5 h-5" />
+                Leaderboard
+              </button>
+            </div>
+          </>
+        )}
 
         <button
           type="button"
