@@ -496,11 +496,6 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
     <div className="bg-white rounded-xl shadow-2xl p-3 sm:p-6 w-full max-w-lg mx-auto max-h-[95vh] overflow-y-auto">
       <div className="text-center mb-3">
         <h2 className="text-2xl sm:text-3xl font-bold text-red-600">Game Over!</h2>
-        <p className="text-lg text-gray-600">
-          Score: <span className="font-bold text-amber-600">{score.toLocaleString()}</span>
-          <span className="mx-2">|</span>
-          Level: <span className="font-bold">{level}</span>
-        </p>
       </div>
 
       <div className="flex justify-center mb-3 bg-red-700 rounded-lg p-2 overflow-hidden aspect-square">
