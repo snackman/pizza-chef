@@ -12,6 +12,20 @@ interface ScoreCardProps {
   onClose?: () => void;
 }
 
+interface LoadedImages {
+  splashLogo: HTMLImageElement | null;
+  pizzaDAOLogo: HTMLImageElement | null;
+  gotchi: HTMLImageElement | null;
+  plate: HTMLImageElement | null;
+  pizza: HTMLImageElement | null;
+  honey: HTMLImageElement | null;
+  iceCream: HTMLImageElement | null;
+  beer: HTMLImageElement | null;
+  doge: HTMLImageElement | null;
+  nyancat: HTMLImageElement | null;
+  star: HTMLImageElement | null;
+}
+
 function calculateSkillRating(stats: GameStatsType, score: number, level: number): { grade: string; stars: number; description: string } {
   let points = 0;
 
@@ -60,12 +74,34 @@ function getAchievements(stats: GameStatsType, score: number, level: number): st
   return achievements.slice(0, 4);
 }
 
+function loadImage(src: string): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const img = new window.Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
 export default function ScoreCard({ stats, score, level, playerName, gameId, timestamp, onClose }: ScoreCardProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [imageGenerated, setImageGenerated] = useState(false);
   const [copySuccess, setCopySuccess] = useState<'image' | 'text' | 'link' | null>(null);
-  const [logoLoaded, setLogoLoaded] = useState(false);
-  const logoRef = useRef<HTMLImageElement | null>(null);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+  const imagesRef = useRef<LoadedImages>({
+    splashLogo: null,
+    pizzaDAOLogo: null,
+    gotchi: null,
+    plate: null,
+    pizza: null,
+    honey: null,
+    iceCream: null,
+    beer: null,
+    doge: null,
+    nyancat: null,
+    star: null,
+  });
 
   const skillRating = calculateSkillRating(stats, score, level);
   const achievements = getAchievements(stats, score, level);
@@ -74,16 +110,50 @@ export default function ScoreCard({ stats, score, level, playerName, gameId, tim
   const formattedTime = timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
   useEffect(() => {
-    const img = new window.Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      logoRef.current = img;
-      setLogoLoaded(true);
-    };
-    img.onerror = () => {
-      setLogoLoaded(true);
-    };
-    img.src = '/PizzaDAO-Logo-White (2).png';
+    async function loadAllImages() {
+      const [
+        splashLogo,
+        pizzaDAOLogo,
+        gotchi,
+        plate,
+        pizza,
+        honey,
+        iceCream,
+        beer,
+        doge,
+        nyancat,
+        star,
+      ] = await Promise.all([
+        loadImage('https://i.imgur.com/EPCSa79.png'),
+        loadImage('/PizzaDAO-Logo-White (2).png'),
+        loadImage('/Sprites/gotchi.png'),
+        loadImage('/Sprites/paperplate.png'),
+        loadImage('/Sprites/fullpizza.png'),
+        loadImage('/Sprites/hothoney.png'),
+        loadImage('/Sprites/sundae.png'),
+        loadImage('/Sprites/beer.png'),
+        loadImage('/Sprites/doge.png'),
+        loadImage('/Sprites/nyancat.png'),
+        loadImage('/Sprites/yumface.png'),
+      ]);
+
+      imagesRef.current = {
+        splashLogo,
+        pizzaDAOLogo,
+        gotchi,
+        plate,
+        pizza,
+        honey,
+        iceCream,
+        beer,
+        doge,
+        nyancat,
+        star,
+      };
+      setImagesLoaded(true);
+    }
+
+    loadAllImages();
   }, []);
 
   const generateImage = useCallback(() => {
@@ -93,180 +163,175 @@ export default function ScoreCard({ stats, score, level, playerName, gameId, tim
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    const images = imagesRef.current;
     const width = 600;
-    const height = 800;
+    const height = 850;
     canvas.width = width;
     canvas.height = height;
 
-    const gradient = ctx.createLinearGradient(0, 0, width, height);
-    gradient.addColorStop(0, '#1a1a2e');
-    gradient.addColorStop(0.5, '#16213e');
-    gradient.addColorStop(1, '#0f0f23');
-    ctx.fillStyle = gradient;
+    ctx.fillStyle = '#dc2626';
     ctx.fillRect(0, 0, width, height);
 
-    const accentGradient = ctx.createLinearGradient(0, 0, width, 0);
-    accentGradient.addColorStop(0, '#f59e0b');
-    accentGradient.addColorStop(1, '#ef4444');
-    ctx.fillStyle = accentGradient;
-    ctx.fillRect(0, 0, width, 8);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+    ctx.fillRect(0, 0, width, 10);
 
-    if (logoRef.current) {
-      const logoSize = 80;
-      ctx.drawImage(logoRef.current, (width - logoSize) / 2, 30, logoSize, logoSize);
+    if (images.splashLogo) {
+      const logoWidth = 140;
+      const logoHeight = (images.splashLogo.height / images.splashLogo.width) * logoWidth;
+      ctx.drawImage(images.splashLogo, (width - logoWidth) / 2, 25, logoWidth, logoHeight);
     }
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 32px system-ui, -apple-system, sans-serif';
+    ctx.font = 'bold 48px system-ui, -apple-system, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('PIZZA CHEF', width / 2, 140);
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetY = 2;
+    ctx.fillText('Pizza Chef', width / 2, 195);
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
 
-    ctx.fillStyle = '#94a3b8';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.font = '16px system-ui, -apple-system, sans-serif';
-    ctx.fillText('SCORE CARD', width / 2, 165);
+    ctx.fillText('SCORE CARD', width / 2, 220);
 
-    ctx.fillStyle = '#e2e8f0';
-    ctx.font = 'bold 24px system-ui, -apple-system, sans-serif';
-    ctx.fillText(playerName.toUpperCase(), width / 2, 210);
+    if (images.pizzaDAOLogo) {
+      const daoLogoWidth = 120;
+      const daoLogoHeight = (images.pizzaDAOLogo.height / images.pizzaDAOLogo.width) * daoLogoWidth;
+      ctx.drawImage(images.pizzaDAOLogo, (width - daoLogoWidth) / 2, 235, daoLogoWidth, daoLogoHeight);
+    }
 
-    const scoreGradient = ctx.createLinearGradient(width / 2 - 100, 240, width / 2 + 100, 310);
-    scoreGradient.addColorStop(0, '#fbbf24');
-    scoreGradient.addColorStop(1, '#f59e0b');
-    ctx.fillStyle = scoreGradient;
-    ctx.font = 'bold 72px system-ui, -apple-system, sans-serif';
-    ctx.fillText(score.toLocaleString(), width / 2, 290);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.beginPath();
+    ctx.roundRect(30, 290, width - 60, 130, 12);
+    ctx.fill();
 
-    ctx.fillStyle = '#64748b';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 20px system-ui, -apple-system, sans-serif';
+    ctx.fillText(playerName.toUpperCase(), width / 2, 325);
+
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = 'bold 64px system-ui, -apple-system, sans-serif';
+    ctx.fillText(score.toLocaleString(), width / 2, 385);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
     ctx.font = '18px system-ui, -apple-system, sans-serif';
-    ctx.fillText(`Level ${level}`, width / 2, 320);
+    ctx.fillText(`Level ${level}`, width / 2, 410);
 
     const gradeColors: Record<string, string> = {
       'S+': '#fbbf24',
       'S': '#f59e0b',
       'A': '#22c55e',
-      'B': '#3b82f6',
-      'C': '#8b5cf6',
-      'D': '#f97316',
-      'F': '#ef4444'
+      'B': '#60a5fa',
+      'C': '#a78bfa',
+      'D': '#fb923c',
+      'F': '#f87171'
     };
 
-    ctx.fillStyle = gradeColors[skillRating.grade] || '#f59e0b';
-    ctx.font = 'bold 48px system-ui, -apple-system, sans-serif';
-    ctx.fillText(skillRating.grade, width / 2, 380);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.beginPath();
+    ctx.roundRect(30, 430, width - 60, 80, 12);
+    ctx.fill();
 
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '16px system-ui, -apple-system, sans-serif';
-    ctx.fillText(skillRating.description, width / 2, 405);
+    ctx.fillStyle = gradeColors[skillRating.grade] || '#fbbf24';
+    ctx.font = 'bold 42px system-ui, -apple-system, sans-serif';
+    ctx.fillText(skillRating.grade, width / 2, 475);
 
-    const starY = 430;
-    const starSize = 20;
-    const starSpacing = 30;
-    const startX = width / 2 - ((5 - 1) * starSpacing) / 2;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.font = '14px system-ui, -apple-system, sans-serif';
+    ctx.fillText(skillRating.description, width / 2, 500);
 
-    for (let i = 0; i < 5; i++) {
-      const x = startX + i * starSpacing;
-      ctx.fillStyle = i < skillRating.stars ? '#fbbf24' : '#374151';
-      drawStar(ctx, x, starY, starSize / 2, starSize / 4, 5);
-    }
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.beginPath();
+    ctx.roundRect(30, 520, width - 60, 180, 12);
+    ctx.fill();
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-    ctx.fillRect(30, 460, width - 60, 200);
-
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.font = 'bold 12px system-ui, -apple-system, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText('STATISTICS', 50, 490);
+    ctx.fillText('STATISTICS', 50, 545);
 
-    const statsData = [
-      { label: 'Slices Baked', value: stats.slicesBaked },
-      { label: 'Customers Served', value: stats.customersServed },
-      { label: 'Best Streak', value: stats.longestCustomerStreak },
-      { label: 'Plates Caught', value: stats.platesCaught },
-      { label: 'Plate Streak', value: stats.largestPlateStreak },
-      { label: 'Upgrades', value: stats.ovenUpgradesMade },
+    const iconSize = 28;
+    const statsWithIcons = [
+      { img: images.pizza, label: 'Baked', value: stats.slicesBaked },
+      { img: images.gotchi, label: 'Served', value: stats.customersServed },
+      { img: images.star, label: 'Streak', value: stats.longestCustomerStreak },
+      { img: images.plate, label: 'Plates', value: stats.platesCaught },
     ];
 
-    ctx.font = '14px system-ui, -apple-system, sans-serif';
-    statsData.forEach((stat, index) => {
-      const row = Math.floor(index / 2);
+    statsWithIcons.forEach((stat, index) => {
       const col = index % 2;
-      const x = col === 0 ? 50 : 320;
-      const y = 520 + row * 40;
+      const row = Math.floor(index / 2);
+      const x = col === 0 ? 60 : 320;
+      const y = 560 + row * 60;
 
-      ctx.fillStyle = '#94a3b8';
+      if (stat.img) {
+        ctx.drawImage(stat.img, x, y, iconSize, iconSize);
+      }
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.font = '12px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(stat.label, x, y);
+      ctx.fillText(stat.label, x + iconSize + 8, y + 12);
 
-      ctx.fillStyle = '#e2e8f0';
-      ctx.font = 'bold 18px system-ui, -apple-system, sans-serif';
-      ctx.fillText(stat.value.toString(), x, y + 20);
-      ctx.font = '14px system-ui, -apple-system, sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 20px system-ui, -apple-system, sans-serif';
+      ctx.fillText(stat.value.toString(), x + iconSize + 8, y + 32);
     });
 
-    if (achievements.length > 0) {
-      const badgeY = 680;
-      const badgeWidth = 120;
-      const badgeHeight = 28;
-      const badgeSpacing = 10;
-      const totalBadgeWidth = achievements.length * badgeWidth + (achievements.length - 1) * badgeSpacing;
-      let badgeStartX = (width - totalBadgeWidth) / 2;
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.beginPath();
+    ctx.roundRect(30, 710, width - 60, 70, 12);
+    ctx.fill();
 
-      achievements.forEach((achievement, index) => {
-        const x = badgeStartX + index * (badgeWidth + badgeSpacing);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.font = 'bold 12px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('POWER-UPS COLLECTED', 50, 735);
 
-        const badgeGradient = ctx.createLinearGradient(x, badgeY, x + badgeWidth, badgeY + badgeHeight);
-        badgeGradient.addColorStop(0, 'rgba(245, 158, 11, 0.3)');
-        badgeGradient.addColorStop(1, 'rgba(239, 68, 68, 0.3)');
-        ctx.fillStyle = badgeGradient;
-        ctx.beginPath();
-        ctx.roundRect(x, badgeY, badgeWidth, badgeHeight, 14);
-        ctx.fill();
+    const powerUpIcons = [
+      { img: images.honey, count: stats.powerUpsUsed.honey },
+      { img: images.iceCream, count: stats.powerUpsUsed['ice-cream'] },
+      { img: images.beer, count: stats.powerUpsUsed.beer },
+      { img: images.doge, count: stats.powerUpsUsed.doge },
+      { img: images.nyancat, count: stats.powerUpsUsed.nyan },
+    ];
 
-        ctx.strokeStyle = '#f59e0b';
-        ctx.lineWidth = 1;
-        ctx.stroke();
+    const powerUpSize = 32;
+    const powerUpSpacing = 100;
+    const powerUpStartX = (width - (powerUpIcons.length * powerUpSpacing - (powerUpSpacing - powerUpSize))) / 2;
 
-        ctx.fillStyle = '#fbbf24';
-        ctx.font = 'bold 11px system-ui, -apple-system, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(achievement, x + badgeWidth / 2, badgeY + 18);
-      });
-    }
+    powerUpIcons.forEach((powerUp, index) => {
+      const x = powerUpStartX + index * powerUpSpacing;
+      const y = 745;
 
-    ctx.fillStyle = '#475569';
-    ctx.font = '12px system-ui, -apple-system, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`${formattedDate} at ${formattedTime}`, width / 2, 740);
-    ctx.fillText(`Game ID: ${gameId.slice(0, 8)}`, width / 2, 758);
+      if (powerUp.img) {
+        ctx.drawImage(powerUp.img, x, y, powerUpSize, powerUpSize);
+      }
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
-    ctx.fillRect(0, height - 40, width, 40);
-    ctx.fillStyle = '#64748b';
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(powerUp.count.toString(), x + powerUpSize / 2, y + powerUpSize + 14);
+    });
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
     ctx.font = '11px system-ui, -apple-system, sans-serif';
-    ctx.fillText('pizzadao.xyz', width / 2, height - 15);
+    ctx.textAlign = 'center';
+    ctx.fillText(`${formattedDate} at ${formattedTime}  |  Game: ${gameId.slice(0, 8)}`, width / 2, 815);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.font = '12px system-ui, -apple-system, sans-serif';
+    ctx.fillText('pizzadao.xyz', width / 2, 835);
 
     setImageGenerated(true);
-  }, [stats, score, level, playerName, gameId, skillRating, achievements, formattedDate, formattedTime]);
+  }, [stats, score, level, playerName, gameId, skillRating, formattedDate, formattedTime]);
 
   useEffect(() => {
-    if (logoLoaded) {
+    if (imagesLoaded) {
       generateImage();
     }
-  }, [logoLoaded, generateImage]);
-
-  function drawStar(ctx: CanvasRenderingContext2D, cx: number, cy: number, outerRadius: number, innerRadius: number, points: number) {
-    ctx.beginPath();
-    for (let i = 0; i < points * 2; i++) {
-      const radius = i % 2 === 0 ? outerRadius : innerRadius;
-      const angle = (Math.PI * i) / points - Math.PI / 2;
-      const x = cx + radius * Math.cos(angle);
-      const y = cy + radius * Math.sin(angle);
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    }
-    ctx.closePath();
-    ctx.fill();
-  }
+  }, [imagesLoaded, generateImage]);
 
   const copyImageToClipboard = async () => {
     const canvas = canvasRef.current;
@@ -352,11 +417,11 @@ Play at: ${shareUrl}`;
         <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Your Score Card</h2>
       </div>
 
-      <div className="flex justify-center mb-4 bg-gray-900 rounded-lg p-2 overflow-hidden">
+      <div className="flex justify-center mb-4 bg-red-700 rounded-lg p-2 overflow-hidden">
         <canvas
           ref={canvasRef}
           className="max-w-full h-auto rounded"
-          style={{ maxHeight: '400px', width: 'auto' }}
+          style={{ maxHeight: '450px', width: 'auto' }}
         />
       </div>
 
