@@ -240,6 +240,11 @@ export default function ScoreCard({ stats, score, level, playerName, gameId, tim
     ctx.roundRect(30, 425, width - 60, 280, 12);
     ctx.fill();
 
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.font = 'bold 18px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('STATISTICS', 50, 455);
+
     const iconSize = 40;
     const statsData = [
       { emoji: '\u{1F355}', label: 'Slices Baked', value: stats.slicesBaked },
@@ -259,6 +264,7 @@ export default function ScoreCard({ stats, score, level, playerName, gameId, tim
       if ('img' in stat && stat.img) {
         ctx.drawImage(stat.img, x, y, iconSize, iconSize);
       } else if ('emoji' in stat) {
+        ctx.fillStyle = '#ffffff';
         ctx.font = '32px system-ui, -apple-system, sans-serif';
         ctx.textAlign = 'left';
         ctx.fillText(stat.emoji, x + 4, y + 30);
