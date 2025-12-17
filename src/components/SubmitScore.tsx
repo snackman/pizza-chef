@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { Send, X } from 'lucide-react';
-import { submitScore } from '../services/highScores';
+import { submitScore, createGameSession, GameSession } from '../services/highScores';
+import { GameStats } from '../types/game';
 
 interface SubmitScoreProps {
   score: number;
-  onSubmitted: () => void;
+  level: number;
+  stats: GameStats;
+  onSubmitted: (session: GameSession, playerName: string) => void;
   onSkip: () => void;
 }
 
-const SubmitScore: React.FC<SubmitScoreProps> = ({ score, onSubmitted, onSkip }) => {
+const SubmitScore: React.FC<SubmitScoreProps> = ({ score, level, stats, onSubmitted, onSkip }) => {
   const [playerName, setPlayerName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -29,10 +32,29 @@ const SubmitScore: React.FC<SubmitScoreProps> = ({ score, onSubmitted, onSkip })
     setSubmitting(true);
     setError('');
 
-    const success = await submitScore(playerName.trim(), score);
+    const [scoreSuccess, session] = await Promise.all([
+      submitScore(playerName.trim(), score),
+      createGameSession(playerName.trim(), score, level, stats)
+    ]);
 
-    if (success) {
-      onSubmitted();
+    if (scoreSuccess && session) {
+      onSubmitted(session, playerName.trim());
+    } else if (scoreSuccess) {
+      const fallbackSession: GameSession = {
+        id: crypto.randomUUID(),
+        player_name: playerName.trim(),
+        score,
+        level,
+        slices_baked: stats.slicesBaked,
+        customers_served: stats.customersServed,
+        longest_streak: stats.longestCustomerStreak,
+        plates_caught: stats.platesCaught,
+        largest_plate_streak: stats.largestPlateStreak,
+        oven_upgrades: stats.ovenUpgradesMade,
+        power_ups_used: stats.powerUpsUsed,
+        created_at: new Date().toISOString()
+      };
+      onSubmitted(fallbackSession, playerName.trim());
     } else {
       setError('Failed to submit score. Please try again.');
       setSubmitting(false);

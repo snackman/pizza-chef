@@ -14,17 +14,22 @@ import PowerUpAlert from './components/PowerUpAlert';
 import GameStats from './components/GameStats';
 import StreakDisplay from './components/StreakDisplay';
 import DebugPanel from './components/DebugPanel';
+import ScoreCard from './components/ScoreCard';
 import { useGameLogic } from './hooks/useGameLogic';
+import { GameSession } from './services/highScores';
 
 function App() {
   const [showStats, setShowStats] = useState(false);
   const [showScoreSubmit, setShowScoreSubmit] = useState(false);
+  const [showScoreCard, setShowScoreCard] = useState(false);
   const [showHighScores, setShowHighScores] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const [gameStarted, setGameStarted] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [gameSession, setGameSession] = useState<GameSession | null>(null);
+  const [playerName, setPlayerName] = useState('');
 
   const { gameState, servePizza, moveChef, useOven, cleanOven, resetGame, togglePause, upgradeOven, upgradeOvenSpeed, closeStore, bribeReviewer, buyPowerUp, debugActivatePowerUp } = useGameLogic(gameStarted);
 
@@ -168,7 +173,7 @@ function App() {
           {gameState.gameOver && (
             <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center z-20">
               <div className="flex flex-col items-center gap-4 p-4 max-h-[90vh] overflow-y-auto">
-                {showStats && !showScoreSubmit && !showHighScores ? (
+                {showStats && !showScoreSubmit && !showScoreCard && !showHighScores ? (
                   <GameStats
                     stats={gameState.stats}
                     score={gameState.score}
@@ -178,15 +183,32 @@ function App() {
                       setShowScoreSubmit(true);
                     }}
                   />
-                ) : showScoreSubmit && !showHighScores ? (
+                ) : showScoreSubmit && !showScoreCard && !showHighScores ? (
                   <SubmitScore
                     score={gameState.score}
-                    onSubmitted={() => {
+                    level={gameState.level}
+                    stats={gameState.stats}
+                    onSubmitted={(session, name) => {
+                      setGameSession(session);
+                      setPlayerName(name);
                       setShowScoreSubmit(false);
-                      setShowHighScores(true);
+                      setShowScoreCard(true);
                     }}
                     onSkip={() => {
                       setShowScoreSubmit(false);
+                      setShowHighScores(true);
+                    }}
+                  />
+                ) : showScoreCard && !showHighScores && gameSession ? (
+                  <ScoreCard
+                    stats={gameState.stats}
+                    score={gameState.score}
+                    level={gameState.level}
+                    playerName={playerName}
+                    gameId={gameSession.id}
+                    timestamp={new Date(gameSession.created_at)}
+                    onClose={() => {
+                      setShowScoreCard(false);
                       setShowHighScores(true);
                     }}
                   />
@@ -197,8 +219,11 @@ function App() {
                       onClick={() => {
                         resetGame();
                         setShowHighScores(false);
+                        setShowScoreCard(false);
                         setShowScoreSubmit(false);
                         setShowStats(false);
+                        setGameSession(null);
+                        setPlayerName('');
                       }}
                       className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
                     >
@@ -341,7 +366,7 @@ function App() {
         {gameState.gameOver && (
           <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-40 p-2">
             <div className="flex flex-col items-center gap-2 w-full max-w-6xl max-h-[100dvh] overflow-y-auto py-2">
-              {showStats && !showScoreSubmit && !showHighScores ? (
+              {showStats && !showScoreSubmit && !showScoreCard && !showHighScores ? (
                 <GameStats
                   stats={gameState.stats}
                   score={gameState.score}
@@ -351,15 +376,32 @@ function App() {
                     setShowScoreSubmit(true);
                   }}
                 />
-              ) : showScoreSubmit && !showHighScores ? (
+              ) : showScoreSubmit && !showScoreCard && !showHighScores ? (
                 <SubmitScore
                   score={gameState.score}
-                  onSubmitted={() => {
+                  level={gameState.level}
+                  stats={gameState.stats}
+                  onSubmitted={(session, name) => {
+                    setGameSession(session);
+                    setPlayerName(name);
                     setShowScoreSubmit(false);
-                    setShowHighScores(true);
+                    setShowScoreCard(true);
                   }}
                   onSkip={() => {
                     setShowScoreSubmit(false);
+                    setShowHighScores(true);
+                  }}
+                />
+              ) : showScoreCard && !showHighScores && gameSession ? (
+                <ScoreCard
+                  stats={gameState.stats}
+                  score={gameState.score}
+                  level={gameState.level}
+                  playerName={playerName}
+                  gameId={gameSession.id}
+                  timestamp={new Date(gameSession.created_at)}
+                  onClose={() => {
+                    setShowScoreCard(false);
                     setShowHighScores(true);
                   }}
                 />
@@ -370,8 +412,11 @@ function App() {
                     onClick={() => {
                       resetGame();
                       setShowHighScores(false);
+                      setShowScoreCard(false);
                       setShowScoreSubmit(false);
                       setShowStats(false);
+                      setGameSession(null);
+                      setPlayerName('');
                     }}
                     className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
                   >
@@ -389,8 +434,11 @@ function App() {
             onReset={() => {
               resetGame();
               setShowScoreSubmit(false);
+              setShowScoreCard(false);
               setShowHighScores(false);
               setShowStats(false);
+              setGameSession(null);
+              setPlayerName('');
             }}
             onShowHighScores={() => {
               setShowHighScores(true);
