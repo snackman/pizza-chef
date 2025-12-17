@@ -146,57 +146,56 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
     if (!ctx) return;
 
     const images = imagesRef.current;
-    const width = 600;
-    const height = 980;
-    canvas.width = width;
-    canvas.height = height;
+    const size = 600;
+    canvas.width = size;
+    canvas.height = size;
 
     ctx.fillStyle = '#dc2626';
-    ctx.fillRect(0, 0, width, height);
+    ctx.fillRect(0, 0, size, size);
 
     if (images.splashLogo) {
-      const logoWidth = 100;
+      const logoWidth = 70;
       const logoHeight = (images.splashLogo.height / images.splashLogo.width) * logoWidth;
-      ctx.drawImage(images.splashLogo, (width - logoWidth) / 2, 12, logoWidth, logoHeight);
+      ctx.drawImage(images.splashLogo, (size - logoWidth) / 2, 12, logoWidth, logoHeight);
     }
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 48px system-ui, -apple-system, sans-serif';
+    ctx.font = 'bold 32px system-ui, -apple-system, sans-serif';
     ctx.textAlign = 'center';
     ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
     ctx.shadowBlur = 4;
     ctx.shadowOffsetY = 2;
-    ctx.fillText('Pizza Chef', width / 2, 150);
+    ctx.fillText('Pizza Chef', size / 2, 100);
     ctx.shadowBlur = 0;
     ctx.shadowOffsetY = 0;
 
     if (images.pizzaDAOLogo) {
-      const daoLogoWidth = 150;
+      const daoLogoWidth = 100;
       const daoLogoHeight = (images.pizzaDAOLogo.height / images.pizzaDAOLogo.width) * daoLogoWidth;
-      ctx.drawImage(images.pizzaDAOLogo, (width - daoLogoWidth) / 2, 160, daoLogoWidth, daoLogoHeight);
+      ctx.drawImage(images.pizzaDAOLogo, (size - daoLogoWidth) / 2, 108, daoLogoWidth, daoLogoHeight);
     }
 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
     ctx.beginPath();
-    ctx.roundRect(30, 210, width - 60, 115, 12);
+    ctx.roundRect(24, 150, size - 48, 80, 10);
     ctx.fill();
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 28px system-ui, -apple-system, sans-serif';
-    ctx.fillText(displayName.toUpperCase(), width / 2, 250);
+    ctx.font = 'bold 20px system-ui, -apple-system, sans-serif';
+    ctx.fillText(displayName.toUpperCase(), size / 2, 178);
 
     ctx.fillStyle = '#fbbf24';
-    ctx.font = 'bold 56px system-ui, -apple-system, sans-serif';
-    ctx.fillText(score.toLocaleString(), width / 2, 305);
+    ctx.font = 'bold 40px system-ui, -apple-system, sans-serif';
+    ctx.fillText(score.toLocaleString(), size / 2, 218);
 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
     ctx.beginPath();
-    ctx.roundRect(30, 335, width - 60, 80, 12);
+    ctx.roundRect(24, 238, size - 48, 50, 10);
     ctx.fill();
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.font = 'bold 22px system-ui, -apple-system, sans-serif';
-    ctx.fillText(`Level ${level}`, width / 2, 370);
+    ctx.font = 'bold 18px system-ui, -apple-system, sans-serif';
+    ctx.fillText(`Level ${level}`, size / 2, 262);
 
     const gradeColors: Record<string, string> = {
       'S+': '#fbbf24',
@@ -209,63 +208,64 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
     };
 
     ctx.fillStyle = gradeColors[skillRating.grade] || '#fbbf24';
-    ctx.font = 'bold 36px system-ui, -apple-system, sans-serif';
-    ctx.fillText(skillRating.description, width / 2, 405);
+    ctx.font = 'bold 24px system-ui, -apple-system, sans-serif';
+    ctx.fillText(skillRating.description, size / 2, 282);
 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
     ctx.beginPath();
-    ctx.roundRect(30, 425, width - 60, 280, 12);
+    ctx.roundRect(24, 296, size - 48, 155, 10);
     ctx.fill();
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.font = 'bold 18px system-ui, -apple-system, sans-serif';
+    ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText('STATISTICS', 50, 455);
+    ctx.fillText('STATISTICS', 40, 318);
 
-    const iconSize = 40;
+    const iconSize = 28;
     const statsData = [
-      { emoji: '\u{1F355}', label: 'Slices Baked', value: stats.slicesBaked },
-      { emoji: '\u{2B06}\u{FE0F}', label: 'Oven Upgrades', value: stats.ovenUpgradesMade },
-      { img: images.droolface, label: 'Customers Served', value: stats.customersServed },
-      { emoji: '\u{1F525}', label: 'Best Customer Streak', value: stats.longestCustomerStreak },
-      { img: images.plate, label: 'Plates Caught', value: stats.platesCaught },
-      { emoji: '\u{1F4AB}', label: 'Best Plate Streak', value: stats.largestPlateStreak },
+      { emoji: '\u{1F355}', label: 'Slices', value: stats.slicesBaked },
+      { emoji: '\u{2B06}\u{FE0F}', label: 'Upgrades', value: stats.ovenUpgradesMade },
+      { img: images.droolface, label: 'Served', value: stats.customersServed },
+      { emoji: '\u{1F525}', label: 'Streak', value: stats.longestCustomerStreak },
+      { img: images.plate, label: 'Plates', value: stats.platesCaught },
+      { emoji: '\u{1F4AB}', label: 'Plate Streak', value: stats.largestPlateStreak },
     ];
 
     statsData.forEach((stat, index) => {
-      const col = index % 2;
-      const row = Math.floor(index / 2);
-      const x = col === 0 ? 50 : 310;
-      const y = 475 + row * 85;
+      const col = index % 3;
+      const row = Math.floor(index / 3);
+      const colWidth = (size - 48) / 3;
+      const x = 36 + col * colWidth;
+      const y = 330 + row * 60;
 
       if ('img' in stat && stat.img) {
         ctx.drawImage(stat.img, x, y, iconSize, iconSize);
       } else if ('emoji' in stat) {
         ctx.fillStyle = '#ffffff';
-        ctx.font = '32px system-ui, -apple-system, sans-serif';
+        ctx.font = '22px system-ui, -apple-system, sans-serif';
         ctx.textAlign = 'left';
-        ctx.fillText(stat.emoji, x + 4, y + 30);
+        ctx.fillText(stat.emoji, x + 2, y + 22);
       }
 
       ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-      ctx.font = '16px system-ui, -apple-system, sans-serif';
+      ctx.font = '12px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(stat.label, x + iconSize + 12, y + 15);
+      ctx.fillText(stat.label, x + iconSize + 6, y + 10);
 
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 32px system-ui, -apple-system, sans-serif';
-      ctx.fillText(stat.value.toString(), x + iconSize + 12, y + 48);
+      ctx.font = 'bold 22px system-ui, -apple-system, sans-serif';
+      ctx.fillText(stat.value.toString(), x + iconSize + 6, y + 30);
     });
 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
     ctx.beginPath();
-    ctx.roundRect(30, 715, width - 60, 130, 12);
+    ctx.roundRect(24, 460, size - 48, 90, 10);
     ctx.fill();
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.font = 'bold 18px system-ui, -apple-system, sans-serif';
+    ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText('POWER-UPS COLLECTED', 50, 745);
+    ctx.fillText('POWER-UPS COLLECTED', 40, 482);
 
     const powerUpIcons = [
       { img: images.honey, count: stats.powerUpsUsed.honey },
@@ -276,33 +276,33 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
       { img: images.moltobenny, count: stats.powerUpsUsed.moltobenny },
     ];
 
-    const powerUpSize = 50;
-    const powerUpSpacing = 15;
+    const powerUpSize = 36;
+    const powerUpSpacing = 12;
     const totalPowerUpWidth = powerUpIcons.length * powerUpSize + (powerUpIcons.length - 1) * powerUpSpacing;
-    const powerUpStartX = (width - totalPowerUpWidth) / 2;
+    const powerUpStartX = (size - totalPowerUpWidth) / 2;
 
     powerUpIcons.forEach((powerUp, index) => {
       const x = powerUpStartX + index * (powerUpSize + powerUpSpacing);
-      const y = 760;
+      const y = 494;
 
       if (powerUp.img) {
         ctx.drawImage(powerUp.img, x, y, powerUpSize, powerUpSize);
       }
 
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 20px system-ui, -apple-system, sans-serif';
+      ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(powerUp.count.toString(), x + powerUpSize / 2, y + powerUpSize + 22);
+      ctx.fillText(powerUp.count.toString(), x + powerUpSize / 2, y + powerUpSize + 14);
     });
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-    ctx.font = '16px system-ui, -apple-system, sans-serif';
+    ctx.font = '13px system-ui, -apple-system, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`${formattedDate} at ${formattedTime}`, width / 2, 900);
+    ctx.fillText(`${formattedDate} at ${formattedTime}`, size / 2, 570);
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.font = 'bold 16px system-ui, -apple-system, sans-serif';
-    ctx.fillText('pizzadao.xyz', width / 2, 955);
+    ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
+    ctx.fillText('pizzadao.xyz', size / 2, 590);
   }, [stats, score, level, displayName, skillRating, formattedDate, formattedTime]);
 
   useEffect(() => {
@@ -503,11 +503,10 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
         </p>
       </div>
 
-      <div className="flex justify-center mb-3 bg-red-700 rounded-lg p-2 overflow-hidden">
+      <div className="flex justify-center mb-3 bg-red-700 rounded-lg p-2 overflow-hidden aspect-square">
         <canvas
           ref={canvasRef}
-          className="max-w-full h-auto rounded"
-          style={{ maxHeight: '400px', width: 'auto' }}
+          className="w-full h-full rounded object-contain"
         />
       </div>
 
