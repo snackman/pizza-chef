@@ -260,7 +260,7 @@ function App() {
           </div>
 
           <div
-            className="w-full max-w-6xl aspect-[5/3]"
+            className="relative w-full max-w-6xl aspect-[5/3]"
             onClick={handleGameBoardClick}
           >
             <GameBoard gameState={gameState} />
