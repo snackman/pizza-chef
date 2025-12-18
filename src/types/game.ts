@@ -19,6 +19,7 @@ export interface Customer {
   critic?: boolean;
   badLuckBrian?: boolean;
   flipped?: boolean;
+  textMessage?: string;
 }
 
 export interface PizzaSlice {

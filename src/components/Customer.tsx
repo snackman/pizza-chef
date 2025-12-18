@@ -33,28 +33,42 @@ const Customer: React.FC<CustomerProps> = ({ customer }) => {
   const display = getDisplay();
 
   return (
-    <div
-      className="absolute w-[8%] aspect-square transition-all duration-100 flex items-center justify-center"
-      style={{
-        left: `${leftPosition}%`,
-        top: `${customer.lane * 25 + 6}%`,
-      }}
-    >
-      {display.type === 'image' ? (
-        <img
-          src={display.value}
-          alt={display.alt}
-          className="w-full h-full object-contain"
+    <>
+      <div
+        className="absolute w-[8%] aspect-square transition-all duration-100 flex items-center justify-center"
+        style={{
+          left: `${leftPosition}%`,
+          top: `${customer.lane * 25 + 6}%`,
+        }}
+      >
+        {display.type === 'image' ? (
+          <img
+            src={display.value}
+            alt={display.alt}
+            className="w-full h-full object-contain"
+            style={{
+              transform: customer.flipped ? 'scaleX(-1)' : 'none',
+            }}
+          />
+        ) : (
+          <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
+            {display.value}
+          </div>
+        )}
+      </div>
+      {customer.textMessage && (
+        <div
+          className="absolute px-2 py-1 bg-white text-black rounded border-2 border-black text-xs font-bold whitespace-nowrap"
           style={{
-            transform: customer.flipped ? 'scaleX(-1)' : 'none',
+            left: `${leftPosition}%`,
+            top: `${customer.lane * 25 + 18}%`,
+            transform: 'translateX(-50%)',
           }}
-        />
-      ) : (
-        <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
-          {display.value}
+        >
+          {customer.textMessage}
         </div>
       )}
-    </div>
+    </>
   );
 };
 

@@ -35,28 +35,42 @@ const LandscapeCustomer: React.FC<LandscapeCustomerProps> = ({ customer }) => {
   const display = getDisplay();
 
   return (
-    <div
-      className="absolute w-[8%] aspect-square transition-all duration-100 flex items-center justify-center"
-      style={{
-        left: `${leftPosition}%`,
-        top: `${LANDSCAPE_LANE_POSITIONS[customer.lane]}%`,
-      }}
-    >
-      {display.type === 'image' ? (
-        <img
-          src={display.value}
-          alt={display.alt}
-          className="w-full h-full object-contain"
+    <>
+      <div
+        className="absolute w-[8%] aspect-square transition-all duration-100 flex items-center justify-center"
+        style={{
+          left: `${leftPosition}%`,
+          top: `${LANDSCAPE_LANE_POSITIONS[customer.lane]}%`,
+        }}
+      >
+        {display.type === 'image' ? (
+          <img
+            src={display.value}
+            alt={display.alt}
+            className="w-full h-full object-contain"
+            style={{
+              transform: customer.flipped ? 'scaleX(-1)' : 'none',
+            }}
+          />
+        ) : (
+          <div style={{ fontSize: 'clamp(1rem, 2vw, 1.5rem)' }}>
+            {display.value}
+          </div>
+        )}
+      </div>
+      {customer.textMessage && (
+        <div
+          className="absolute px-2 py-1 bg-white text-black rounded border-2 border-black text-xs font-bold whitespace-nowrap"
           style={{
-            transform: customer.flipped ? 'scaleX(-1)' : 'none',
+            left: `${leftPosition}%`,
+            top: `${LANDSCAPE_LANE_POSITIONS[customer.lane] + 12}%`,
+            transform: 'translateX(-50%)',
           }}
-        />
-      ) : (
-        <div style={{ fontSize: 'clamp(1rem, 2vw, 1.5rem)' }}>
-          {display.value}
+        >
+          {customer.textMessage}
         </div>
       )}
-    </div>
+    </>
   );
 };
 

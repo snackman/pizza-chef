@@ -141,6 +141,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       movingRight: false,
       critic: isCritic,
       badLuckBrian: isBadLuckBrian,
+      flipped: isBadLuckBrian,
     };
 
     setGameState(prev => ({
@@ -487,9 +488,27 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         }
 
         // Bad Luck Brian moving right after dropping a plate
-        if (customer.badLuckBrian && customer.flipped && customer.movingRight) {
-          const newPosition = customer.position + (customer.speed * 2);
+        if (customer.badLuckBrian && customer.movingRight) {
+          const newPosition = customer.position + customer.speed;
           return { ...customer, position: newPosition, hotHoneyAffected: false };
+        }
+
+        // Bad Luck Brian reaching the counter without being served
+        if (customer.badLuckBrian && !customer.movingRight && !customer.served && !customer.disappointed) {
+          const speedModifier = customer.hotHoneyAffected ? 0.5 : 1;
+          const newPosition = customer.position - (customer.speed * speedModifier);
+
+          if (newPosition <= 15) {
+            return {
+              ...customer,
+              position: newPosition,
+              textMessage: "Damn! They sold out again!",
+              flipped: false,
+              movingRight: true,
+              hotHoneyAffected: false
+            };
+          }
+          return { ...customer, position: newPosition };
         }
 
         // Normal customers - only slow if this customer was affected by hot honey
@@ -545,7 +564,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               };
               newState.droppedPlates = [...newState.droppedPlates, droppedPlate];
 
-              return { ...customer, flipped: true, movingRight: true };
+              return { ...customer, flipped: false, movingRight: true };
             }
 
             soundManager.customerServed();
@@ -778,7 +797,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               };
               newState.droppedPlates = [...newState.droppedPlates, droppedPlate];
 
-              return { ...customer, frozen: false, flipped: true, movingRight: true };
+              return { ...customer, frozen: false, flipped: false, movingRight: true };
             }
 
             soundManager.customerUnfreeze();
@@ -849,7 +868,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               };
               newState.droppedPlates = [...newState.droppedPlates, droppedPlate];
 
-              return { ...customer, woozy: false, flipped: true, movingRight: true };
+              return { ...customer, woozy: false, flipped: false, movingRight: true };
             }
 
             const currentState = customer.woozyState || 'normal';
@@ -983,7 +1002,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               };
               newState.droppedPlates = [...newState.droppedPlates, droppedPlate];
 
-              return { ...customer, flipped: true, movingRight: true };
+              return { ...customer, flipped: false, movingRight: true };
             }
 
             soundManager.customerServed();
@@ -1171,7 +1190,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               };
               newState.droppedPlates = [...newState.droppedPlates, droppedPlate];
 
-              return { ...customer, flipped: true, movingRight: true };
+              return { ...customer, flipped: false, movingRight: true };
             }
 
             soundManager.customerServed();
