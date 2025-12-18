@@ -1512,6 +1512,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       customers: [],
       pizzaSlices: [],
       emptyPlates: [],
+      droppedPlates: [],
       powerUps: [],
       activePowerUps: [],
       floatingScores: [],
@@ -1535,6 +1536,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       showStore: false,
       lastStoreLevelShown: 0,
       pendingStoreShow: false,
+      fallingPizza: undefined,
+      starPowerActive: false,
+      powerUpAlert: undefined,
       stats: {
         slicesBaked: 0,
         customersServed: 0,
