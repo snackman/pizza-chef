@@ -506,6 +506,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       });
 
       // Star power: auto-feed customers on contact with chef
+      const starPowerScores: Array<{ points: number; lane: number; position: number }> = [];
       if (hasStar && newState.availableSlices > 0) {
         newState.customers = newState.customers.map(customer => {
           // Check if customer is in same lane and close to chef
@@ -520,7 +521,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             newState.score += pointsEarned;
             newState.bank += baseBank * bankMultiplier;
             newState.happyCustomers += 1;
-            newState = addFloatingScore(pointsEarned, customer.lane, customer.position, newState);
+            starPowerScores.push({ points: pointsEarned, lane: customer.lane, position: customer.position });
             newState.stats.customersServed += 1;
             newState.stats.currentCustomerStreak += 1;
             if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) {
@@ -553,9 +554,15 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         });
       }
 
+      // Add floating scores for star power
+      starPowerScores.forEach(({ points, lane, position }) => {
+        newState = addFloatingScore(points, lane, position, newState);
+      });
+
       // Check chef-powerup collisions first (chef grabs power-up at position 15 or less)
       // Don't pick up power-ups while nyan cat sweep is active
       const caughtPowerUpIds = new Set<string>();
+      const powerUpScores: Array<{ points: number; lane: number; position: number }> = [];
       newState.powerUps.forEach(powerUp => {
         if (powerUp.position <= 15 && powerUp.lane === newState.chefLane && !newState.nyanSweep?.active) {
           // Chef grabbed the power-up - activate it
@@ -564,7 +571,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           const scoreMultiplier = hasDoge ? 2 : 1;
           const pointsEarned = baseScore * scoreMultiplier;
           newState.score += pointsEarned;
-          newState = addFloatingScore(pointsEarned, powerUp.lane, powerUp.position, newState);
+          powerUpScores.push({ points: pointsEarned, lane: powerUp.lane, position: powerUp.position });
           caughtPowerUpIds.add(powerUp.id);
 
           // Activate the power-up
@@ -648,7 +655,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             // Moltobenny power-up gives 10,000 points (affected by doge multiplier)
             const moltoScore = 10000 * scoreMultiplier;
             newState.score += moltoScore;
-            newState = addFloatingScore(moltoScore, newState.chefLane, 15, newState);
+            powerUpScores.push({ points: moltoScore, lane: newState.chefLane, position: 15 });
           } else {
             // Add to active power-ups (hot honey and ice-cream)
             newState.activePowerUps = [
@@ -685,6 +692,11 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           }))
           .filter(powerUp => powerUp.position > 10);
 
+      // Add floating scores for power-ups
+      powerUpScores.forEach(({ points, lane, position }) => {
+        newState = addFloatingScore(points, lane, position, newState);
+      });
+
       // Move pizza slices
       newState.pizzaSlices = newState.pizzaSlices.map(slice => ({
         ...slice,
@@ -695,6 +707,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       const remainingSlices: PizzaSlice[] = [];
       const destroyedPowerUpIds = new Set<string>();
       const platesFromSlices = new Set<string>();
+      const customerScores: Array<{ points: number; lane: number; position: number }> = [];
       let sliceWentOffScreen = false;
 
       newState.pizzaSlices.forEach(slice => {
@@ -722,7 +735,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             const pointsEarned = Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
             newState.score += pointsEarned;
             newState.bank += baseBank * bankMultiplier;
-            newState = addFloatingScore(pointsEarned, customer.lane, customer.position, newState);
+            customerScores.push({ points: pointsEarned, lane: customer.lane, position: customer.position });
             newState.happyCustomers += 1;
             newState.stats.customersServed += 1;
             newState.stats.currentCustomerStreak += 1;
@@ -776,7 +789,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               const pointsEarned = Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
               newState.score += pointsEarned;
               newState.bank += baseBank * bankMultiplier;
-              newState = addFloatingScore(pointsEarned, customer.lane, customer.position, newState);
+              customerScores.push({ points: pointsEarned, lane: customer.lane, position: customer.position });
               newState.happyCustomers += 1;
               newState.stats.customersServed += 1;
               newState.stats.currentCustomerStreak += 1;
@@ -818,7 +831,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               const pointsEarned = Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
               newState.score += pointsEarned;
               newState.bank += baseBank * bankMultiplier;
-              newState = addFloatingScore(pointsEarned, customer.lane, customer.position, newState);
+              customerScores.push({ points: pointsEarned, lane: customer.lane, position: customer.position });
 
               // Create empty plate for first slice too
               const newPlate: EmptyPlate = {
@@ -842,7 +855,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               const pointsEarned = Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
               newState.score += pointsEarned;
               newState.bank += baseBank * bankMultiplier;
-              newState = addFloatingScore(pointsEarned, customer.lane, customer.position, newState);
+              customerScores.push({ points: pointsEarned, lane: customer.lane, position: customer.position });
               newState.happyCustomers += 1;
               newState.stats.customersServed += 1;
               newState.stats.currentCustomerStreak += 1;
@@ -887,7 +900,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             const pointsEarned = Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
             newState.score += pointsEarned;
             newState.bank += baseBank * bankMultiplier;
-            newState = addFloatingScore(pointsEarned, customer.lane, customer.position, newState);
+            customerScores.push({ points: pointsEarned, lane: customer.lane, position: customer.position });
             newState.happyCustomers += 1;
             newState.stats.customersServed += 1;
             newState.stats.currentCustomerStreak += 1;
@@ -958,7 +971,13 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         newState.stats.currentPlateStreak = 0;
       }
 
+      // Add floating scores for customer servings
+      customerScores.forEach(({ points, lane, position }) => {
+        newState = addFloatingScore(points, lane, position, newState);
+      });
+
       // Move empty plates
+      const platesToAddScores: Array<{ points: number; lane: number; position: number }> = [];
       newState.emptyPlates = newState.emptyPlates.map(plate => ({
         ...plate,
         position: plate.position - (plate.speed),
@@ -971,7 +990,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           const plateStreakMultiplier = getStreakMultiplier(newState.stats.currentPlateStreak);
           const pointsEarned = Math.floor(baseScore * dogeMultiplier * plateStreakMultiplier);
           newState.score += pointsEarned;
-          newState = addFloatingScore(pointsEarned, plate.lane, plate.position, newState);
+          platesToAddScores.push({ points: pointsEarned, lane: plate.lane, position: plate.position });
           newState.stats.platesCaught += 1;
           newState.stats.currentPlateStreak += 1;
           if (newState.stats.currentPlateStreak > newState.stats.largestPlateStreak) {
@@ -985,6 +1004,11 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           return false;
         }
         return true;
+      });
+
+      // Add floating scores for caught plates
+      platesToAddScores.forEach(({ points, lane, position }) => {
+        newState = addFloatingScore(points, lane, position, newState);
       });
 
       // Handle Nyan Cat sweep animation
@@ -1017,6 +1041,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         }
 
         // Check for customers at chef's current position and serve them
+        const nyanScores: Array<{ points: number; lane: number; position: number }> = [];
         newState.customers = newState.customers.map(customer => {
           if (customer.served || customer.disappointed || customer.vomit) {
             return customer;
@@ -1034,7 +1059,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             const pointsEarned = Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
             newState.score += pointsEarned;
             newState.bank += baseBank * bankMultiplier;
-            newState = addFloatingScore(pointsEarned, customer.lane, customer.position, newState);
+            nyanScores.push({ points: pointsEarned, lane: customer.lane, position: customer.position });
             newState.happyCustomers += 1;
             newState.stats.customersServed += 1;
             newState.stats.currentCustomerStreak += 1;
@@ -1056,6 +1081,11 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           }
 
           return customer;
+        });
+
+        // Add floating scores for nyan sweep
+        nyanScores.forEach(({ points, lane, position }) => {
+          newState = addFloatingScore(points, lane, position, newState);
         });
 
         if (newState.nyanSweep.xPosition >= MAX_X) {
