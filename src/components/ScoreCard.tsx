@@ -320,16 +320,16 @@ export default function ScoreCard({ stats, score, level, playerName, gameId, tim
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
     ctx.font = '13px system-ui, -apple-system, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`${formattedDate} at ${formattedTime}`, size / 2, 565);
+    ctx.textAlign = 'left';
+    ctx.fillText(`${formattedDate} at ${formattedTime}`, 24, 565);
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-    ctx.font = '12px system-ui, -apple-system, sans-serif';
-    ctx.fillText(`Game: ${gameId.slice(0, 8)}`, size / 2, 580);
+    ctx.textAlign = 'right';
+    ctx.fillText(`#${gameId.slice(0, 8)}`, size - 24, 565);
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
-    ctx.fillText('pizzadao.xyz', size / 2, 595);
+    ctx.textAlign = 'center';
+    ctx.fillText('pizzadao.xyz', size / 2, 588);
 
     setImageGenerated(true);
   }, [stats, score, level, playerName, gameId, skillRating, formattedDate, formattedTime]);

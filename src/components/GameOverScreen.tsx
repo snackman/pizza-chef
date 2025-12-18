@@ -297,12 +297,13 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
     ctx.font = '13px system-ui, -apple-system, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`${formattedDate} at ${formattedTime}`, size / 2, 570);
+    ctx.textAlign = 'left';
+    ctx.fillText(`${formattedDate} at ${formattedTime}`, 24, 575);
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
-    ctx.fillText('pizzadao.xyz', size / 2, 590);
+    ctx.font = 'bold 13px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('pizzadao.xyz', size - 24, 575);
   }, [stats, score, level, displayName, skillRating, formattedDate, formattedTime]);
 
   useEffect(() => {
