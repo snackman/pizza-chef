@@ -556,9 +556,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         return customer.position > -10;
       });
 
-      // Track customers that have already had plates created this frame
-      const customersWithPlatesCreated = new Set<string>();
-
       // Star power: auto-feed customers on contact with chef
       const starPowerScores: Array<{ points: number; lane: number; position: number }> = [];
       if (hasStar && newState.availableSlices > 0) {
@@ -619,17 +616,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               }
             }
 
-            // Create empty plate (only if not already created for this customer)
-            if (!customersWithPlatesCreated.has(customer.id)) {
-              customersWithPlatesCreated.add(customer.id);
-              const newPlate: EmptyPlate = {
-                id: `plate-star-${Date.now()}-${customer.id}`,
-                lane: customer.lane,
-                position: customer.position,
-                speed: PLATE_SPEED,
-              };
-              newState.emptyPlates = [...newState.emptyPlates, newPlate];
-            }
+            // Create empty plate
+            const newPlate: EmptyPlate = {
+              id: `plate-star-${Date.now()}-${customer.id}`,
+              lane: customer.lane,
+              position: customer.position,
+              speed: PLATE_SPEED,
+            };
+            newState.emptyPlates = [...newState.emptyPlates, newPlate];
 
             return { ...customer, served: true, hasPlate: false };
           }
@@ -879,17 +873,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               }
             }
 
-            // Create empty plate for unfreezing slice (only if not already created)
-            if (!customersWithPlatesCreated.has(customer.id)) {
-              customersWithPlatesCreated.add(customer.id);
-              const newPlate: EmptyPlate = {
-                id: `plate-${Date.now()}-${customer.id}-unfreeze`,
-                lane: customer.lane,
-                position: customer.position,
-                speed: PLATE_SPEED,
-              };
-              newState.emptyPlates = [...newState.emptyPlates, newPlate];
-            }
+            // Create empty plate for unfreezing slice
+            const newPlate: EmptyPlate = {
+              id: `plate-${Date.now()}-${customer.id}-unfreeze`,
+              lane: customer.lane,
+              position: customer.position,
+              speed: PLATE_SPEED,
+            };
+            newState.emptyPlates = [...newState.emptyPlates, newPlate];
             platesFromSlices.add(slice.id);
 
             // Mark as unfrozen this period so they won't refreeze until ice cream expires
@@ -963,17 +954,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 }
               }
 
-              // Create empty plate (only if not already created)
-              if (!customersWithPlatesCreated.has(customer.id)) {
-                customersWithPlatesCreated.add(customer.id);
-                const newPlate: EmptyPlate = {
-                  id: `plate-${Date.now()}-${customer.id}`,
-                  lane: customer.lane,
-                  position: customer.position,
-                  speed: PLATE_SPEED,
-                };
-                newState.emptyPlates = [...newState.emptyPlates, newPlate];
-              }
+              // Create empty plate
+              const newPlate: EmptyPlate = {
+                id: `plate-${Date.now()}-${customer.id}`,
+                lane: customer.lane,
+                position: customer.position,
+                speed: PLATE_SPEED,
+              };
+              newState.emptyPlates = [...newState.emptyPlates, newPlate];
               platesFromSlices.add(slice.id);
 
               return { ...customer, woozy: false, woozyState: 'satisfied', served: true, hasPlate: false, hotHoneyAffected: false };
@@ -992,17 +980,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               newState.bank += baseBank * bankMultiplier;
               customerScores.push({ points: pointsEarned, lane: customer.lane, position: customer.position });
 
-              // Create empty plate for first slice too (only if not already created)
-              if (!customersWithPlatesCreated.has(customer.id)) {
-                customersWithPlatesCreated.add(customer.id);
-                const newPlate: EmptyPlate = {
-                  id: `plate-${Date.now()}-${customer.id}-first`,
-                  lane: customer.lane,
-                  position: customer.position,
-                  speed: PLATE_SPEED,
-                };
-                newState.emptyPlates = [...newState.emptyPlates, newPlate];
-              }
+              // Create empty plate for first slice too
+              const newPlate: EmptyPlate = {
+                id: `plate-${Date.now()}-${customer.id}-first`,
+                lane: customer.lane,
+                position: customer.position,
+                speed: PLATE_SPEED,
+              };
+              newState.emptyPlates = [...newState.emptyPlates, newPlate];
               platesFromSlices.add(slice.id);
 
               return { ...customer, woozy: false, woozyState: 'drooling' };
@@ -1035,17 +1020,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 }
               }
 
-              // Create empty plate (only if not already created)
-              if (!customersWithPlatesCreated.has(customer.id)) {
-                customersWithPlatesCreated.add(customer.id);
-                const newPlate: EmptyPlate = {
-                  id: `plate-${Date.now()}-${customer.id}`,
-                  lane: customer.lane,
-                  position: customer.position,
-                  speed: PLATE_SPEED,
-                };
-                newState.emptyPlates = [...newState.emptyPlates, newPlate];
-              }
+              // Create empty plate
+              const newPlate: EmptyPlate = {
+                id: `plate-${Date.now()}-${customer.id}`,
+                lane: customer.lane,
+                position: customer.position,
+                speed: PLATE_SPEED,
+              };
+              newState.emptyPlates = [...newState.emptyPlates, newPlate];
               platesFromSlices.add(slice.id);
 
               return { ...customer, woozy: false, woozyState: 'satisfied', served: true, hasPlate: false };
@@ -1116,17 +1098,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               }
             }
 
-            // Create empty plate immediately when customer is served (only if not already created)
-            if (!customersWithPlatesCreated.has(customer.id)) {
-              customersWithPlatesCreated.add(customer.id);
-              const newPlate: EmptyPlate = {
-                id: `plate-${Date.now()}-${customer.id}`,
-                lane: customer.lane,
-                position: customer.position,
-                speed: PLATE_SPEED,
-              };
-              newState.emptyPlates = [...newState.emptyPlates, newPlate];
-            }
+            // Create empty plate immediately when customer is served
+            const newPlate: EmptyPlate = {
+              id: `plate-${Date.now()}-${customer.id}`,
+              lane: customer.lane,
+              position: customer.position,
+              speed: PLATE_SPEED,
+            };
+            newState.emptyPlates = [...newState.emptyPlates, newPlate];
             platesFromSlices.add(slice.id);
 
             return { ...customer, served: true, hasPlate: false };
