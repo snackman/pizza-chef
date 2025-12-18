@@ -672,6 +672,21 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 };
               }
               if (!customer.served && !customer.vomit && !customer.disappointed) {
+                // Bad Luck Brian can't handle beer - hurls and loses you a star
+                if (customer.badLuckBrian) {
+                  livesLost += 1;
+                  return {
+                    ...customer,
+                    vomit: true,
+                    disappointed: true,
+                    movingRight: true,
+                    flipped: false,
+                    textMessage: "Oh man I hurled",
+                    textMessageTime: Date.now(),
+                    hotHoneyAffected: false,
+                    frozen: false,
+                  };
+                }
                 return {
                   ...customer,
                   woozy: true,
@@ -1495,6 +1510,21 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             };
           }
           if (!customer.served && !customer.vomit && !customer.disappointed) {
+            // Bad Luck Brian can't handle beer - hurls and loses you a star
+            if (customer.badLuckBrian) {
+              livesLost += 1;
+              return {
+                ...customer,
+                vomit: true,
+                disappointed: true,
+                movingRight: true,
+                flipped: false,
+                textMessage: "Oh man I hurled",
+                textMessageTime: Date.now(),
+                hotHoneyAffected: false,
+                frozen: false,
+              };
+            }
             return {
               ...customer,
               woozy: true,
