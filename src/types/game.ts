@@ -20,6 +20,7 @@ export interface Customer {
   badLuckBrian?: boolean;
   flipped?: boolean;
   textMessage?: string;
+  textMessageTime?: number;
 }
 
 export interface PizzaSlice {

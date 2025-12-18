@@ -349,6 +349,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       // Remove expired dropped plates (after 1 second)
       newState.droppedPlates = newState.droppedPlates.filter(dp => now - dp.startTime < 1000);
 
+      // Clear expired text messages (after 3 seconds)
+      newState.customers = newState.customers.map(customer => {
+        if (customer.textMessage && customer.textMessageTime && now - customer.textMessageTime >= 3000) {
+          return { ...customer, textMessage: undefined, textMessageTime: undefined };
+        }
+        return customer;
+      });
+
       // Remove expired power-ups
       const expiredStarPower = newState.activePowerUps.some(p => p.type === 'star' && now >= p.endTime);
       const expiredHoney = newState.activePowerUps.some(p => p.type === 'honey' && now >= p.endTime);
@@ -499,10 +507,16 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           const newPosition = customer.position - (customer.speed * speedModifier);
 
           if (newPosition <= 15) {
+            const counterMessages = [
+              "Damn! They sold out again!",
+              "You don't have gluten free?"
+            ];
+            const randomMessage = counterMessages[Math.floor(Math.random() * counterMessages.length)];
             return {
               ...customer,
               position: newPosition,
-              textMessage: "Damn! They sold out again!",
+              textMessage: randomMessage,
+              textMessageTime: Date.now(),
               flipped: false,
               movingRight: true,
               hotHoneyAffected: false
@@ -565,7 +579,13 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               };
               newState.droppedPlates = [...newState.droppedPlates, droppedPlate];
 
-              return { ...customer, flipped: false, movingRight: true };
+              return {
+                ...customer,
+                flipped: false,
+                movingRight: true,
+                textMessage: "Ugh! I dropped my slice!",
+                textMessageTime: Date.now()
+              };
             }
 
             soundManager.customerServed();
@@ -729,13 +749,28 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                   : c
               );
             }
-            // If ice cream, mark all current non-served customers to be frozen
+            // If ice cream, mark all current non-served customers to be frozen (except Bad Luck Brian)
             if (powerUp.type === 'ice-cream') {
-              newState.customers = newState.customers.map(c =>
-                (!c.served && !c.disappointed && !c.vomit)
-                  ? { ...c, shouldBeFrozenByIceCream: true, frozen: true, hotHoneyAffected: false, woozy: false, woozyState: undefined }
-                  : c
-              );
+              newState.customers = newState.customers.map(c => {
+                if (!c.served && !c.disappointed && !c.vomit) {
+                  if (c.badLuckBrian) {
+                    return {
+                      ...c,
+                      textMessage: "I'm lactose intolerant",
+                      textMessageTime: Date.now()
+                    };
+                  }
+                  return {
+                    ...c,
+                    shouldBeFrozenByIceCream: true,
+                    frozen: true,
+                    hotHoneyAffected: false,
+                    woozy: false,
+                    woozyState: undefined
+                  };
+                }
+                return c;
+              });
             }
           }
         }
@@ -799,7 +834,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               };
               newState.droppedPlates = [...newState.droppedPlates, droppedPlate];
 
-              return { ...customer, frozen: false, flipped: false, movingRight: true };
+              return {
+                ...customer,
+                frozen: false,
+                flipped: false,
+                movingRight: true,
+                textMessage: "Ugh! I dropped my slice!",
+                textMessageTime: Date.now()
+              };
             }
 
             soundManager.customerUnfreeze();
@@ -871,7 +913,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               };
               newState.droppedPlates = [...newState.droppedPlates, droppedPlate];
 
-              return { ...customer, woozy: false, flipped: false, movingRight: true };
+              return {
+                ...customer,
+                woozy: false,
+                flipped: false,
+                movingRight: true,
+                textMessage: "Ugh! I dropped my slice!",
+                textMessageTime: Date.now()
+              };
             }
 
             const currentState = customer.woozyState || 'normal';
@@ -1006,7 +1055,13 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               };
               newState.droppedPlates = [...newState.droppedPlates, droppedPlate];
 
-              return { ...customer, flipped: false, movingRight: true };
+              return {
+                ...customer,
+                flipped: false,
+                movingRight: true,
+                textMessage: "Ugh! I dropped my slice!",
+                textMessageTime: Date.now()
+              };
             }
 
             soundManager.customerServed();
@@ -1195,7 +1250,13 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               };
               newState.droppedPlates = [...newState.droppedPlates, droppedPlate];
 
-              return { ...customer, flipped: false, movingRight: true };
+              return {
+                ...customer,
+                flipped: false,
+                movingRight: true,
+                textMessage: "Ugh! I dropped my slice!",
+                textMessageTime: Date.now()
+              };
             }
 
             soundManager.customerServed();
@@ -1493,13 +1554,28 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               : c
           );
         }
-        // Ice cream overrides hot honey and woozy states
+        // Ice cream overrides hot honey and woozy states (except Bad Luck Brian)
         if (type === 'ice-cream') {
-          newState.customers = newState.customers.map(c =>
-            (!c.served && !c.disappointed && !c.vomit)
-              ? { ...c, shouldBeFrozenByIceCream: true, frozen: true, hotHoneyAffected: false, woozy: false, woozyState: undefined }
-              : c
-          );
+          newState.customers = newState.customers.map(c => {
+            if (!c.served && !c.disappointed && !c.vomit) {
+              if (c.badLuckBrian) {
+                return {
+                  ...c,
+                  textMessage: "I'm lactose intolerant",
+                  textMessageTime: Date.now()
+                };
+              }
+              return {
+                ...c,
+                shouldBeFrozenByIceCream: true,
+                frozen: true,
+                hotHoneyAffected: false,
+                woozy: false,
+                woozyState: undefined
+              };
+            }
+            return c;
+          });
         }
       }
 
