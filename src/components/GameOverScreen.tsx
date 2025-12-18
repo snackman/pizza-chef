@@ -117,7 +117,7 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
         loadImage('/Sprites/beer.png'),
         loadImage('/Sprites/doge.png'),
         loadImage('/Sprites/nyancat.png'),
-        loadImage('https://i.imgur.com/uf9VPRu.png'),
+        loadImage('https://i.imgur.com/hw0jkrq.png'),
         loadImage('https://i.imgur.com/5goVcAS.png'),
       ]);
 
