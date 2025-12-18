@@ -41,7 +41,14 @@ const Customer: React.FC<CustomerProps> = ({ customer }) => {
       }}
     >
       {display.type === 'image' ? (
-        <img src={display.value} alt={display.alt} className="w-full h-full object-contain" />
+        <img
+          src={display.value}
+          alt={display.alt}
+          className="w-full h-full object-contain"
+          style={{
+            transform: customer.flipped ? 'scaleX(-1)' : 'none',
+          }}
+        />
       ) : (
         <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
           {display.value}

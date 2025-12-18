@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import LandscapeCustomer from './LandscapeCustomer';
 import PizzaSlice from './PizzaSlice';
 import EmptyPlate from './EmptyPlate';
+import LandscapeDroppedPlate from './LandscapeDroppedPlate';
 import PowerUp from './PowerUp';
 import PizzaSliceStack from './PizzaSliceStack';
 import FloatingScore from './FloatingScore';
@@ -176,6 +177,10 @@ const LandscapeGameBoard: React.FC<LandscapeGameBoardProps> = ({ gameState }) =>
 
       {gameState.emptyPlates.map((plate) => (
         <EmptyPlate key={plate.id} plate={plate} />
+      ))}
+
+      {gameState.droppedPlates.map((droppedPlate) => (
+        <LandscapeDroppedPlate key={droppedPlate.id} droppedPlate={droppedPlate} />
       ))}
 
       {gameState.powerUps.map((powerUp) => (

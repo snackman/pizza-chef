@@ -18,6 +18,7 @@ export interface Customer {
   shouldBeHotHoneyAffected?: boolean;
   critic?: boolean;
   badLuckBrian?: boolean;
+  flipped?: boolean;
 }
 
 export interface PizzaSlice {
@@ -59,6 +60,13 @@ export interface FloatingScore {
   startTime: number;
 }
 
+export interface DroppedPlate {
+  id: string;
+  lane: number;
+  position: number;
+  startTime: number;
+}
+
 export interface GameStats {
   slicesBaked: number;
   customersServed: number;
@@ -86,6 +94,7 @@ export interface GameState {
   powerUps: PowerUp[];
   activePowerUps: ActivePowerUp[];
   floatingScores: FloatingScore[];
+  droppedPlates: DroppedPlate[];
   chefLane: number;
   score: number;
   lives: number;

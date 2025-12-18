@@ -43,7 +43,14 @@ const LandscapeCustomer: React.FC<LandscapeCustomerProps> = ({ customer }) => {
       }}
     >
       {display.type === 'image' ? (
-        <img src={display.value} alt={display.alt} className="w-full h-full object-contain" />
+        <img
+          src={display.value}
+          alt={display.alt}
+          className="w-full h-full object-contain"
+          style={{
+            transform: customer.flipped ? 'scaleX(-1)' : 'none',
+          }}
+        />
       ) : (
         <div style={{ fontSize: 'clamp(1rem, 2vw, 1.5rem)' }}>
           {display.value}

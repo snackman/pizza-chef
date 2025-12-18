@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import Customer from './Customer';
 import PizzaSlice from './PizzaSlice';
 import EmptyPlate from './EmptyPlate';
+import DroppedPlate from './DroppedPlate';
 import PowerUp from './PowerUp';
 import PizzaSliceStack from './PizzaSliceStack';
 import FloatingScore from './FloatingScore';
@@ -181,6 +182,10 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
 
       {gameState.emptyPlates.map((plate) => (
         <EmptyPlate key={plate.id} plate={plate} />
+      ))}
+
+      {gameState.droppedPlates.map((droppedPlate) => (
+        <DroppedPlate key={droppedPlate.id} droppedPlate={droppedPlate} />
       ))}
 
       {gameState.powerUps.map((powerUp) => (

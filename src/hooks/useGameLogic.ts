@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { GameState, Customer, PizzaSlice, EmptyPlate, PowerUp, PowerUpType, FloatingScore } from '../types/game';
+import { GameState, Customer, PizzaSlice, EmptyPlate, PowerUp, PowerUpType, FloatingScore, DroppedPlate } from '../types/game';
 import { soundManager } from '../utils/sounds';
 import { getStreakMultiplier } from '../components/StreakDisplay';
 
@@ -22,6 +22,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     powerUps: [],
     activePowerUps: [],
     floatingScores: [],
+    droppedPlates: [],
     chefLane: 0,
     score: 0,
     lives: 3,
@@ -344,6 +345,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       // Remove expired floating scores (after 1 second)
       newState.floatingScores = newState.floatingScores.filter(fs => now - fs.startTime < 1000);
 
+      // Remove expired dropped plates (after 1 second)
+      newState.droppedPlates = newState.droppedPlates.filter(dp => now - dp.startTime < 1000);
+
       // Remove expired power-ups
       const expiredStarPower = newState.activePowerUps.some(p => p.type === 'star' && now >= p.endTime);
       const expiredHoney = newState.activePowerUps.some(p => p.type === 'honey' && now >= p.endTime);
@@ -482,6 +486,12 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           return { ...customer, position: newPosition, hotHoneyAffected: false };
         }
 
+        // Bad Luck Brian moving right after dropping a plate
+        if (customer.badLuckBrian && customer.flipped && customer.movingRight) {
+          const newPosition = customer.position + (customer.speed * 2);
+          return { ...customer, position: newPosition, hotHoneyAffected: false };
+        }
+
         // Normal customers - only slow if this customer was affected by hot honey
         const speedModifier = customer.hotHoneyAffected ? 0.5 : 1;
         const newPosition = customer.position - (customer.speed * speedModifier);
@@ -525,7 +535,17 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             if (customer.badLuckBrian) {
               soundManager.plateDropped();
               newState.stats.currentCustomerStreak = 0;
-              return { ...customer, disappointed: true, movingRight: true };
+              newState.stats.currentPlateStreak = 0;
+
+              const droppedPlate = {
+                id: `dropped-${Date.now()}-${customer.id}`,
+                lane: customer.lane,
+                position: customer.position,
+                startTime: Date.now(),
+              };
+              newState.droppedPlates = [...newState.droppedPlates, droppedPlate];
+
+              return { ...customer, flipped: true, movingRight: true };
             }
 
             soundManager.customerServed();
@@ -747,8 +767,18 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             if (customer.badLuckBrian) {
               soundManager.plateDropped();
               newState.stats.currentCustomerStreak = 0;
+              newState.stats.currentPlateStreak = 0;
               platesFromSlices.add(slice.id);
-              return { ...customer, frozen: false, disappointed: true, movingRight: true };
+
+              const droppedPlate = {
+                id: `dropped-${Date.now()}-${customer.id}`,
+                lane: customer.lane,
+                position: customer.position,
+                startTime: Date.now(),
+              };
+              newState.droppedPlates = [...newState.droppedPlates, droppedPlate];
+
+              return { ...customer, frozen: false, flipped: true, movingRight: true };
             }
 
             soundManager.customerUnfreeze();
@@ -808,8 +838,18 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             if (customer.badLuckBrian) {
               soundManager.plateDropped();
               newState.stats.currentCustomerStreak = 0;
+              newState.stats.currentPlateStreak = 0;
               platesFromSlices.add(slice.id);
-              return { ...customer, woozy: false, disappointed: true, movingRight: true };
+
+              const droppedPlate = {
+                id: `dropped-${Date.now()}-${customer.id}`,
+                lane: customer.lane,
+                position: customer.position,
+                startTime: Date.now(),
+              };
+              newState.droppedPlates = [...newState.droppedPlates, droppedPlate];
+
+              return { ...customer, woozy: false, flipped: true, movingRight: true };
             }
 
             const currentState = customer.woozyState || 'normal';
@@ -932,8 +972,18 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             if (customer.badLuckBrian) {
               soundManager.plateDropped();
               newState.stats.currentCustomerStreak = 0;
+              newState.stats.currentPlateStreak = 0;
               platesFromSlices.add(slice.id);
-              return { ...customer, disappointed: true, movingRight: true };
+
+              const droppedPlate = {
+                id: `dropped-${Date.now()}-${customer.id}`,
+                lane: customer.lane,
+                position: customer.position,
+                startTime: Date.now(),
+              };
+              newState.droppedPlates = [...newState.droppedPlates, droppedPlate];
+
+              return { ...customer, flipped: true, movingRight: true };
             }
 
             soundManager.customerServed();
@@ -1111,7 +1161,17 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             if (customer.badLuckBrian) {
               soundManager.plateDropped();
               newState.stats.currentCustomerStreak = 0;
-              return { ...customer, disappointed: true, movingRight: true };
+              newState.stats.currentPlateStreak = 0;
+
+              const droppedPlate = {
+                id: `dropped-${Date.now()}-${customer.id}`,
+                lane: customer.lane,
+                position: customer.position,
+                startTime: Date.now(),
+              };
+              newState.droppedPlates = [...newState.droppedPlates, droppedPlate];
+
+              return { ...customer, flipped: true, movingRight: true };
             }
 
             soundManager.customerServed();
