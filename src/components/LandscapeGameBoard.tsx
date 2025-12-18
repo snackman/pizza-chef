@@ -128,7 +128,11 @@ const LandscapeGameBoard: React.FC<LandscapeGameBoardProps> = ({ gameState }) =>
           }}
         >
           {gameState.gameOver ? (
-            <div style={{ fontSize: 'clamp(1rem, 2vw, 1.5rem)' }}>🧟</div>
+            <img
+              src="https://i.imgur.com/PwRdw0u.png"
+              alt="game over"
+              className="w-full h-full object-contain"
+            />
           ) : (
             <img
               src={"https://i.imgur.com/EPCSa79.png"}

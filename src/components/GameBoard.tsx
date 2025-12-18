@@ -128,7 +128,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
             }}
           >
             {gameState.gameOver ? (
-              <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>🧟</div>
+              <img src="https://i.imgur.com/PwRdw0u.png" alt="game over" className="w-full h-full object-contain" style={{ transform: 'scale(15)' }} />
             ) : (
               <img src={"https://i.imgur.com/EPCSa79.png"} alt="chef" className="w-full h-full object-contain" style={{ transform: 'scale(15)' }} />
             )}
