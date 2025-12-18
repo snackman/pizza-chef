@@ -86,14 +86,14 @@ const MobileGameControls: React.FC<MobileGameControlsProps> = ({
           <button
             onClick={onMoveUp}
             disabled={isDisabled || safeLane === 0}
-            className="w-24 h-16 bg-blue-500 text-white rounded-t-xl hover:bg-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95 active:bg-blue-700 flex items-center justify-center text-3xl font-bold shadow-lg border-b border-blue-400"
+            className="w-24 h-[108px] bg-blue-500 text-white rounded-t-xl hover:bg-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95 active:bg-blue-700 flex items-center justify-center text-3xl font-bold shadow-lg border-b border-blue-400"
           >
             ↑
           </button>
           <button
             onClick={onMoveDown}
             disabled={isDisabled || safeLane === 3}
-            className="w-24 h-16 bg-blue-500 text-white rounded-b-xl hover:bg-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95 active:bg-blue-700 flex items-center justify-center text-3xl font-bold shadow-lg"
+            className="w-24 h-[108px] bg-blue-500 text-white rounded-b-xl hover:bg-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95 active:bg-blue-700 flex items-center justify-center text-3xl font-bold shadow-lg"
           >
             ↓
           </button>
