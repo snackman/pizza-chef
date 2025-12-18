@@ -117,7 +117,7 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
         loadImage('/Sprites/beer.png'),
         loadImage('/Sprites/doge.png'),
         loadImage('/Sprites/nyancat.png'),
-        loadImage('/Sprites/yumface.png'),
+        loadImage('https://i.imgur.com/uf9VPRu.png'),
         loadImage('https://i.imgur.com/5goVcAS.png'),
       ]);
 
@@ -302,6 +302,7 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
       { img: images.honey, count: stats.powerUpsUsed.honey },
       { img: images.iceCream, count: stats.powerUpsUsed['ice-cream'] },
       { img: images.beer, count: stats.powerUpsUsed.beer },
+      { img: images.star, count: stats.powerUpsUsed.star },
       { img: images.doge, count: stats.powerUpsUsed.doge },
       { img: images.nyancat, count: stats.powerUpsUsed.nyan },
       { img: images.moltobenny, count: stats.powerUpsUsed.moltobenny },
