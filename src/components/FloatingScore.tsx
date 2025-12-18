@@ -14,13 +14,13 @@ export default function FloatingScore({ id, points, lane, position, onComplete }
 
   useEffect(() => {
     const startTime = Date.now();
-    const duration = 1000;
+    const duration = 2000;
 
     const animate = () => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
 
-      setYOffset(progress * -50);
+      setYOffset(progress * -30);
       setOpacity(1 - progress);
 
       if (progress < 1) {
@@ -42,14 +42,15 @@ export default function FloatingScore({ id, points, lane, position, onComplete }
 
   return (
     <div
-      className="absolute pointer-events-none font-bold text-xl z-50"
+      className="absolute pointer-events-none font-black text-4xl z-50"
       style={{
         left: `${position}%`,
         top: `${lanePosition + yOffset}%`,
         opacity,
         color,
-        textShadow: '0 0 4px rgba(0,0,0,0.5), 0 0 8px rgba(255,255,255,0.3)',
+        textShadow: '2px 2px 8px rgba(0,0,0,0.9), -2px -2px 8px rgba(0,0,0,0.9), 2px -2px 8px rgba(0,0,0,0.9), -2px 2px 8px rgba(0,0,0,0.9), 0 0 16px rgba(255,255,255,0.5)',
         transform: 'translateX(-50%)',
+        WebkitTextStroke: '2px black',
       }}
     >
       +{points.toLocaleString()}
