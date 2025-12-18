@@ -518,7 +518,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           // Check if customer is in same lane and close to chef
           if (customer.lane === newState.chefLane && !customer.served && !customer.disappointed && !customer.vomit && Math.abs(customer.position - 15) < 8) {
             soundManager.customerServed();
-            const baseScore = 150;
+            const baseScore = customer.critic ? 300 : 150;
             const baseBank = 1;
             const dogeMultiplier = hasDoge ? 2 : 1;
             const bankMultiplier = hasDoge ? 2 : 1;
@@ -735,7 +735,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             soundManager.customerUnfreeze();
 
             // Give score for serving frozen customer with customer streak multiplier
-            const baseScore = 150;
+            const baseScore = customer.critic ? 300 : 150;
             const baseBank = 1;
             const dogeMultiplier = hasDoge ? 2 : 1;
             const bankMultiplier = hasDoge ? 2 : 1;
@@ -789,7 +789,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             // If hot honey is active and customer is affected by it, satisfy them with one slice
             if (hasHoney && customer.hotHoneyAffected) {
               soundManager.customerServed();
-              const baseScore = 150;
+              const baseScore = customer.critic ? 300 : 150;
               const baseBank = 1;
               const dogeMultiplier = hasDoge ? 2 : 1;
               const bankMultiplier = hasDoge ? 2 : 1;
@@ -855,7 +855,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             } else if (currentState === 'drooling') {
               // Second pizza - becomes satisfied
               soundManager.customerServed();
-              const baseScore = 150;
+              const baseScore = customer.critic ? 300 : 150;
               const baseBank = 1;
               const dogeMultiplier = hasDoge ? 2 : 1;
               const bankMultiplier = hasDoge ? 2 : 1;
@@ -900,7 +900,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               Math.abs(customer.position - slice.position) < 5) {
             consumed = true;
             soundManager.customerServed();
-            const baseScore = 150; // 100 base + 50 bonus for customer eating pizza
+            const baseScore = customer.critic ? 300 : 150;
             const baseBank = 1;
             const dogeMultiplier = hasDoge ? 2 : 1;
             const bankMultiplier = hasDoge ? 2 : 1;
@@ -1070,7 +1070,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           if (customer.lane === newState.chefLane &&
               Math.abs(customer.position - newState.nyanSweep!.xPosition) < 10) {
             soundManager.customerServed();
-            const baseScore = 150;
+            const baseScore = customer.critic ? 300 : 150;
             const baseBank = 1;
             const dogeMultiplier = hasDoge ? 2 : 1;
             const bankMultiplier = hasDoge ? 2 : 1;
