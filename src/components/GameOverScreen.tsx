@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Send, Trophy, Download, Share2, Check, Image as ImageIcon, ArrowLeft, RotateCcw } from 'lucide-react';
 import { submitScore, createGameSession, GameSession } from '../services/highScores';
 import { GameStats } from '../types/game';
@@ -86,6 +86,7 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
 
   const displayName = playerName.trim() || DEFAULT_NAME;
   const skillRating = calculateSkillRating(stats, score, level);
+  const gameId = useMemo(() => crypto.randomUUID(), []);
   const timestamp = new Date();
   const formattedDate = timestamp.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const formattedTime = timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
@@ -298,13 +299,16 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
     ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
     ctx.font = '13px system-ui, -apple-system, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText(`${formattedDate} at ${formattedTime}`, 24, 575);
+    ctx.fillText(`${formattedDate} at ${formattedTime}`, 24, 565);
+
+    ctx.textAlign = 'right';
+    ctx.fillText(`#${gameId.slice(0, 8)}`, size - 24, 565);
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.font = 'bold 13px system-ui, -apple-system, sans-serif';
-    ctx.textAlign = 'right';
-    ctx.fillText('pizzadao.xyz', size - 24, 575);
-  }, [stats, score, level, displayName, skillRating, formattedDate, formattedTime]);
+    ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('pizzadao.xyz', size / 2, 588);
+  }, [stats, score, level, displayName, skillRating, gameId, formattedDate, formattedTime]);
 
   useEffect(() => {
     if (imagesLoaded) {
@@ -385,7 +389,7 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
     if (!canvas) return;
 
     const link = document.createElement('a');
-    link.download = `pizza-chef-score.png`;
+    link.download = `pizza-chef-score-${gameId.slice(0, 8)}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
     setCopySuccess('image');
@@ -399,7 +403,7 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
     try {
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
       if (blob) {
-        const file = new File([blob], `pizza-chef-score.png`, { type: 'image/png' });
+        const file = new File([blob], `pizza-chef-score-${gameId.slice(0, 8)}.png`, { type: 'image/png' });
         await navigator.share({
           title: 'Pizza Chef Score Card',
           text: `I scored ${score.toLocaleString()} points in Pizza Chef! Level ${level} - ${skillRating.description}`,
