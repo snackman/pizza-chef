@@ -10,7 +10,7 @@ interface LandscapeScoreBoardProps {
 const LandscapeScoreBoard: React.FC<LandscapeScoreBoardProps> = ({ gameState, onShowInstructions }) => {
   return (
     <div
-      className="absolute text-white rounded-lg flex items-center justify-center px-4 z-0"
+      className="absolute text-white rounded-lg flex items-center justify-center px-4"
       style={{
         top: '0%',
         left: '20%',
