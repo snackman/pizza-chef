@@ -1,15 +1,39 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Send, Trophy, Download, Share2, Check, Image as ImageIcon, ArrowLeft, RotateCcw } from 'lucide-react';
 import { submitScore, createGameSession, GameSession } from '../services/highScores';
-import { GameStats } from '../types/game';
+import { GameStats, StarLostReason } from '../types/game';
 import HighScores from './HighScores';
 
 interface GameOverScreenProps {
   stats: GameStats;
   score: number;
   level: number;
+  lastStarLostReason?: StarLostReason;
   onSubmitted: (session: GameSession, playerName: string) => void;
   onPlayAgain: () => void;
+}
+
+function getStarLostMessage(reason?: StarLostReason): string {
+  switch (reason) {
+    case 'burned_pizza':
+      return 'Your pizza burned in the oven!';
+    case 'disappointed_customer':
+      return 'A hungry customer left disappointed!';
+    case 'disappointed_critic':
+      return 'A food critic stormed off angry!';
+    case 'woozy_customer_reached':
+      return 'A tipsy customer stumbled to the counter!';
+    case 'woozy_critic_reached':
+      return 'A tipsy critic demanded a refund!';
+    case 'beer_vomit':
+      return 'Too much beer made a customer sick!';
+    case 'beer_critic_vomit':
+      return 'A critic had one too many beers!';
+    case 'brian_hurled':
+      return 'Bad Luck Brian couldn\'t handle the beer!';
+    default:
+      return 'You ran out of stars!';
+  }
 }
 
 interface LoadedImages {
@@ -59,7 +83,7 @@ function loadImage(src: string): Promise<HTMLImageElement | null> {
   });
 }
 
-export default function GameOverScreen({ stats, score, level, onSubmitted, onPlayAgain }: GameOverScreenProps) {
+export default function GameOverScreen({ stats, score, level, lastStarLostReason, onSubmitted, onPlayAgain }: GameOverScreenProps) {
   const [playerName, setPlayerName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -532,7 +556,7 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
   return (
     <div className="bg-white rounded-xl shadow-2xl p-3 sm:p-6 w-full max-w-lg mx-auto max-h-[95vh] overflow-y-auto">
       <div className="text-center mb-3">
-        <h2 className="text-2xl sm:text-3xl font-bold text-red-600">Game Over!</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-red-600">{getStarLostMessage(lastStarLostReason)}</h2>
       </div>
 
       <div className="flex justify-center mb-3 bg-red-700 rounded-lg p-2 overflow-hidden aspect-square">

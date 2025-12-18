@@ -170,6 +170,7 @@ function App() {
                   stats={gameState.stats}
                   score={gameState.score}
                   level={gameState.level}
+                  lastStarLostReason={gameState.lastStarLostReason}
                   onSubmitted={() => {}}
                   onPlayAgain={() => {
                     resetGame();
@@ -314,6 +315,7 @@ function App() {
                 stats={gameState.stats}
                 score={gameState.score}
                 level={gameState.level}
+                lastStarLostReason={gameState.lastStarLostReason}
                 onSubmitted={() => {}}
                 onPlayAgain={() => {
                   resetGame();

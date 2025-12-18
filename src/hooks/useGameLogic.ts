@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { GameState, Customer, PizzaSlice, EmptyPlate, PowerUp, PowerUpType, FloatingScore, DroppedPlate } from '../types/game';
+import { GameState, Customer, PizzaSlice, EmptyPlate, PowerUp, PowerUpType, FloatingScore, DroppedPlate, StarLostReason } from '../types/game';
 import { soundManager } from '../utils/sounds';
 import { getStreakMultiplier } from '../components/StreakDisplay';
 
@@ -312,6 +312,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             soundManager.ovenBurned();
             soundManager.lifeLost();
             newState.lives = Math.max(0, newState.lives - 1);
+            newState.lastStarLostReason = 'burned_pizza';
             if (newState.lives === 0) {
               newState.gameOver = true;
               soundManager.gameOver();
@@ -474,6 +475,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               // Critic customers remove 2 stars instead of 1
               const starsLost = customer.critic ? 2 : 1;
               newState.lives = Math.max(0, newState.lives - starsLost);
+              newState.lastStarLostReason = customer.critic ? 'woozy_critic_reached' : 'woozy_customer_reached';
               if (newState.lives === 0) {
                 newState.gameOver = true;
                 soundManager.gameOver();
@@ -536,6 +538,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           // Critic customers remove 2 stars instead of 1
           const starsLost = customer.critic ? 2 : 1;
           newState.lives = Math.max(0, newState.lives - starsLost);
+          newState.lastStarLostReason = customer.critic ? 'disappointed_critic' : 'disappointed_customer';
           if (newState.lives === 0) {
             newState.gameOver = true;
             soundManager.gameOver();
@@ -658,11 +661,13 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             // Make all current unsatisfied customers woozy, existing woozy customers become vomit faces
             // Beer overrides hot honey and frozen states
             let livesLost = 0;
+            let lastReason: StarLostReason | undefined;
             newState.customers = newState.customers.map(customer => {
               if (customer.woozy) {
                 // Existing woozy customers become vomit/dissatisfied
                 // Critic customers lose 2 lives instead of 1
                 livesLost += customer.critic ? 2 : 1;
+                lastReason = customer.critic ? 'beer_critic_vomit' : 'beer_vomit';
                 return {
                   ...customer,
                   woozy: false,
@@ -675,6 +680,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 // Bad Luck Brian can't handle beer - hurls and loses you a star
                 if (customer.badLuckBrian) {
                   livesLost += 1;
+                  lastReason = 'brian_hurled';
                   return {
                     ...customer,
                     vomit: true,
@@ -702,6 +708,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             if (livesLost > 0) {
               soundManager.lifeLost();
               newState.stats.currentCustomerStreak = 0;
+              if (lastReason) {
+                newState.lastStarLostReason = lastReason;
+              }
             }
             if (newState.lives === 0) {
               newState.gameOver = true;
@@ -1497,10 +1506,12 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       if (type === 'beer') {
         let livesLost = 0;
+        let lastReason: StarLostReason | undefined;
         newState.customers = newState.customers.map(customer => {
           if (customer.woozy) {
             // Critic customers lose 2 lives instead of 1
             livesLost += customer.critic ? 2 : 1;
+            lastReason = customer.critic ? 'beer_critic_vomit' : 'beer_vomit';
             return {
               ...customer,
               woozy: false,
@@ -1513,6 +1524,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             // Bad Luck Brian can't handle beer - hurls and loses you a star
             if (customer.badLuckBrian) {
               livesLost += 1;
+              lastReason = 'brian_hurled';
               return {
                 ...customer,
                 vomit: true,
@@ -1539,6 +1551,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         newState.lives = Math.max(0, newState.lives - livesLost);
         if (livesLost > 0) {
           newState.stats.currentCustomerStreak = 0;
+          if (lastReason) {
+            newState.lastStarLostReason = lastReason;
+          }
         }
         if (newState.lives === 0) {
           newState.gameOver = true;
@@ -1628,6 +1643,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       lives: 3,
       level: 1,
       gameOver: false,
+      lastStarLostReason: undefined,
       paused: false,
       availableSlices: 0,
       ovens: {
