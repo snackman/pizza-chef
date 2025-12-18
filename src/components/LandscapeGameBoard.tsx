@@ -159,8 +159,7 @@ const LandscapeGameBoard: React.FC<LandscapeGameBoardProps> = ({ gameState }) =>
             height: '3%',
             left: `${gameState.nyanSweep.xPosition}%`,
             top: `${23 + gameState.chefLane * 20}%`,
-            zIndex: 20,
-            willChange: 'transform, left, top'
+            zIndex: 20
           }}
         >
           <img src="https://i.imgur.com/fGPU4Pu.png" alt="nyan cat" className="w-full h-full object-contain" style={{ transform: 'scale(0.5)' }} />

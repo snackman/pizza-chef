@@ -1222,11 +1222,11 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       // Handle Nyan Cat sweep animation
       if (newState.nyanSweep?.active) {
         const MAX_X = 90;
-        const UPDATE_INTERVAL = 150;
+        const UPDATE_INTERVAL = 50;
 
         if (now - newState.nyanSweep.lastUpdateTime >= UPDATE_INTERVAL) {
           const INITIAL_X = 15;
-          const increment = ((MAX_X - INITIAL_X) / 80) * 4.5;
+          const increment = ((MAX_X - INITIAL_X) / 80) * 1.5;
           const newXPosition = newState.nyanSweep.xPosition + increment;
 
           let newLane = newState.chefLane + newState.nyanSweep.laneDirection * 0.5;
@@ -1250,14 +1250,13 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
         // Check for customers at chef's current position and serve them
         const nyanScores: Array<{ points: number; lane: number; position: number }> = [];
-        const currentLaneRounded = Math.round(newState.chefLane);
         newState.customers = newState.customers.map(customer => {
           if (customer.served || customer.disappointed || customer.vomit) {
             return customer;
           }
 
           // Check if customer is in chef's lane and at approximately the chef's x position
-          if (customer.lane === currentLaneRounded &&
+          if (customer.lane === newState.chefLane &&
               Math.abs(customer.position - newState.nyanSweep!.xPosition) < 10) {
 
             // Bad Luck Brian drops the plate immediately (nyan cat doesn't create plates anyway)
