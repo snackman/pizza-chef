@@ -561,6 +561,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 lane: customer.lane,
                 position: customer.position,
                 startTime: Date.now(),
+                hasSlice: true,
               };
               newState.droppedPlates = [...newState.droppedPlates, droppedPlate];
 
@@ -794,6 +795,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 lane: customer.lane,
                 position: customer.position,
                 startTime: Date.now(),
+                hasSlice: true,
               };
               newState.droppedPlates = [...newState.droppedPlates, droppedPlate];
 
@@ -865,6 +867,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 lane: customer.lane,
                 position: customer.position,
                 startTime: Date.now(),
+                hasSlice: true,
               };
               newState.droppedPlates = [...newState.droppedPlates, droppedPlate];
 
@@ -999,6 +1002,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 lane: customer.lane,
                 position: customer.position,
                 startTime: Date.now(),
+                hasSlice: true,
               };
               newState.droppedPlates = [...newState.droppedPlates, droppedPlate];
 
@@ -1187,6 +1191,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 lane: customer.lane,
                 position: customer.position,
                 startTime: Date.now(),
+                hasSlice: true,
               };
               newState.droppedPlates = [...newState.droppedPlates, droppedPlate];
 

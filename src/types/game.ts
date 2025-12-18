@@ -66,6 +66,7 @@ export interface DroppedPlate {
   lane: number;
   position: number;
   startTime: number;
+  hasSlice?: boolean;
 }
 
 export interface GameStats {

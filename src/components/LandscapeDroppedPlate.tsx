@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { DroppedPlate as DroppedPlateType } from '../types/game';
 import paperPlateImg from '/Sprites/paperplate.png';
+import fullPizzaImg from '/Sprites/fullpizza.png';
 
 interface LandscapeDroppedPlateProps {
   droppedPlate: DroppedPlateType;
@@ -43,6 +44,14 @@ const LandscapeDroppedPlate: React.FC<LandscapeDroppedPlateProps> = ({ droppedPl
       }}
     >
       <img src={paperPlateImg} alt="dropped plate" className="w-full h-full object-contain" />
+      {droppedPlate.hasSlice && (
+        <img
+          src={fullPizzaImg}
+          alt="pizza slice"
+          className="absolute top-0 left-0 w-full h-full object-contain"
+          style={{ transform: 'scale(0.8)' }}
+        />
+      )}
     </div>
   );
 };
