@@ -127,6 +127,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     const lane = Math.floor(Math.random() * 4);
     const disappointedEmojis = ['😢', '😭', '😠', '🤬'];
     const isCritic = Math.random() < 0.15;
+    const isBadLuckBrian = !isCritic && Math.random() < 0.1;
     const newCustomer: Customer = {
       id: `customer-${now}-${lane}`,
       lane,
@@ -138,6 +139,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       disappointedEmoji: disappointedEmojis[Math.floor(Math.random() * disappointedEmojis.length)],
       movingRight: false,
       critic: isCritic,
+      badLuckBrian: isBadLuckBrian,
     };
 
     setGameState(prev => ({
@@ -517,6 +519,15 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         newState.customers = newState.customers.map(customer => {
           // Check if customer is in same lane and close to chef
           if (customer.lane === newState.chefLane && !customer.served && !customer.disappointed && !customer.vomit && Math.abs(customer.position - 15) < 8) {
+            newState.availableSlices = Math.max(0, newState.availableSlices - 1);
+
+            // Bad Luck Brian drops the plate immediately
+            if (customer.badLuckBrian) {
+              soundManager.plateDropped();
+              newState.stats.currentCustomerStreak = 0;
+              return { ...customer, disappointed: true, movingRight: true };
+            }
+
             soundManager.customerServed();
             const baseScore = customer.critic ? 300 : 150;
             const baseBank = 1;
@@ -533,7 +544,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) {
               newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
             }
-            newState.availableSlices = Math.max(0, newState.availableSlices - 1);
 
             // Check if we should award a star (every 8 happy customers, max 5 stars)
             // Critic customers don't get special treatment with star power (served at position ~15)
@@ -732,6 +742,15 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           if (!consumed && customer.frozen && customer.lane === slice.lane &&
               Math.abs(customer.position - slice.position) < 5) {
             consumed = true;
+
+            // Bad Luck Brian drops the plate immediately (even when frozen)
+            if (customer.badLuckBrian) {
+              soundManager.plateDropped();
+              newState.stats.currentCustomerStreak = 0;
+              platesFromSlices.add(slice.id);
+              return { ...customer, frozen: false, disappointed: true, movingRight: true };
+            }
+
             soundManager.customerUnfreeze();
 
             // Give score for serving frozen customer with customer streak multiplier
@@ -784,6 +803,15 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           if (!consumed && customer.woozy && !customer.frozen && customer.lane === slice.lane &&
               Math.abs(customer.position - slice.position) < 5) {
             consumed = true;
+
+            // Bad Luck Brian drops the plate immediately (even when woozy)
+            if (customer.badLuckBrian) {
+              soundManager.plateDropped();
+              newState.stats.currentCustomerStreak = 0;
+              platesFromSlices.add(slice.id);
+              return { ...customer, woozy: false, disappointed: true, movingRight: true };
+            }
+
             const currentState = customer.woozyState || 'normal';
 
             // If hot honey is active and customer is affected by it, satisfy them with one slice
@@ -899,6 +927,15 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           if (!consumed && !customer.served && !customer.woozy && !customer.frozen && customer.lane === slice.lane &&
               Math.abs(customer.position - slice.position) < 5) {
             consumed = true;
+
+            // Bad Luck Brian drops the plate immediately
+            if (customer.badLuckBrian) {
+              soundManager.plateDropped();
+              newState.stats.currentCustomerStreak = 0;
+              platesFromSlices.add(slice.id);
+              return { ...customer, disappointed: true, movingRight: true };
+            }
+
             soundManager.customerServed();
             const baseScore = customer.critic ? 300 : 150;
             const baseBank = 1;
@@ -1069,6 +1106,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           // Check if customer is in chef's lane and at approximately the chef's x position
           if (customer.lane === newState.chefLane &&
               Math.abs(customer.position - newState.nyanSweep!.xPosition) < 10) {
+
+            // Bad Luck Brian drops the plate immediately (nyan cat doesn't create plates anyway)
+            if (customer.badLuckBrian) {
+              soundManager.plateDropped();
+              newState.stats.currentCustomerStreak = 0;
+              return { ...customer, disappointed: true, movingRight: true };
+            }
+
             soundManager.customerServed();
             const baseScore = customer.critic ? 300 : 150;
             const baseBank = 1;
