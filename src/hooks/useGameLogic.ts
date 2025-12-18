@@ -126,6 +126,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     // Customer spawn choice
     const lane = Math.floor(Math.random() * 4);
     const disappointedEmojis = ['😢', '😭', '😠', '🤬'];
+    const isCritic = Math.random() < 0.15;
     const newCustomer: Customer = {
       id: `customer-${now}-${lane}`,
       lane,
@@ -136,6 +137,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       disappointed: false,
       disappointedEmoji: disappointedEmojis[Math.floor(Math.random() * disappointedEmojis.length)],
       movingRight: false,
+      critic: isCritic,
     };
 
     setGameState(prev => ({
@@ -454,7 +456,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               soundManager.customerDisappointed();
               soundManager.lifeLost();
               newState.stats.currentCustomerStreak = 0;
-              newState.lives = Math.max(0, newState.lives - 1);
+              // Critic customers remove 2 stars instead of 1
+              const starsLost = customer.critic ? 2 : 1;
+              newState.lives = Math.max(0, newState.lives - starsLost);
               if (newState.lives === 0) {
                 newState.gameOver = true;
                 soundManager.gameOver();
@@ -484,7 +488,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           soundManager.customerDisappointed();
           soundManager.lifeLost();
           newState.stats.currentCustomerStreak = 0;
-          newState.lives = Math.max(0, newState.lives - 1);
+          // Critic customers remove 2 stars instead of 1
+          const starsLost = customer.critic ? 2 : 1;
+          newState.lives = Math.max(0, newState.lives - starsLost);
           if (newState.lives === 0) {
             newState.gameOver = true;
             soundManager.gameOver();
@@ -529,13 +535,28 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             }
             newState.availableSlices = Math.max(0, newState.availableSlices - 1);
 
-            // Check if we should award a star (every 8 happy customers, max 5 stars)
-            if (newState.happyCustomers % 8 === 0 && newState.lives < 5) {
-              const starsToAdd = hasDoge ? 2 : 1;
-              const actualStarsToAdd = Math.min(starsToAdd, 5 - newState.lives);
-              newState.lives += actualStarsToAdd;
-              if (actualStarsToAdd > 0) {
-                soundManager.lifeGained();
+            // Critic customer special star mechanics
+            if (customer.critic) {
+              // Star power serves at position ~15, which is < 30, so remove one star
+              newState.lives = Math.max(0, newState.lives - 1);
+              soundManager.lifeLost();
+              if (newState.lives === 0) {
+                newState.gameOver = true;
+                soundManager.gameOver();
+                if (newState.availableSlices > 0) {
+                  newState.fallingPizza = { lane: newState.chefLane, y: 0 };
+                  newState.availableSlices = 0;
+                }
+              }
+            } else {
+              // Check if we should award a star (every 8 happy customers, max 5 stars)
+              if (newState.happyCustomers % 8 === 0 && newState.lives < 5) {
+                const starsToAdd = hasDoge ? 2 : 1;
+                const actualStarsToAdd = Math.min(starsToAdd, 5 - newState.lives);
+                newState.lives += actualStarsToAdd;
+                if (actualStarsToAdd > 0) {
+                  soundManager.lifeGained();
+                }
               }
             }
 
@@ -584,7 +605,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             newState.customers = newState.customers.map(customer => {
               if (customer.woozy) {
                 // Existing woozy customers become vomit/dissatisfied
-                livesLost++;
+                // Critic customers lose 2 lives instead of 1
+                livesLost += customer.critic ? 2 : 1;
                 return {
                   ...customer,
                   woozy: false,
@@ -908,10 +930,33 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
             }
 
-            // Check if we should award a star (every 8 happy customers, max 5 stars)
-            if (newState.happyCustomers % 8 === 0 && newState.lives < 5) {
-              soundManager.lifeGained();
-              newState.lives += 1;
+            // Critic customer special star mechanics
+            if (customer.critic) {
+              if (customer.position >= 70) {
+                // Served before xPosition 70 - add a star
+                if (newState.lives < 5) {
+                  newState.lives += 1;
+                  soundManager.lifeGained();
+                }
+              } else if (customer.position < 30) {
+                // Served closer than xPosition 30 - remove one star
+                newState.lives = Math.max(0, newState.lives - 1);
+                soundManager.lifeLost();
+                if (newState.lives === 0) {
+                  newState.gameOver = true;
+                  soundManager.gameOver();
+                  if (newState.availableSlices > 0) {
+                    newState.fallingPizza = { lane: newState.chefLane, y: 0 };
+                    newState.availableSlices = 0;
+                  }
+                }
+              }
+            } else {
+              // Check if we should award a star (every 8 happy customers, max 5 stars)
+              if (newState.happyCustomers % 8 === 0 && newState.lives < 5) {
+                soundManager.lifeGained();
+                newState.lives += 1;
+              }
             }
 
             // Create empty plate immediately when customer is served
@@ -1067,13 +1112,36 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
             }
 
-            // Check if we should award a star
-            if (newState.happyCustomers % 8 === 0 && newState.lives < 5) {
-              const starsToAdd = hasDoge ? 2 : 1;
-              const actualStarsToAdd = Math.min(starsToAdd, 5 - newState.lives);
-              newState.lives += actualStarsToAdd;
-              if (actualStarsToAdd > 0) {
-                soundManager.lifeGained();
+            // Critic customer special star mechanics
+            if (customer.critic) {
+              if (customer.position >= 70) {
+                // Served before xPosition 70 - add a star
+                if (newState.lives < 5) {
+                  newState.lives += 1;
+                  soundManager.lifeGained();
+                }
+              } else if (customer.position < 30) {
+                // Served closer than xPosition 30 - remove one star
+                newState.lives = Math.max(0, newState.lives - 1);
+                soundManager.lifeLost();
+                if (newState.lives === 0) {
+                  newState.gameOver = true;
+                  soundManager.gameOver();
+                  if (newState.availableSlices > 0) {
+                    newState.fallingPizza = { lane: newState.chefLane, y: 0 };
+                    newState.availableSlices = 0;
+                  }
+                }
+              }
+            } else {
+              // Check if we should award a star
+              if (newState.happyCustomers % 8 === 0 && newState.lives < 5) {
+                const starsToAdd = hasDoge ? 2 : 1;
+                const actualStarsToAdd = Math.min(starsToAdd, 5 - newState.lives);
+                newState.lives += actualStarsToAdd;
+                if (actualStarsToAdd > 0) {
+                  soundManager.lifeGained();
+                }
               }
             }
 
@@ -1263,7 +1331,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         let livesLost = 0;
         newState.customers = newState.customers.map(customer => {
           if (customer.woozy) {
-            livesLost++;
+            // Critic customers lose 2 lives instead of 1
+            livesLost += customer.critic ? 2 : 1;
             return {
               ...customer,
               woozy: false,

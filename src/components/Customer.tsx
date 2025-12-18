@@ -5,6 +5,7 @@ import yumfaceImg from '/Sprites/yumface.png';
 import frozenfaceImg from '/Sprites/frozenface.png';
 const spicyfaceImg = "https://i.imgur.com/MDS5EVg.png";
 import woozyfaceImg from '/Sprites/woozyface.png';
+const criticImg = "https://i.imgur.com/ZygBTOI.png";
 
 interface CustomerProps {
   customer: CustomerType;
@@ -23,6 +24,7 @@ const Customer: React.FC<CustomerProps> = ({ customer }) => {
     if (customer.served) return { type: 'image', value: yumfaceImg, alt: 'yum' };
     if (customer.disappointed) return { type: 'emoji', value: customer.disappointedEmoji || '😢' };
     if (customer.hotHoneyAffected) return { type: 'image', value: spicyfaceImg, alt: 'spicy' };
+    if (customer.critic) return { type: 'image', value: criticImg, alt: 'critic' };
     return { type: 'image', value: droolfaceImg, alt: 'drool' };
   };
 

@@ -16,6 +16,7 @@ export interface Customer {
   hotHoneyAffected?: boolean;
   shouldBeFrozenByIceCream?: boolean;
   shouldBeHotHoneyAffected?: boolean;
+  critic?: boolean;
 }
 
 export interface PizzaSlice {
