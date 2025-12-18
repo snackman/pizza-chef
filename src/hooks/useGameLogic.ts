@@ -535,28 +535,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             }
             newState.availableSlices = Math.max(0, newState.availableSlices - 1);
 
-            // Critic customer special star mechanics
-            if (customer.critic) {
-              // Star power serves at position ~15, which is < 30, so remove one star
-              newState.lives = Math.max(0, newState.lives - 1);
-              soundManager.lifeLost();
-              if (newState.lives === 0) {
-                newState.gameOver = true;
-                soundManager.gameOver();
-                if (newState.availableSlices > 0) {
-                  newState.fallingPizza = { lane: newState.chefLane, y: 0 };
-                  newState.availableSlices = 0;
-                }
-              }
-            } else {
-              // Check if we should award a star (every 8 happy customers, max 5 stars)
-              if (newState.happyCustomers % 8 === 0 && newState.lives < 5) {
-                const starsToAdd = hasDoge ? 2 : 1;
-                const actualStarsToAdd = Math.min(starsToAdd, 5 - newState.lives);
-                newState.lives += actualStarsToAdd;
-                if (actualStarsToAdd > 0) {
-                  soundManager.lifeGained();
-                }
+            // Check if we should award a star (every 8 happy customers, max 5 stars)
+            // Critic customers don't get special treatment with star power (served at position ~15)
+            if (!customer.critic && newState.happyCustomers % 8 === 0 && newState.lives < 5) {
+              const starsToAdd = hasDoge ? 2 : 1;
+              const actualStarsToAdd = Math.min(starsToAdd, 5 - newState.lives);
+              newState.lives += actualStarsToAdd;
+              if (actualStarsToAdd > 0) {
+                soundManager.lifeGained();
               }
             }
 
@@ -932,23 +918,11 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
             // Critic customer special star mechanics
             if (customer.critic) {
-              if (customer.position >= 70) {
-                // Served before xPosition 70 - add a star
+              if (customer.position >= 55) {
+                // Served before xPosition 55 - add a star
                 if (newState.lives < 5) {
                   newState.lives += 1;
                   soundManager.lifeGained();
-                }
-              } else if (customer.position < 30) {
-                // Served closer than xPosition 30 - remove one star
-                newState.lives = Math.max(0, newState.lives - 1);
-                soundManager.lifeLost();
-                if (newState.lives === 0) {
-                  newState.gameOver = true;
-                  soundManager.gameOver();
-                  if (newState.availableSlices > 0) {
-                    newState.fallingPizza = { lane: newState.chefLane, y: 0 };
-                    newState.availableSlices = 0;
-                  }
                 }
               }
             } else {
@@ -1114,23 +1088,11 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
             // Critic customer special star mechanics
             if (customer.critic) {
-              if (customer.position >= 70) {
-                // Served before xPosition 70 - add a star
+              if (customer.position >= 55) {
+                // Served before xPosition 55 - add a star
                 if (newState.lives < 5) {
                   newState.lives += 1;
                   soundManager.lifeGained();
-                }
-              } else if (customer.position < 30) {
-                // Served closer than xPosition 30 - remove one star
-                newState.lives = Math.max(0, newState.lives - 1);
-                soundManager.lifeLost();
-                if (newState.lives === 0) {
-                  newState.gameOver = true;
-                  soundManager.gameOver();
-                  if (newState.availableSlices > 0) {
-                    newState.fallingPizza = { lane: newState.chefLane, y: 0 };
-                    newState.availableSlices = 0;
-                  }
                 }
               }
             } else {
