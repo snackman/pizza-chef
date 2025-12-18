@@ -152,6 +152,7 @@ function App() {
           <LandscapeControls
             gameOver={gameState.gameOver}
             paused={gameState.paused}
+            nyanSweepActive={gameState.nyanSweep?.active ?? false}
             onMoveUp={() => moveChef('up')}
             onMoveDown={() => moveChef('down')}
             onServePizza={servePizza}
@@ -369,6 +370,7 @@ function App() {
           <MobileGameControls
             gameOver={gameState.gameOver}
             paused={gameState.paused}
+            nyanSweepActive={gameState.nyanSweep?.active ?? false}
             onMoveUp={() => moveChef('up')}
             onMoveDown={() => moveChef('down')}
             onServePizza={servePizza}
