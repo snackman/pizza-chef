@@ -235,6 +235,17 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
     ctx.font = `bold ${20 * scale}px system-ui, -apple-system, sans-serif`;
     ctx.fillText(skillRating.description, size / 2, 159 * scale);
 
+    const deathMessage = getStarLostMessage(lastStarLostReason);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.beginPath();
+    ctx.roundRect(24 * scale, 173 * scale, size - 48 * scale, 40 * scale, 10 * scale);
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.font = `${16 * scale}px system-ui, -apple-system, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(`\u{1FAA6} ${deathMessage}`, size / 2, 200 * scale);
+
     const awards: string[] = [];
     if (stats.longestCustomerStreak >= 10) awards.push('Streak Master');
     if (stats.customersServed >= 50) awards.push('Crowd Pleaser');
@@ -246,36 +257,36 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
     ctx.beginPath();
-    ctx.roundRect(24 * scale, 173 * scale, size - 48 * scale, 50 * scale, 10 * scale);
+    ctx.roundRect(24 * scale, 221 * scale, size - 48 * scale, 50 * scale, 10 * scale);
     ctx.fill();
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.font = `bold ${14 * scale}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = 'left';
-    ctx.fillText('AWARDS', 40 * scale, 195 * scale);
+    ctx.fillText('AWARDS', 40 * scale, 243 * scale);
 
     if (awards.length === 0) {
       ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
       ctx.font = `italic ${14 * scale}px system-ui, -apple-system, sans-serif`;
       ctx.textAlign = 'center';
-      ctx.fillText('No awards this time!', size / 2, 215 * scale);
+      ctx.fillText('No awards this time!', size / 2, 263 * scale);
     } else {
       ctx.fillStyle = '#fbbf24';
       ctx.font = `bold ${14 * scale}px system-ui, -apple-system, sans-serif`;
       ctx.textAlign = 'center';
       const awardsText = awards.slice(0, 3).join('  |  ');
-      ctx.fillText(awardsText, size / 2, 215 * scale);
+      ctx.fillText(awardsText, size / 2, 263 * scale);
     }
 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
     ctx.beginPath();
-    ctx.roundRect(24 * scale, 231 * scale, size - 48 * scale, 155 * scale, 10 * scale);
+    ctx.roundRect(24 * scale, 279 * scale, size - 48 * scale, 155 * scale, 10 * scale);
     ctx.fill();
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.font = `bold ${14 * scale}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = 'left';
-    ctx.fillText('STATISTICS', 40 * scale, 253 * scale);
+    ctx.fillText('STATISTICS', 40 * scale, 301 * scale);
 
     const iconSize = 28 * scale;
     const statsData = [
@@ -292,7 +303,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
       const row = Math.floor(index / 3);
       const colWidth = (size - 48 * scale) / 3;
       const x = 36 * scale + col * colWidth;
-      const y = 265 * scale + row * 60 * scale;
+      const y = 313 * scale + row * 60 * scale;
 
       if ('img' in stat && stat.img) {
         ctx.drawImage(stat.img, x, y, iconSize, iconSize);
@@ -315,13 +326,13 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
     ctx.beginPath();
-    ctx.roundRect(24 * scale, 394 * scale, size - 48 * scale, 90 * scale, 10 * scale);
+    ctx.roundRect(24 * scale, 442 * scale, size - 48 * scale, 90 * scale, 10 * scale);
     ctx.fill();
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.font = `bold ${14 * scale}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = 'left';
-    ctx.fillText('POWER-UPS COLLECTED', 40 * scale, 416 * scale);
+    ctx.fillText('POWER-UPS COLLECTED', 40 * scale, 464 * scale);
 
     const powerUpIcons = [
       { img: images.honey, count: stats.powerUpsUsed.honey },
@@ -340,7 +351,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
 
     powerUpIcons.forEach((powerUp, index) => {
       const x = powerUpStartX + index * (powerUpSize + powerUpSpacing);
-      const y = 428 * scale;
+      const y = 476 * scale;
 
       if (powerUp.img) {
         ctx.drawImage(powerUp.img, x, y, powerUpSize, powerUpSize);
@@ -355,16 +366,16 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
     ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
     ctx.font = `${13 * scale}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = 'left';
-    ctx.fillText(`${formattedDate} at ${formattedTime}`, 24 * scale, 565 * scale);
+    ctx.fillText(`${formattedDate} at ${formattedTime}`, 24 * scale, 575 * scale);
 
     ctx.textAlign = 'right';
-    ctx.fillText(`#${gameId.slice(0, 8)}`, size - 24 * scale, 565 * scale);
+    ctx.fillText(`#${gameId.slice(0, 8)}`, size - 24 * scale, 575 * scale);
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.font = `bold ${14 * scale}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('pizzadao.xyz', size / 2, 588 * scale);
-  }, [stats, score, level, displayName, skillRating, gameId, formattedDate, formattedTime]);
+    ctx.fillText('pizzadao.xyz', size / 2, 595 * scale);
+  }, [stats, score, level, displayName, skillRating, gameId, formattedDate, formattedTime, lastStarLostReason]);
 
   useEffect(() => {
     if (imagesLoaded) {
