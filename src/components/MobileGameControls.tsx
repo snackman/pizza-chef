@@ -1,5 +1,4 @@
 import React from 'react';
-import chefImg from '/Sprites/chefemoji.png';
 import pizzaPanImg from '/Sprites/pizzapan.png';
 
 interface MobileGameControlsProps {
@@ -83,35 +82,21 @@ const MobileGameControls: React.FC<MobileGameControlsProps> = ({
       <div className="absolute inset-0 flex items-center justify-between px-4 pt-8 pointer-events-auto">
 
         {/* Chef Movement Control */}
-        <div className="flex flex-col items-center space-y-2">
+        <div className="flex flex-col items-center">
           <button
             onClick={onMoveUp}
             disabled={isDisabled || safeLane === 0}
-            className="w-12 h-12 bg-blue-500 text-white rounded-full hover:bg-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95 flex items-center justify-center font-bold shadow-lg"
+            className="w-24 h-16 bg-blue-500 text-white rounded-t-xl hover:bg-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95 active:bg-blue-700 flex items-center justify-center text-3xl font-bold shadow-lg border-b border-blue-400"
           >
             ↑
           </button>
-
-          <div className={`relative w-20 h-20 bg-orange-200 rounded-lg border-4 border-orange-400 shadow-xl flex items-center justify-center ${nyanSweepActive ? 'opacity-50' : ''}`}>
-            <img src={"https://i.imgur.com/EPCSa79.png"} alt="chef" className="w-16 h-16 object-contain" />
-            {availableSlices > 0 && (
-              <div className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-lg">
-                {availableSlices}
-              </div>
-            )}
-          </div>
-
           <button
             onClick={onMoveDown}
             disabled={isDisabled || safeLane === 3}
-            className="w-12 h-12 bg-blue-500 text-white rounded-full hover:bg-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95 flex items-center justify-center font-bold shadow-lg"
+            className="w-24 h-16 bg-blue-500 text-white rounded-b-xl hover:bg-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95 active:bg-blue-700 flex items-center justify-center text-3xl font-bold shadow-lg"
           >
             ↓
           </button>
-
-          <div className="text-white text-xs font-bold mt-1">
-            Lane {safeLane + 1}
-          </div>
         </div>
 
         {/* Right side controls - Oven and Serve stacked */}
