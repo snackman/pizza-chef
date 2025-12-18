@@ -107,7 +107,7 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
         star,
         moltobenny,
       ] = await Promise.all([
-        loadImage('https://i.imgur.com/PwRdw0u.png'),
+        loadImage('https://i.imgur.com/EPCSa79.png'),
         loadImage('/PizzaDAO-Logo-White (2).png'),
         loadImage('/Sprites/droolface.png'),
         loadImage('/Sprites/paperplate.png'),
