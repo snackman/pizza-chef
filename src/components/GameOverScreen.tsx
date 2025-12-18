@@ -255,7 +255,7 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
 
     const iconSize = 28 * scale;
     const statsData = [
-      { emoji: '\u{1F355}', label: 'Slices Baked', value: stats.slicesBaked },
+      { emoji: '\u{1F355}', label: 'Slices Heated', value: stats.slicesBaked },
       { img: images.droolface, label: 'Served', value: stats.customersServed },
       { img: images.plate, label: 'Plates Caught', value: stats.platesCaught },
       { emoji: '\u{2B06}\u{FE0F}', label: 'Upgrades', value: stats.ovenUpgradesMade },
