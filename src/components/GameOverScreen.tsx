@@ -155,48 +155,46 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
     ctx.fillRect(0, 0, size, size);
 
     if (images.splashLogo) {
-      const logoWidth = 70;
+      const logoWidth = 50;
       const logoHeight = (images.splashLogo.height / images.splashLogo.width) * logoWidth;
-      ctx.drawImage(images.splashLogo, (size - logoWidth) / 2, 12, logoWidth, logoHeight);
+      ctx.drawImage(images.splashLogo, 20, 14, logoWidth, logoHeight);
     }
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 32px system-ui, -apple-system, sans-serif';
-    ctx.textAlign = 'center';
+    ctx.font = 'bold 22px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'left';
     ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
     ctx.shadowBlur = 4;
     ctx.shadowOffsetY = 2;
-    ctx.fillText('Pizza Chef', size / 2, 100);
+    ctx.fillText('Pizza Chef', 78, 42);
     ctx.shadowBlur = 0;
     ctx.shadowOffsetY = 0;
 
     if (images.pizzaDAOLogo) {
-      const daoLogoWidth = 100;
+      const daoLogoWidth = 80;
       const daoLogoHeight = (images.pizzaDAOLogo.height / images.pizzaDAOLogo.width) * daoLogoWidth;
-      ctx.drawImage(images.pizzaDAOLogo, (size - daoLogoWidth) / 2, 108, daoLogoWidth, daoLogoHeight);
+      ctx.drawImage(images.pizzaDAOLogo, 78, 50, daoLogoWidth, daoLogoHeight);
     }
 
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-    ctx.beginPath();
-    ctx.roundRect(24, 150, size - 48, 80, 10);
-    ctx.fill();
-
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 20px system-ui, -apple-system, sans-serif';
-    ctx.fillText(displayName.toUpperCase(), size / 2, 178);
+    ctx.font = 'bold 18px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(displayName.toUpperCase(), size - 24, 40);
 
     ctx.fillStyle = '#fbbf24';
-    ctx.font = 'bold 40px system-ui, -apple-system, sans-serif';
-    ctx.fillText(score.toLocaleString(), size / 2, 218);
+    ctx.font = 'bold 44px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(score.toLocaleString(), size - 24, 85);
 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
     ctx.beginPath();
-    ctx.roundRect(24, 238, size - 48, 50, 10);
+    ctx.roundRect(24, 115, size - 48, 50, 10);
     ctx.fill();
 
+    ctx.textAlign = 'center';
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.font = 'bold 18px system-ui, -apple-system, sans-serif';
-    ctx.fillText(`Level ${level}`, size / 2, 262);
+    ctx.fillText(`Level ${level}`, size / 2, 139);
 
     const gradeColors: Record<string, string> = {
       'S+': '#fbbf24',
@@ -209,18 +207,50 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
     };
 
     ctx.fillStyle = gradeColors[skillRating.grade] || '#fbbf24';
-    ctx.font = 'bold 24px system-ui, -apple-system, sans-serif';
-    ctx.fillText(skillRating.description, size / 2, 282);
+    ctx.font = 'bold 20px system-ui, -apple-system, sans-serif';
+    ctx.fillText(skillRating.description, size / 2, 159);
+
+    const awards: string[] = [];
+    if (stats.longestCustomerStreak >= 10) awards.push('Streak Master');
+    if (stats.customersServed >= 50) awards.push('Crowd Pleaser');
+    if (stats.largestPlateStreak >= 5) awards.push('Plate Juggler');
+    if (level >= 10) awards.push('Pizza Veteran');
+    if (stats.ovenUpgradesMade >= 5) awards.push('Upgrade King');
+    const totalPowerUps = Object.values(stats.powerUpsUsed).reduce((a, b) => a + b, 0);
+    if (totalPowerUps >= 10) awards.push('Power Collector');
 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
     ctx.beginPath();
-    ctx.roundRect(24, 296, size - 48, 155, 10);
+    ctx.roundRect(24, 173, size - 48, 50, 10);
     ctx.fill();
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText('STATISTICS', 40, 318);
+    ctx.fillText('AWARDS', 40, 195);
+
+    if (awards.length === 0) {
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.font = 'italic 14px system-ui, -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('No awards this time!', size / 2, 215);
+    } else {
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      const awardsText = awards.slice(0, 3).join('  |  ');
+      ctx.fillText(awardsText, size / 2, 215);
+    }
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.beginPath();
+    ctx.roundRect(24, 231, size - 48, 155, 10);
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('STATISTICS', 40, 253);
 
     const iconSize = 28;
     const statsData = [
@@ -237,7 +267,7 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
       const row = Math.floor(index / 3);
       const colWidth = (size - 48) / 3;
       const x = 36 + col * colWidth;
-      const y = 330 + row * 60;
+      const y = 265 + row * 60;
 
       if ('img' in stat && stat.img) {
         ctx.drawImage(stat.img, x, y, iconSize, iconSize);
@@ -260,13 +290,13 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
     ctx.beginPath();
-    ctx.roundRect(24, 460, size - 48, 90, 10);
+    ctx.roundRect(24, 394, size - 48, 90, 10);
     ctx.fill();
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText('POWER-UPS COLLECTED', 40, 482);
+    ctx.fillText('POWER-UPS COLLECTED', 40, 416);
 
     const powerUpIcons = [
       { img: images.honey, count: stats.powerUpsUsed.honey },
@@ -284,7 +314,7 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
 
     powerUpIcons.forEach((powerUp, index) => {
       const x = powerUpStartX + index * (powerUpSize + powerUpSpacing);
-      const y = 494;
+      const y = 428;
 
       if (powerUp.img) {
         ctx.drawImage(powerUp.img, x, y, powerUpSize, powerUpSize);
