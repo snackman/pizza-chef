@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { GameState, Customer, PizzaSlice, EmptyPlate, PowerUp, PowerUpType } from '../types/game';
+import { GameState, Customer, PizzaSlice, EmptyPlate, PowerUp, PowerUpType, FloatingScore } from '../types/game';
 import { soundManager } from '../utils/sounds';
 import { getStreakMultiplier } from '../components/StreakDisplay';
 
@@ -21,6 +21,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     emptyPlates: [],
     powerUps: [],
     activePowerUps: [],
+    floatingScores: [],
     chefLane: 0,
     score: 0,
     lives: 3,
@@ -74,6 +75,22 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     3: 'idle'
   });
   const prevShowStoreRef = useRef(false);
+
+  const addFloatingScore = useCallback((points: number, lane: number, position: number, state: GameState): GameState => {
+    const now = Date.now();
+    const newFloatingScore: FloatingScore = {
+      id: `score-${now}-${Math.random()}`,
+      points,
+      lane,
+      position,
+      startTime: now,
+    };
+
+    return {
+      ...state,
+      floatingScores: [...state.floatingScores, newFloatingScore],
+    };
+  }, []);
 
   const spawnPowerUp = useCallback(() => {
     const now = Date.now();
@@ -320,6 +337,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       newState.ovens = updatedOvens;
 
+      // Remove expired floating scores (after 1 second)
+      newState.floatingScores = newState.floatingScores.filter(fs => now - fs.startTime < 1000);
+
       // Remove expired power-ups
       const expiredStarPower = newState.activePowerUps.some(p => p.type === 'star' && now >= p.endTime);
       const expiredHoney = newState.activePowerUps.some(p => p.type === 'honey' && now >= p.endTime);
@@ -496,9 +516,11 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             const dogeMultiplier = hasDoge ? 2 : 1;
             const bankMultiplier = hasDoge ? 2 : 1;
             const customerStreakMultiplier = getStreakMultiplier(newState.stats.currentCustomerStreak);
-            newState.score += Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
+            const pointsEarned = Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
+            newState.score += pointsEarned;
             newState.bank += baseBank * bankMultiplier;
             newState.happyCustomers += 1;
+            newState = addFloatingScore(pointsEarned, customer.lane, customer.position, newState);
             newState.stats.customersServed += 1;
             newState.stats.currentCustomerStreak += 1;
             if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) {
@@ -540,7 +562,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           soundManager.powerUpCollected(powerUp.type);
           const baseScore = 100;
           const scoreMultiplier = hasDoge ? 2 : 1;
-          newState.score += baseScore * scoreMultiplier;
+          const pointsEarned = baseScore * scoreMultiplier;
+          newState.score += pointsEarned;
+          newState = addFloatingScore(pointsEarned, powerUp.lane, powerUp.position, newState);
           caughtPowerUpIds.add(powerUp.id);
 
           // Activate the power-up
@@ -624,6 +648,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             // Moltobenny power-up gives 10,000 points (affected by doge multiplier)
             const moltoScore = 10000 * scoreMultiplier;
             newState.score += moltoScore;
+            newState = addFloatingScore(moltoScore, newState.chefLane, 15, newState);
           } else {
             // Add to active power-ups (hot honey and ice-cream)
             newState.activePowerUps = [
@@ -694,8 +719,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             const dogeMultiplier = hasDoge ? 2 : 1;
             const bankMultiplier = hasDoge ? 2 : 1;
             const customerStreakMultiplier = getStreakMultiplier(newState.stats.currentCustomerStreak);
-            newState.score += Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
+            const pointsEarned = Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
+            newState.score += pointsEarned;
             newState.bank += baseBank * bankMultiplier;
+            newState = addFloatingScore(pointsEarned, customer.lane, customer.position, newState);
             newState.happyCustomers += 1;
             newState.stats.customersServed += 1;
             newState.stats.currentCustomerStreak += 1;
@@ -746,8 +773,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               const dogeMultiplier = hasDoge ? 2 : 1;
               const bankMultiplier = hasDoge ? 2 : 1;
               const customerStreakMultiplier = getStreakMultiplier(newState.stats.currentCustomerStreak);
-              newState.score += Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
+              const pointsEarned = Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
+              newState.score += pointsEarned;
               newState.bank += baseBank * bankMultiplier;
+              newState = addFloatingScore(pointsEarned, customer.lane, customer.position, newState);
               newState.happyCustomers += 1;
               newState.stats.customersServed += 1;
               newState.stats.currentCustomerStreak += 1;
@@ -786,8 +815,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               const dogeMultiplier = hasDoge ? 2 : 1;
               const bankMultiplier = hasDoge ? 2 : 1;
               const customerStreakMultiplier = getStreakMultiplier(newState.stats.currentCustomerStreak);
-              newState.score += Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
+              const pointsEarned = Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
+              newState.score += pointsEarned;
               newState.bank += baseBank * bankMultiplier;
+              newState = addFloatingScore(pointsEarned, customer.lane, customer.position, newState);
 
               // Create empty plate for first slice too
               const newPlate: EmptyPlate = {
@@ -808,8 +839,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               const dogeMultiplier = hasDoge ? 2 : 1;
               const bankMultiplier = hasDoge ? 2 : 1;
               const customerStreakMultiplier = getStreakMultiplier(newState.stats.currentCustomerStreak);
-              newState.score += Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
+              const pointsEarned = Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
+              newState.score += pointsEarned;
               newState.bank += baseBank * bankMultiplier;
+              newState = addFloatingScore(pointsEarned, customer.lane, customer.position, newState);
               newState.happyCustomers += 1;
               newState.stats.customersServed += 1;
               newState.stats.currentCustomerStreak += 1;
@@ -851,8 +884,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             const dogeMultiplier = hasDoge ? 2 : 1;
             const bankMultiplier = hasDoge ? 2 : 1;
             const customerStreakMultiplier = getStreakMultiplier(newState.stats.currentCustomerStreak);
-            newState.score += Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
+            const pointsEarned = Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
+            newState.score += pointsEarned;
             newState.bank += baseBank * bankMultiplier;
+            newState = addFloatingScore(pointsEarned, customer.lane, customer.position, newState);
             newState.happyCustomers += 1;
             newState.stats.customersServed += 1;
             newState.stats.currentCustomerStreak += 1;
@@ -934,7 +969,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           const baseScore = 50;
           const dogeMultiplier = hasDoge ? 2 : 1;
           const plateStreakMultiplier = getStreakMultiplier(newState.stats.currentPlateStreak);
-          newState.score += Math.floor(baseScore * dogeMultiplier * plateStreakMultiplier);
+          const pointsEarned = Math.floor(baseScore * dogeMultiplier * plateStreakMultiplier);
+          newState.score += pointsEarned;
+          newState = addFloatingScore(pointsEarned, plate.lane, plate.position, newState);
           newState.stats.platesCaught += 1;
           newState.stats.currentPlateStreak += 1;
           if (newState.stats.currentPlateStreak > newState.stats.largestPlateStreak) {
@@ -994,8 +1031,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             const dogeMultiplier = hasDoge ? 2 : 1;
             const bankMultiplier = hasDoge ? 2 : 1;
             const customerStreakMultiplier = getStreakMultiplier(newState.stats.currentCustomerStreak);
-            newState.score += Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
+            const pointsEarned = Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
+            newState.score += pointsEarned;
             newState.bank += baseBank * bankMultiplier;
+            newState = addFloatingScore(pointsEarned, customer.lane, customer.position, newState);
             newState.happyCustomers += 1;
             newState.stats.customersServed += 1;
             newState.stats.currentCustomerStreak += 1;
@@ -1285,6 +1324,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       emptyPlates: [],
       powerUps: [],
       activePowerUps: [],
+      floatingScores: [],
       chefLane: 0,
       score: 0,
       lives: 3,

@@ -49,6 +49,14 @@ export interface ActivePowerUp {
   endTime: number;
 }
 
+export interface FloatingScore {
+  id: string;
+  points: number;
+  lane: number;
+  position: number;
+  startTime: number;
+}
+
 export interface GameStats {
   slicesBaked: number;
   customersServed: number;
@@ -75,6 +83,7 @@ export interface GameState {
   emptyPlates: EmptyPlate[];
   powerUps: PowerUp[];
   activePowerUps: ActivePowerUp[];
+  floatingScores: FloatingScore[];
   chefLane: number;
   score: number;
   lives: number;
