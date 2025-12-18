@@ -150,7 +150,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
           style={{
             top: `${gameState.chefLane * 25 + 13}%`,
             left: `${gameState.nyanSweep.xPosition}%`,
-            zIndex: 20
+            zIndex: 20,
+            willChange: 'transform, left, top'
           }}
         >
           <img src="https://i.imgur.com/fGPU4Pu.png" alt="nyan cat" className="w-full h-full object-contain" style={{ transform: 'scale(1.5)' }} />
