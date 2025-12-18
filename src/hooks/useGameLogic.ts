@@ -262,7 +262,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       if (prev.paused) return prev;
 
-      let newState = { ...prev };
+      let newState = { ...prev, stats: { ...prev.stats, powerUpsUsed: { ...prev.stats.powerUpsUsed } } };
 
       // Check for burned pizzas and cleaning progress
       const now = Date.now();
@@ -1469,13 +1469,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       if (prev.gameOver) return prev;
 
       const now = Date.now();
-      let newState = { ...prev };
-
-      newState.stats = {
-        ...newState.stats,
-        powerUpsUsed: {
-          ...newState.stats.powerUpsUsed,
-          [type]: newState.stats.powerUpsUsed[type] + 1,
+      let newState = {
+        ...prev,
+        stats: {
+          ...prev.stats,
+          powerUpsUsed: {
+            ...prev.stats.powerUpsUsed,
+            [type]: prev.stats.powerUpsUsed[type] + 1,
+          }
         }
       };
 
