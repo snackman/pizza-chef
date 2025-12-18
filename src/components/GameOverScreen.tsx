@@ -566,10 +566,6 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
 
   return (
     <div className="bg-white rounded-xl shadow-2xl p-3 sm:p-6 w-full max-w-lg mx-auto max-h-[95vh] overflow-y-auto">
-      <div className="text-center mb-3">
-        <h2 className="text-xl sm:text-2xl font-bold text-red-600">{getStarLostMessage(lastStarLostReason)}</h2>
-      </div>
-
       <div className="flex justify-center mb-3 bg-red-700 rounded-lg p-2 overflow-hidden aspect-square">
         <canvas
           ref={canvasRef}
