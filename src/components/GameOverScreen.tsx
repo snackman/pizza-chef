@@ -255,11 +255,11 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
 
     const iconSize = 28 * scale;
     const statsData = [
-      { emoji: '\u{1F355}', label: 'Slices', value: stats.slicesBaked },
-      { emoji: '\u{2B06}\u{FE0F}', label: 'Upgrades', value: stats.ovenUpgradesMade },
+      { emoji: '\u{1F355}', label: 'Slices Baked', value: stats.slicesBaked },
       { img: images.droolface, label: 'Served', value: stats.customersServed },
-      { emoji: '\u{1F525}', label: 'Streak', value: stats.longestCustomerStreak },
-      { img: images.plate, label: 'Plates', value: stats.platesCaught },
+      { img: images.plate, label: 'Plates Caught', value: stats.platesCaught },
+      { emoji: '\u{2B06}\u{FE0F}', label: 'Upgrades', value: stats.ovenUpgradesMade },
+      { emoji: '\u{1F525}', label: 'Served Streak', value: stats.longestCustomerStreak },
       { emoji: '\u{1F4AB}', label: 'Plate Streak', value: stats.largestPlateStreak },
     ];
 
