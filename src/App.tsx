@@ -254,13 +254,13 @@ function App() {
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-orange-200 via-yellow-100 to-red-200 flex items-center justify-center overflow-hidden">
       <div className="relative w-full h-full flex flex-col">
-        <div className="absolute top-2 left-2 right-2 z-30">
-          <ScoreBoard gameState={gameState} onShowInstructions={() => setShowInstructions(true)} />
-        </div>
+        <div className="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 gap-2 sm:gap-4">
+          <div className="w-full max-w-6xl">
+            <ScoreBoard gameState={gameState} onShowInstructions={() => setShowInstructions(true)} />
+          </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 gap-2">
           <div
-            className="w-full max-w-6xl aspect-[5/3] sm:relative absolute top-[15%] sm:top-auto"
+            className="w-full max-w-6xl aspect-[5/3]"
             onClick={handleGameBoardClick}
           >
             <GameBoard gameState={gameState} />
