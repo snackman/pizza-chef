@@ -241,10 +241,27 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
     ctx.roundRect(24 * scale, 173 * scale, size - 48 * scale, 50 * scale, 12 * scale);
     ctx.fill();
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-    ctx.font = `${17 * scale}px system-ui, -apple-system, sans-serif`;
+    const deathBoxCenterY = (173 + 25) * scale;
+    const deathTextSize = 17 * scale;
+    const deathEmojiSize = Math.round(17 * 1.5) * scale;
+
+    ctx.font = `${deathEmojiSize}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText(`\u{1FAA6} ${deathMessage}`, size / 2, 214 * scale);
+    const deathEmoji = '\u{1FAA6}';
+    const emojiWidth = ctx.measureText(deathEmoji).width;
+
+    ctx.font = `${deathTextSize}px system-ui, -apple-system, sans-serif`;
+    const textWidth = ctx.measureText(` ${deathMessage}`).width;
+    const totalDeathWidth = emojiWidth + textWidth;
+    const deathStartX = (size - totalDeathWidth) / 2;
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.font = `${deathEmojiSize}px system-ui, -apple-system, sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.fillText(deathEmoji, deathStartX, deathBoxCenterY + deathEmojiSize / 3);
+
+    ctx.font = `${deathTextSize}px system-ui, -apple-system, sans-serif`;
+    ctx.fillText(` ${deathMessage}`, deathStartX + emojiWidth, deathBoxCenterY + deathTextSize / 3);
 
     const awards: string[] = [];
     if (stats.longestCustomerStreak >= 10) awards.push('Streak Master');
@@ -260,17 +277,34 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
     ctx.roundRect(24 * scale, 233 * scale, size - 48 * scale, 58 * scale, 12 * scale);
     ctx.fill();
 
+    const awardsBoxCenterY = (233 + 29) * scale;
+    const awardsTextSize = 15 * scale;
+    const awardsEmojiSize = Math.round(15 * 1.5) * scale;
+
     if (awards.length === 0) {
       ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-      ctx.font = `italic ${15 * scale}px system-ui, -apple-system, sans-serif`;
+      ctx.font = `italic ${awardsTextSize}px system-ui, -apple-system, sans-serif`;
       ctx.textAlign = 'center';
-      ctx.fillText('No awards this time!', size / 2, 279 * scale);
+      ctx.fillText('No awards this time!', size / 2, awardsBoxCenterY + awardsTextSize / 3);
     } else {
+      const awardsEmoji = '\u{1F3C6}';
+      const awardsText = awards.slice(0, 3).join('  \u{2022}  ');
+
+      ctx.font = `${awardsEmojiSize}px system-ui, -apple-system, sans-serif`;
+      const awardsEmojiWidth = ctx.measureText(awardsEmoji).width;
+
+      ctx.font = `bold ${awardsTextSize}px system-ui, -apple-system, sans-serif`;
+      const awardsTextWidth = ctx.measureText(` ${awardsText}`).width;
+      const totalAwardsWidth = awardsEmojiWidth + awardsTextWidth;
+      const awardsStartX = (size - totalAwardsWidth) / 2;
+
       ctx.fillStyle = '#fbbf24';
-      ctx.font = `bold ${15 * scale}px system-ui, -apple-system, sans-serif`;
-      ctx.textAlign = 'center';
-      const awardsText = awards.slice(0, 3).join('  •  ');
-      ctx.fillText(`\u{1F3C6} ${awardsText}`, size / 2, 279 * scale);
+      ctx.font = `${awardsEmojiSize}px system-ui, -apple-system, sans-serif`;
+      ctx.textAlign = 'left';
+      ctx.fillText(awardsEmoji, awardsStartX, awardsBoxCenterY + awardsEmojiSize / 3);
+
+      ctx.font = `bold ${awardsTextSize}px system-ui, -apple-system, sans-serif`;
+      ctx.fillText(` ${awardsText}`, awardsStartX + awardsEmojiWidth, awardsBoxCenterY + awardsTextSize / 3);
     }
 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
