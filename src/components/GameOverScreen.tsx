@@ -30,7 +30,7 @@ function getStarLostMessage(reason?: StarLostReason): string {
     case 'beer_critic_vomit':
       return 'A critic had one too many beers!';
     case 'brian_hurled':
-      return 'Bad Luck Brian couldn\'t handle the beer!';
+      return "Bad Luck Brian couldn't handle the beer!";
     default:
       return 'You ran out of stars!';
   }
@@ -53,7 +53,11 @@ interface LoadedImages {
 
 const DEFAULT_NAME = 'Pizza Trainee';
 
-function calculateSkillRating(stats: GameStats, score: number, level: number): { grade: string; stars: number; description: string } {
+function calculateSkillRating(
+  stats: GameStats,
+  score: number,
+  level: number
+): { grade: string; stars: number; description: string } {
   let points = 0;
   points += score / 1000;
   points += Math.min(level * 0.1, 1);
@@ -83,7 +87,14 @@ function loadImage(src: string): Promise<HTMLImageElement | null> {
   });
 }
 
-export default function GameOverScreen({ stats, score, level, lastStarLostReason, onSubmitted, onPlayAgain }: GameOverScreenProps) {
+export default function GameOverScreen({
+  stats,
+  score,
+  level,
+  lastStarLostReason,
+  onSubmitted,
+  onPlayAgain,
+}: GameOverScreenProps) {
   const [playerName, setPlayerName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -93,6 +104,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
   const [submittedName, setSubmittedName] = useState('');
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
   const imagesRef = useRef<LoadedImages>({
     splashLogo: null,
     pizzaDAOLogo: null,
@@ -176,9 +188,11 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
     canvas.width = size;
     canvas.height = size;
 
+    // --- Background ---
     ctx.fillStyle = '#dc2626';
     ctx.fillRect(0, 0, size, size);
 
+    // --- Header ---
     if (images.splashLogo) {
       const logoWidth = 50 * scale;
       const logoHeight = (images.splashLogo.height / images.splashLogo.width) * logoWidth;
@@ -211,6 +225,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
     ctx.textAlign = 'right';
     ctx.fillText(score.toLocaleString(), size - 24 * scale, 85 * scale);
 
+    // --- Level / Grade ---
     ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
     ctx.beginPath();
     ctx.roundRect(24 * scale, 115 * scale, size - 48 * scale, 50 * scale, 10 * scale);
@@ -223,18 +238,19 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
 
     const gradeColors: Record<string, string> = {
       'S+': '#fbbf24',
-      'S': '#f59e0b',
-      'A': '#22c55e',
-      'B': '#60a5fa',
-      'C': '#a78bfa',
-      'D': '#fb923c',
-      'F': '#f87171'
+      S: '#f59e0b',
+      A: '#22c55e',
+      B: '#60a5fa',
+      C: '#a78bfa',
+      D: '#fb923c',
+      F: '#f87171',
     };
 
     ctx.fillStyle = gradeColors[skillRating.grade] || '#fbbf24';
     ctx.font = `bold ${20 * scale}px system-ui, -apple-system, sans-serif`;
     ctx.fillText(skillRating.description, size / 2, 159 * scale);
 
+    // --- Death message ---
     const deathMessage = getStarLostMessage(lastStarLostReason);
     ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
     ctx.beginPath();
@@ -263,6 +279,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
     ctx.font = `${deathTextSize}px system-ui, -apple-system, sans-serif`;
     ctx.fillText(` ${deathMessage}`, deathStartX + emojiWidth, deathBoxCenterY + deathTextSize / 3);
 
+    // --- Awards ---
     const awards: string[] = [];
     if (stats.longestCustomerStreak >= 10) awards.push('Streak Master');
     if (stats.customersServed >= 50) awards.push('Crowd Pleaser');
@@ -303,6 +320,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
       ctx.textAlign = 'left';
       ctx.fillText(awardsEmoji, awardsStartX, awardsBoxCenterY + awardsEmojiSize / 3);
 
+      ctx.fillStyle = '#ffffff';
       ctx.font = `bold ${awardsTextSize}px system-ui, -apple-system, sans-serif`;
       ctx.fillText(` ${awardsText}`, awardsStartX + awardsEmojiWidth, awardsBoxCenterY + awardsTextSize / 3);
     }
@@ -355,28 +373,28 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
     });
 
     // --- POWER-UPS COLLECTED ---
-    // Make spacing between STATISTICS and POWER-UPS match other section gaps (~10 * scale).
-    // Stats box ends at (301 + 145) * scale = 446 * scale, so start power-ups at 446 + 10 = 456 * scale.
+    // Keep consistent gap like other sections (~10 * scale).
+    const statsBoxBottom = (301 + 145) * scale; // 446 * scale
+    const powerUpsBoxY = statsBoxBottom + 10 * scale; // 456 * scale
+
     ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
     ctx.beginPath();
 
     const powerUpsBoxExtraBottomPadding = 16 * scale;
-    const powerUpsBoxY = 456 * scale; // was 476 * scale
 
     ctx.roundRect(
       24 * scale,
       powerUpsBoxY,
       size - 48 * scale,
-      (98 * scale) + powerUpsBoxExtraBottomPadding,
+      98 * scale + powerUpsBoxExtraBottomPadding,
       12 * scale
     );
-
     ctx.fill();
 
     ctx.fillStyle = '#ffffff';
     ctx.font = `bold ${15 * scale}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = 'left';
-    ctx.fillText('POWER-UPS COLLECTED', 40 * scale, powerUpsBoxY + 23 * scale); // was 499 * scale
+    ctx.fillText('POWER-UPS COLLECTED', 40 * scale, powerUpsBoxY + 23 * scale);
 
     const powerUpIcons = [
       { img: images.honey, count: stats.powerUpsUsed.honey },
@@ -395,7 +413,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
 
     powerUpIcons.forEach((powerUp, index) => {
       const x = powerUpStartX + index * (powerUpSize + powerUpSpacing);
-      const y = powerUpsBoxY + 37 * scale; // was 513 * scale
+      const y = powerUpsBoxY + 37 * scale;
 
       if (powerUp.img) {
         ctx.drawImage(powerUp.img, x, y, powerUpSize, powerUpSize);
@@ -407,19 +425,24 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
       ctx.fillText(powerUp.count.toString(), x + powerUpSize / 2, y + powerUpSize + 16 * scale);
     });
 
-    // Footer (shift up to stay consistent with the moved power-ups box)
+    // --- FOOTER (anchored to bottom) ---
+    // Anchor baseline from the bottom so it never "floats" if sections move.
+    const footerSideY = size - 24 * scale; // left + right line
+    const footerCenterY = size - 17 * scale; // center line slightly lower
+
     ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
     ctx.font = `${13 * scale}px system-ui, -apple-system, sans-serif`;
+
     ctx.textAlign = 'left';
-    ctx.fillText(`${formattedDate} at ${formattedTime}`, 24 * scale, 568 * scale); // was 588 * scale
+    ctx.fillText(`${formattedDate} at ${formattedTime}`, 24 * scale, footerSideY);
 
     ctx.textAlign = 'right';
-    ctx.fillText(`#${gameId.slice(0, 8)}`, size - 24 * scale, 568 * scale); // was 588 * scale
+    ctx.fillText(`#${gameId.slice(0, 8)}`, size - 24 * scale, footerSideY);
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.font = `bold ${15 * scale}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('pizzadao.xyz', size / 2, 575 * scale); // was 595 * scale
+    ctx.fillText('pizzadao.xyz', size / 2, footerCenterY);
   }, [stats, score, level, displayName, skillRating, gameId, formattedDate, formattedTime, lastStarLostReason]);
 
   useEffect(() => {
@@ -443,7 +466,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
 
     const [scoreSuccess, session] = await Promise.all([
       submitScore(nameToSubmit, score),
-      createGameSession(nameToSubmit, score, level, stats)
+      createGameSession(nameToSubmit, score, level, stats),
     ]);
 
     if (scoreSuccess && session) {
@@ -465,7 +488,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
         largest_plate_streak: stats.largestPlateStreak,
         oven_upgrades: stats.ovenUpgradesMade,
         power_ups_used: stats.powerUpsUsed,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       };
       setSubmittedName(nameToSubmit);
       setScoreSubmitted(true);
@@ -485,9 +508,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
     try {
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
       if (blob) {
-        await navigator.clipboard.write([
-          new ClipboardItem({ 'image/png': blob })
-        ]);
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
         setCopySuccess('image');
         setTimeout(() => setCopySuccess(null), 2000);
       }
@@ -528,7 +549,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
   };
 
   if (showLeaderboard) {
-    const displayNameForScore = scoreSubmitted ? submittedName : (playerName.trim() || DEFAULT_NAME);
+    const displayNameForScore = scoreSubmitted ? submittedName : playerName.trim() || DEFAULT_NAME;
 
     return (
       <div className="flex flex-col items-center gap-4 w-full max-w-4xl mx-auto">
@@ -612,10 +633,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
   return (
     <div className="bg-white rounded-xl shadow-2xl p-3 sm:p-6 w-full max-w-lg mx-auto max-h-[95vh] overflow-y-auto">
       <div className="flex justify-center mb-3 bg-red-700 rounded-lg p-2 overflow-hidden aspect-square">
-        <canvas
-          ref={canvasRef}
-          className="w-full h-full rounded object-contain"
-        />
+        <canvas ref={canvasRef} className="w-full h-full rounded object-contain" />
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3">
