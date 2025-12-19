@@ -242,9 +242,9 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
     ctx.fill();
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = `bold ${15 * scale}px system-ui, -apple-system, sans-serif`;
+    ctx.font = `${26 * scale}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = 'left';
-    ctx.fillText('GAME OVER', 40 * scale, 194 * scale);
+    ctx.fillText('\u{1FAA6}', 40 * scale, 197 * scale);
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
     ctx.font = `${17 * scale}px system-ui, -apple-system, sans-serif`;
@@ -265,10 +265,10 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
     ctx.roundRect(24 * scale, 233 * scale, size - 48 * scale, 58 * scale, 12 * scale);
     ctx.fill();
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = `bold ${15 * scale}px system-ui, -apple-system, sans-serif`;
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = `${26 * scale}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = 'left';
-    ctx.fillText('AWARDS', 40 * scale, 256 * scale);
+    ctx.fillText('\u{1F3C6}', 40 * scale, 259 * scale);
 
     if (awards.length === 0) {
       ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
