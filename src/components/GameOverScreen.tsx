@@ -241,11 +241,6 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
     ctx.roundRect(24 * scale, 173 * scale, size - 48 * scale, 50 * scale, 12 * scale);
     ctx.fill();
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = `bold ${15 * scale}px system-ui, -apple-system, sans-serif`;
-    ctx.textAlign = 'left';
-    ctx.fillText('GAME OVER', 40 * scale, 194 * scale);
-
     ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
     ctx.font = `${17 * scale}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = 'center';
@@ -265,11 +260,6 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
     ctx.roundRect(24 * scale, 233 * scale, size - 48 * scale, 58 * scale, 12 * scale);
     ctx.fill();
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = `bold ${15 * scale}px system-ui, -apple-system, sans-serif`;
-    ctx.textAlign = 'left';
-    ctx.fillText('AWARDS', 40 * scale, 256 * scale);
-
     if (awards.length === 0) {
       ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
       ctx.font = `italic ${15 * scale}px system-ui, -apple-system, sans-serif`;
@@ -280,7 +270,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
       ctx.font = `bold ${15 * scale}px system-ui, -apple-system, sans-serif`;
       ctx.textAlign = 'center';
       const awardsText = awards.slice(0, 3).join('  •  ');
-      ctx.fillText(awardsText, size / 2, 279 * scale);
+      ctx.fillText(`\u{1F3C6} ${awardsText}`, size / 2, 279 * scale);
     }
 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
