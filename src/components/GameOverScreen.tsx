@@ -70,7 +70,7 @@ function calculateSkillRating(stats: GameStats, score: number, level: number): {
   if (points >= 12) return { grade: 'B', stars: 3, description: 'Skilled' };
   if (points >= 6) return { grade: 'C', stars: 2, description: 'Apprentice' };
   if (points >= 3) return { grade: 'D', stars: 1, description: 'Novice' };
-  return { grade: 'F', stars: 0, description: 'Beginner' };
+  return { grade: 'F', stars: 0, description: 'Noob' };
 }
 
 function loadImage(src: string): Promise<HTMLImageElement | null> {
