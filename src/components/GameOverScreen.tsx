@@ -307,6 +307,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
       ctx.fillText(` ${awardsText}`, awardsStartX + awardsEmojiWidth, awardsBoxCenterY + awardsTextSize / 3);
     }
 
+    // --- STATISTICS ---
     ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
     ctx.beginPath();
     ctx.roundRect(24 * scale, 301 * scale, size - 48 * scale, 145 * scale, 12 * scale);
@@ -353,24 +354,29 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
       ctx.fillText(stat.value.toString(), x + iconSize + 8 * scale, y + 34 * scale);
     });
 
+    // --- POWER-UPS COLLECTED ---
+    // Make spacing between STATISTICS and POWER-UPS match other section gaps (~10 * scale).
+    // Stats box ends at (301 + 145) * scale = 446 * scale, so start power-ups at 446 + 10 = 456 * scale.
     ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
     ctx.beginPath();
-    const powerUpsBoxExtraBottomPadding = 16 * scale;
 
-ctx.roundRect(
-  24 * scale,
-  476 * scale,
-  size - 48 * scale,
-  (98 * scale) + powerUpsBoxExtraBottomPadding,
-  12 * scale
-);
+    const powerUpsBoxExtraBottomPadding = 16 * scale;
+    const powerUpsBoxY = 456 * scale; // was 476 * scale
+
+    ctx.roundRect(
+      24 * scale,
+      powerUpsBoxY,
+      size - 48 * scale,
+      (98 * scale) + powerUpsBoxExtraBottomPadding,
+      12 * scale
+    );
 
     ctx.fill();
 
     ctx.fillStyle = '#ffffff';
     ctx.font = `bold ${15 * scale}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = 'left';
-    ctx.fillText('POWER-UPS COLLECTED', 40 * scale, 499 * scale);
+    ctx.fillText('POWER-UPS COLLECTED', 40 * scale, powerUpsBoxY + 23 * scale); // was 499 * scale
 
     const powerUpIcons = [
       { img: images.honey, count: stats.powerUpsUsed.honey },
@@ -389,7 +395,7 @@ ctx.roundRect(
 
     powerUpIcons.forEach((powerUp, index) => {
       const x = powerUpStartX + index * (powerUpSize + powerUpSpacing);
-      const y = 513 * scale;
+      const y = powerUpsBoxY + 37 * scale; // was 513 * scale
 
       if (powerUp.img) {
         ctx.drawImage(powerUp.img, x, y, powerUpSize, powerUpSize);
@@ -401,18 +407,19 @@ ctx.roundRect(
       ctx.fillText(powerUp.count.toString(), x + powerUpSize / 2, y + powerUpSize + 16 * scale);
     });
 
+    // Footer (shift up to stay consistent with the moved power-ups box)
     ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
     ctx.font = `${13 * scale}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = 'left';
-    ctx.fillText(`${formattedDate} at ${formattedTime}`, 24 * scale, 588 * scale);
+    ctx.fillText(`${formattedDate} at ${formattedTime}`, 24 * scale, 568 * scale); // was 588 * scale
 
     ctx.textAlign = 'right';
-    ctx.fillText(`#${gameId.slice(0, 8)}`, size - 24 * scale, 588 * scale);
+    ctx.fillText(`#${gameId.slice(0, 8)}`, size - 24 * scale, 568 * scale); // was 588 * scale
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.font = `bold ${15 * scale}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('pizzadao.xyz', size / 2, 595 * scale);
+    ctx.fillText('pizzadao.xyz', size / 2, 575 * scale); // was 595 * scale
   }, [stats, score, level, displayName, skillRating, gameId, formattedDate, formattedTime, lastStarLostReason]);
 
   useEffect(() => {
