@@ -198,7 +198,7 @@ function App() {
           )}
 
           {gameState.showStore && (
-            <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center z-30">
+            <div className="absolute inset-0 bg-black bg-opacity-75 flex items-start justify-center z-30 pt-2">
               <ItemStore
                 gameState={gameState}
                 onUpgradeOven={upgradeOven}
@@ -291,7 +291,7 @@ function App() {
             )}
 
             {gameState.showStore && (
-              <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center rounded-lg z-30">
+              <div className="absolute inset-0 bg-black bg-opacity-75 flex items-start justify-center rounded-lg z-30 pt-2">
                 <ItemStore
                   gameState={gameState}
                   onUpgradeOven={upgradeOven}
