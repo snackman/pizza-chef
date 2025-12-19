@@ -58,7 +58,8 @@ const PizzaSlice: React.FC<PizzaSliceProps> = ({ slice }) => {
       <img
         src="https://i.imgur.com/4gWxncs.png"
         alt="pizza slice"
-        className="w-[70%] h-[70%] z-10 object-contain"
+        className="absolute inset-0 w-[70%] h-[70%] z-10 object-contain"
+        style={{ zIndex: 10 }}
       />
     </div>
   );
