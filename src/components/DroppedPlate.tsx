@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { DroppedPlate as DroppedPlateType } from '../types/game';
-import slice1PlateImg from '/Sprites/1slicepizzapan.png';
+const slice1PlateImg = "https://i.imgur.com/cs0LDgJ.png";
 
 interface DroppedPlateProps {
   droppedPlate: DroppedPlateType;
