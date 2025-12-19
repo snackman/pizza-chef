@@ -69,8 +69,8 @@ function calculateSkillRating(stats: GameStats, score: number, level: number): {
   if (points >= 27) return { grade: 'A', stars: 4, description: 'Pizzaiolo' };
   if (points >= 12) return { grade: 'B', stars: 3, description: 'Line Cook' };
   if (points >= 6) return { grade: 'C', stars: 2, description: 'Prep Cook' };
-  if (points >= 3) return { grade: 'D', stars: 1, description: 'Dishwasher' };
-  return { grade: 'F', stars: 0, description: 'Noob' };
+  if (points >= 3) return { grade: 'D', stars: 1, description: 'Busser' };
+  return { grade: 'F', stars: 0, description: 'Dishwasher' };
 }
 
 function loadImage(src: string): Promise<HTMLImageElement | null> {
