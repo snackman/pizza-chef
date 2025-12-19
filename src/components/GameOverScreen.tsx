@@ -281,31 +281,25 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
     const awardsTextSize = 15 * scale;
     const awardsEmojiSize = Math.round(15 * 1.5) * scale;
 
-    if (awards.length === 0) {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-      ctx.font = `italic ${awardsTextSize}px system-ui, -apple-system, sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.fillText('No awards this time!', size / 2, awardsBoxCenterY + awardsTextSize / 3);
-    } else {
-      const awardsEmoji = '\u{1F3C6}';
-      const awardsText = awards.slice(0, 3).join('  \u{2022}  ');
+    const awardsEmoji = '\u{1F3C6}';
+    const awardsText = awards.length > 0 ? awards.slice(0, 3).join('  \u{2022}  ') : 'No awards this time!';
 
-      ctx.font = `${awardsEmojiSize}px system-ui, -apple-system, sans-serif`;
-      const awardsEmojiWidth = ctx.measureText(awardsEmoji).width;
+    ctx.font = `${awardsEmojiSize}px system-ui, -apple-system, sans-serif`;
+    const awardsEmojiWidth = ctx.measureText(awardsEmoji).width;
 
-      ctx.font = `bold ${awardsTextSize}px system-ui, -apple-system, sans-serif`;
-      const awardsTextWidth = ctx.measureText(` ${awardsText}`).width;
-      const totalAwardsWidth = awardsEmojiWidth + awardsTextWidth;
-      const awardsStartX = (size - totalAwardsWidth) / 2;
+    ctx.font = `${awards.length > 0 ? 'bold' : 'italic'} ${awardsTextSize}px system-ui, -apple-system, sans-serif`;
+    const awardsTextWidth = ctx.measureText(` ${awardsText}`).width;
+    const totalAwardsWidth = awardsEmojiWidth + awardsTextWidth;
+    const awardsStartX = (size - totalAwardsWidth) / 2;
 
-      ctx.fillStyle = '#fbbf24';
-      ctx.font = `${awardsEmojiSize}px system-ui, -apple-system, sans-serif`;
-      ctx.textAlign = 'left';
-      ctx.fillText(awardsEmoji, awardsStartX, awardsBoxCenterY + awardsEmojiSize / 3);
+    ctx.fillStyle = awards.length > 0 ? '#fbbf24' : 'rgba(255, 255, 255, 0.7)';
+    ctx.font = `${awardsEmojiSize}px system-ui, -apple-system, sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.fillText(awardsEmoji, awardsStartX, awardsBoxCenterY + awardsEmojiSize / 3);
 
-      ctx.font = `bold ${awardsTextSize}px system-ui, -apple-system, sans-serif`;
-      ctx.fillText(` ${awardsText}`, awardsStartX + awardsEmojiWidth, awardsBoxCenterY + awardsTextSize / 3);
-    }
+    ctx.font = `${awards.length > 0 ? 'bold' : 'italic'} ${awardsTextSize}px system-ui, -apple-system, sans-serif`;
+    ctx.fillStyle = awards.length > 0 ? '#fbbf24' : 'rgba(255, 255, 255, 0.7)';
+    ctx.fillText(` ${awardsText}`, awardsStartX + awardsEmojiWidth, awardsBoxCenterY + awardsTextSize / 3);
 
     // --- STATISTICS ---
     ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
