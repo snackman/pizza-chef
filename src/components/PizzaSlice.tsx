@@ -54,13 +54,6 @@ const PizzaSlice: React.FC<PizzaSliceProps> = ({ slice }) => {
         style={{ zIndex: 1 }}
       />
 
-      {/* Pizza on top - centered within plate */}
-      <div
-        className="absolute inset-0 w-[70%] h-[70%] flex items-center justify-center z-10"
-        style={{ fontSize: 'clamp(1.5rem, 4vw, 2.5rem)' }}
-      >
-        🍕
-      </div>
     </div>
   );
 };
