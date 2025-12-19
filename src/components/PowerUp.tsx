@@ -38,10 +38,12 @@ const PowerUp: React.FC<PowerUpProps> = ({ powerUp }) => {
 
   return (
     <div
-      className="absolute w-[8%] aspect-square transition-all duration-100 flex items-center justify-center"
+      className="absolute w-[8%] aspect-square transition-transform duration-100 ease-linear flex items-center justify-center"
       style={{
-        left: `${leftPosition}%`,
-        top: `${topPercent}%`,
+        left: 0,
+        top: 0,
+        transform: `translate3d(${leftPosition}vw, ${topPercent}cqh, 0)`,
+        willChange: 'transform',
       }}
     >
       {image && (

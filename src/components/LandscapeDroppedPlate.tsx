@@ -34,12 +34,16 @@ const LandscapeDroppedPlate: React.FC<LandscapeDroppedPlateProps> = ({ droppedPl
     return null;
   }
 
+  const topPercent = LANDSCAPE_LANE_POSITIONS[droppedPlate.lane];
+
   return (
     <div
-      className="absolute w-[6%] aspect-square transition-all duration-100"
+      className="absolute w-[6%] aspect-square transition-transform duration-100 ease-linear"
       style={{
-        left: `${droppedPlate.position}%`,
-        top: `${LANDSCAPE_LANE_POSITIONS[droppedPlate.lane]}%`,
+        left: 0,
+        top: 0,
+        transform: `translate3d(${droppedPlate.position}vw, ${topPercent}cqh, 0)`,
+        willChange: 'transform',
         opacity: visible ? 1 : 0,
       }}
     >

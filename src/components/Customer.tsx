@@ -34,13 +34,17 @@ const Customer: React.FC<CustomerProps> = ({ customer }) => {
 
   const display = getDisplay();
 
+  const topPercent = customer.lane * 25 + 6;
+
   return (
     <>
       <div
-        className="absolute w-[8%] aspect-square transition-all duration-100 flex items-center justify-center"
+        className="absolute w-[8%] aspect-square transition-transform duration-100 ease-linear flex items-center justify-center"
         style={{
-          left: `${leftPosition}%`,
-          top: `${customer.lane * 25 + 6}%`,
+          left: 0,
+          top: 0,
+          transform: `translate3d(${leftPosition}vw, ${topPercent}cqh, 0)`,
+          willChange: 'transform',
         }}
       >
         {display.type === 'image' ? (
@@ -60,11 +64,12 @@ const Customer: React.FC<CustomerProps> = ({ customer }) => {
       </div>
       {customer.textMessage && (
         <div
-          className="absolute px-2 py-1 bg-white text-black rounded border-2 border-black text-xs font-bold whitespace-nowrap"
+          className="absolute px-2 py-1 bg-white text-black rounded border-2 border-black text-xs font-bold whitespace-nowrap transition-transform duration-100 ease-linear"
           style={{
-            left: `${leftPosition}%`,
-            top: `${customer.lane * 25 + 18}%`,
-            transform: 'translateX(-50%)',
+            left: 0,
+            top: 0,
+            transform: `translate3d(calc(${leftPosition}vw - 50%), ${customer.lane * 25 + 18}cqh, 0)`,
+            willChange: 'transform',
           }}
         >
           {customer.textMessage}

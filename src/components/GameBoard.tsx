@@ -121,10 +121,12 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
       {!gameState.nyanSweep?.active && (
         <div className="absolute top-0 h-full flex flex-col items-center justify-center" style={{ width: '7.5%', left: '9%' }}>
           <div
-            className="absolute w-[8%] aspect-square flex items-center justify-center"
+            className="absolute w-[8%] aspect-square flex items-center justify-center transition-transform duration-100 ease-linear"
             style={{
-              top: `${gameState.chefLane * 25 + 13}%`,
               left: '10%',
+              top: 0,
+              transform: `translate3d(0, ${gameState.chefLane * 25 + 13}cqh, 0)`,
+              willChange: 'transform',
               zIndex: gameState.gameOver ? 19 : 10
             }}
           >
@@ -146,10 +148,12 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
       {/* Nyan Cat Chef - positioned directly on game board during sweep */}
       {gameState.nyanSweep?.active && (
         <div
-          className="absolute w-[8%] aspect-square flex items-center justify-center"
+          className="absolute w-[8%] aspect-square flex items-center justify-center transition-transform duration-100 ease-linear"
           style={{
-            top: `${gameState.chefLane * 25 + 13}%`,
-            left: `${gameState.nyanSweep.xPosition}%`,
+            left: 0,
+            top: 0,
+            transform: `translate3d(${gameState.nyanSweep.xPosition}vw, ${gameState.chefLane * 25 + 13}cqh, 0)`,
+            willChange: 'transform',
             zIndex: 20
           }}
         >
