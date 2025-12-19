@@ -90,6 +90,16 @@ export interface GameStats {
   ovenUpgradesMade: number;
 }
 
+export type StarLostReason =
+  | 'burned_pizza'
+  | 'disappointed_customer'
+  | 'disappointed_critic'
+  | 'woozy_customer_reached'
+  | 'woozy_critic_reached'
+  | 'beer_vomit'
+  | 'beer_critic_vomit'
+  | 'brian_hurled';
+
 export interface GameState {
   customers: Customer[];
   pizzaSlices: PizzaSlice[];
@@ -103,6 +113,7 @@ export interface GameState {
   lives: number;
   level: number;
   gameOver: boolean;
+  lastStarLostReason?: StarLostReason;
   paused: boolean;
   availableSlices: number;
   ovens: { [key: number]: { cooking: boolean; startTime: number; burned: boolean; cleaningStartTime: number; pausedElapsed?: number; sliceCount: number } };

@@ -152,6 +152,7 @@ function App() {
           <LandscapeControls
             gameOver={gameState.gameOver}
             paused={gameState.paused}
+            nyanSweepActive={gameState.nyanSweep?.active ?? false}
             onMoveUp={() => moveChef('up')}
             onMoveDown={() => moveChef('down')}
             onServePizza={servePizza}
@@ -170,6 +171,7 @@ function App() {
                   stats={gameState.stats}
                   score={gameState.score}
                   level={gameState.level}
+                  lastStarLostReason={gameState.lastStarLostReason}
                   onSubmitted={() => {}}
                   onPlayAgain={() => {
                     resetGame();
@@ -196,7 +198,7 @@ function App() {
           )}
 
           {gameState.showStore && (
-            <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center z-30">
+            <div className="absolute inset-0 bg-black bg-opacity-75 flex items-start justify-center z-30 pt-2">
               <ItemStore
                 gameState={gameState}
                 onUpgradeOven={upgradeOven}
@@ -254,7 +256,7 @@ function App() {
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-orange-200 via-yellow-100 to-red-200 flex items-center justify-center overflow-hidden">
       <div className="relative w-full h-full flex flex-col">
-        <div className="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 gap-2 sm:gap-4">
+        <div className={`flex-1 flex flex-col items-center p-2 sm:p-4 gap-2 sm:gap-4 ${isMobile ? 'justify-start pt-1' : 'justify-center'}`}>
           <div className="w-full max-w-6xl">
             <ScoreBoard gameState={gameState} onShowInstructions={() => setShowInstructions(true)} />
           </div>
@@ -289,7 +291,7 @@ function App() {
             )}
 
             {gameState.showStore && (
-              <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center rounded-lg z-30">
+              <div className="absolute inset-0 bg-black bg-opacity-75 flex items-start justify-center rounded-lg z-30 pt-2">
                 <ItemStore
                   gameState={gameState}
                   onUpgradeOven={upgradeOven}
@@ -314,6 +316,7 @@ function App() {
                 stats={gameState.stats}
                 score={gameState.score}
                 level={gameState.level}
+                lastStarLostReason={gameState.lastStarLostReason}
                 onSubmitted={() => {}}
                 onPlayAgain={() => {
                   resetGame();
@@ -367,6 +370,7 @@ function App() {
           <MobileGameControls
             gameOver={gameState.gameOver}
             paused={gameState.paused}
+            nyanSweepActive={gameState.nyanSweep?.active ?? false}
             onMoveUp={() => moveChef('up')}
             onMoveDown={() => moveChef('down')}
             onServePizza={servePizza}
