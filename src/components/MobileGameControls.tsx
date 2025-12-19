@@ -123,9 +123,7 @@ const MobileGameControls: React.FC<MobileGameControlsProps> = ({
             >
               <img src={pizzaPanImg} alt="oven" className="w-full h-full object-contain" />
               {currentOven && currentOven.sliceCount > 0 && (
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl">
-                  🍕
-                </div>
+                <img src="https://i.imgur.com/4gWxncs.png" alt="pizza" className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 object-contain" />
               )}
               {ovenStatus === 'burned' && (
                 <div className="absolute inset-0 flex items-center justify-center text-3xl">
@@ -155,9 +153,7 @@ const MobileGameControls: React.FC<MobileGameControlsProps> = ({
               disabled={isDisabled || availableSlices === 0}
               className="relative w-24 h-24 bg-white rounded-full border-4 border-gray-400 shadow-xl transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
             >
-              <div className="text-5xl">
-                🍕
-              </div>
+              <img src="https://i.imgur.com/4gWxncs.png" alt="pizza" className="w-16 h-16 object-contain" />
               {availableSlices > 0 && (
                 <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-green-600 text-white rounded-full px-3 py-1 text-sm font-bold shadow-lg">
                   {availableSlices}

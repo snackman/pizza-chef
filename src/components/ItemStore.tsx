@@ -128,21 +128,23 @@ const ItemStore: React.FC<ItemStoreProps> = ({
 
                     {/* Level Upgrade Button */}
                     {isMaxLevel ? (
-                      <div className="bg-gray-200 text-gray-600 rounded py-0.5 px-1 sm:py-1 sm:px-2 text-[9px] sm:text-xs font-semibold whitespace-nowrap">
-                        Max 🍕
+                      <div className="bg-gray-200 text-gray-600 rounded py-0.5 px-1 sm:py-1 sm:px-2 text-[9px] sm:text-xs font-semibold whitespace-nowrap flex items-center gap-1">
+                        <img src="https://i.imgur.com/4gWxncs.png" alt="pizza" className="w-3 h-3 object-contain" />
+                        Max
                       </div>
                     ) : (
                       <button
                         onClick={() => onUpgradeOven(lane)}
                         disabled={!canAffordUpgrade}
-                        className={`rounded py-0.5 px-1 sm:py-1 sm:px-2 text-[9px] sm:text-xs font-semibold transition-colors whitespace-nowrap ${
+                        className={`rounded py-0.5 px-1 sm:py-1 sm:px-2 text-[9px] sm:text-xs font-semibold transition-colors whitespace-nowrap flex items-center gap-1 justify-center ${
                           canAffordUpgrade
                             ? 'bg-orange-600 hover:bg-orange-700 text-white'
                             : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         }`}
                         title="Upgrade Level"
                       >
-                        🍕 ${upgradeCost}
+                        <img src="https://i.imgur.com/4gWxncs.png" alt="pizza" className="w-3 h-3 object-contain" />
+                        ${upgradeCost}
                       </button>
                     )}
                   </div>
