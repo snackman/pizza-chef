@@ -372,15 +372,15 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
     ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
     ctx.font = `${13 * scale}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = 'left';
-    ctx.fillText(`${formattedDate} at ${formattedTime}`, 24 * scale, 573 * scale);
+    ctx.fillText(`${formattedDate} at ${formattedTime}`, 24 * scale, 568 * scale);
 
     ctx.textAlign = 'right';
-    ctx.fillText(`#${gameId.slice(0, 8)}`, size - 24 * scale, 573 * scale);
+    ctx.fillText(`#${gameId.slice(0, 8)}`, size - 24 * scale, 568 * scale);
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.font = `bold ${15 * scale}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('pizzadao.xyz', size / 2, 580 * scale);
+    ctx.fillText('pizzadao.xyz', size / 2, 575 * scale);
   }, [stats, score, level, displayName, skillRating, gameId, formattedDate, formattedTime, lastStarLostReason]);
 
   useEffect(() => {
