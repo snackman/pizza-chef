@@ -407,7 +407,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
       ctx.fillText(powerUp.count.toString(), x + powerUpSize / 2, y + powerUpSize + 16 * scale);
     });
 
-    const footerY = size - 24 * scale;
+    const footerY = size - 12 * scale;
     ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
     ctx.font = `${13 * scale}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = 'left';
