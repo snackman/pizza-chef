@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { DroppedPlate as DroppedPlateType } from '../types/game';
-import paperPlateImg from '/Sprites/paperplate.png';
+import slice1PlateImg from '/Sprites/1slicepizzapan.png';
 import fullPizzaImg from '/Sprites/fullpizza.png';
 
 interface DroppedPlateProps {
@@ -42,7 +42,7 @@ const DroppedPlate: React.FC<DroppedPlateProps> = ({ droppedPlate }) => {
         opacity: visible ? 1 : 0,
       }}
     >
-      <img src={paperPlateImg} alt="dropped plate" className="w-full h-full object-contain" />
+      <img src={slice1PlateImg} alt="dropped plate" className="w-full h-full object-contain" />
       {droppedPlate.hasSlice && (
         <img
           src={fullPizzaImg}
