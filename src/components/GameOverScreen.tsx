@@ -309,7 +309,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
     ctx.beginPath();
-    ctx.roundRect(24 * scale, 301 * scale, size - 48 * scale, 150 * scale, 12 * scale);
+    ctx.roundRect(24 * scale, 301 * scale, size - 48 * scale, 180 * scale, 12 * scale);
     ctx.fill();
 
     ctx.fillStyle = '#ffffff';
