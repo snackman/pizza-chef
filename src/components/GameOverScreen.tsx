@@ -180,25 +180,25 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
     ctx.fillRect(0, 0, size, size);
 
     if (images.splashLogo) {
-      const logoWidth = 50 * scale;
+      const logoWidth = 75 * scale;
       const logoHeight = (images.splashLogo.height / images.splashLogo.width) * logoWidth;
       ctx.drawImage(images.splashLogo, 20 * scale, 14 * scale, logoWidth, logoHeight);
     }
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = `bold ${22 * scale}px system-ui, -apple-system, sans-serif`;
+    ctx.font = `bold ${33 * scale}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = 'left';
     ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
     ctx.shadowBlur = 4 * scale;
     ctx.shadowOffsetY = 2 * scale;
-    ctx.fillText('Pizza Chef', 78 * scale, 42 * scale);
+    ctx.fillText('Pizza Chef', 104 * scale, 60 * scale);
     ctx.shadowBlur = 0;
     ctx.shadowOffsetY = 0;
 
     if (images.pizzaDAOLogo) {
-      const daoLogoWidth = 80 * scale;
+      const daoLogoWidth = 120 * scale;
       const daoLogoHeight = (images.pizzaDAOLogo.height / images.pizzaDAOLogo.width) * daoLogoWidth;
-      ctx.drawImage(images.pizzaDAOLogo, 78 * scale, 50 * scale, daoLogoWidth, daoLogoHeight);
+      ctx.drawImage(images.pizzaDAOLogo, 104 * scale, 70 * scale, daoLogoWidth, daoLogoHeight);
     }
 
     ctx.fillStyle = '#ffffff';
