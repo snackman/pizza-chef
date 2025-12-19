@@ -1,15 +1,15 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Trophy, Download, Share2, Check, Image as ImageIcon, ArrowLeft, RotateCcw } from 'lucide-react';
-import { submitScore, createGameSession, GameSession } from '../services/highScores';
-import { GameStats } from '../types/game';
-import HighScores from './HighScores';
+import { useRef, useState, useEffect, useCallback } from 'react';
+import { Copy, Download, Share2, Check, Image as ImageIcon } from 'lucide-react';
+import { GameStats as GameStatsType } from '../types/game';
 
-interface GameOverScreenProps {
-  stats: GameStats;
+interface ScoreCardProps {
+  stats: GameStatsType;
   score: number;
   level: number;
-  onSubmitted: (session: GameSession, playerName: string) => void;
-  onPlayAgain: () => void;
+  playerName: string;
+  gameId: string;
+  timestamp: Date;
+  onClose?: () => void;
 }
 
 interface LoadedImages {
@@ -27,16 +27,17 @@ interface LoadedImages {
   moltobenny: HTMLImageElement | null;
 }
 
-const DEFAULT_NAME = 'Pizza Trainee';
-
-function calculateSkillRating(stats: GameStats, score: number, level: number): { grade: string; stars: number; description: string } {
+function calculateSkillRating(stats: GameStatsType, score: number, level: number): { grade: string; stars: number; description: string } {
   let points = 0;
+
   points += score / 1000;
   points += Math.min(level * 0.1, 1);
   points += Math.min(stats.longestCustomerStreak * 0.05, 1);
   points += Math.min(stats.largestPlateStreak * 0.05, 0.5);
+
   const efficiency = stats.slicesBaked > 0 ? (stats.customersServed / stats.slicesBaked) * 100 : 0;
   points += Math.min(efficiency / 100, 1);
+
   const totalPowerUps = Object.values(stats.powerUpsUsed).reduce((a, b) => a + b, 0);
   points += Math.min(totalPowerUps * 0.05, 0.5);
 
@@ -49,6 +50,31 @@ function calculateSkillRating(stats: GameStats, score: number, level: number): {
   return { grade: 'F', stars: 0, description: 'Beginner' };
 }
 
+function getAchievements(stats: GameStatsType, score: number, level: number): string[] {
+  const achievements: string[] = [];
+
+  if (score >= 10000) achievements.push('10K Club');
+  else if (score >= 5000) achievements.push('5K Club');
+  else if (score >= 1000) achievements.push('1K Club');
+
+  if (level >= 20) achievements.push('Level 20+');
+  else if (level >= 10) achievements.push('Level 10+');
+  else if (level >= 5) achievements.push('Level 5+');
+
+  if (stats.longestCustomerStreak >= 20) achievements.push('Streak Master');
+  else if (stats.longestCustomerStreak >= 10) achievements.push('Hot Streak');
+
+  if (stats.customersServed >= 100) achievements.push('Century Server');
+  else if (stats.customersServed >= 50) achievements.push('Fifty Fed');
+
+  if (stats.platesCaught >= 50) achievements.push('Plate Catcher');
+
+  const totalPowerUps = Object.values(stats.powerUpsUsed).reduce((a, b) => a + b, 0);
+  if (totalPowerUps >= 20) achievements.push('Power User');
+
+  return achievements.slice(0, 4);
+}
+
 function loadImage(src: string): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {
     const img = new window.Image();
@@ -59,16 +85,11 @@ function loadImage(src: string): Promise<HTMLImageElement | null> {
   });
 }
 
-export default function GameOverScreen({ stats, score, level, onSubmitted, onPlayAgain }: GameOverScreenProps) {
-  const [playerName, setPlayerName] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
+export default function ScoreCard({ stats, score, level, playerName, gameId, timestamp, onClose }: ScoreCardProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [imageGenerated, setImageGenerated] = useState(false);
   const [copySuccess, setCopySuccess] = useState<'image' | 'text' | 'link' | null>(null);
   const [imagesLoaded, setImagesLoaded] = useState(false);
-  const [showLeaderboard, setShowLeaderboard] = useState(false);
-  const [scoreSubmitted, setScoreSubmitted] = useState(false);
-  const [submittedName, setSubmittedName] = useState('');
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const imagesRef = useRef<LoadedImages>({
     splashLogo: null,
     pizzaDAOLogo: null,
@@ -84,9 +105,9 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
     moltobenny: null,
   });
 
-  const displayName = playerName.trim() || DEFAULT_NAME;
   const skillRating = calculateSkillRating(stats, score, level);
-  const timestamp = new Date();
+  const achievements = getAchievements(stats, score, level);
+  const shareUrl = `${window.location.origin}?scores=true&highlight=${gameId}`;
   const formattedDate = timestamp.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const formattedTime = timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
@@ -136,12 +157,14 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
       };
       setImagesLoaded(true);
     }
+
     loadAllImages();
   }, []);
 
   const generateImage = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
@@ -183,7 +206,7 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
 
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 28px system-ui, -apple-system, sans-serif';
-    ctx.fillText(displayName.toUpperCase(), width / 2, 250);
+    ctx.fillText(playerName.toUpperCase(), width / 2, 250);
 
     ctx.fillStyle = '#fbbf24';
     ctx.font = 'bold 56px system-ui, -apple-system, sans-serif';
@@ -300,64 +323,22 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
     ctx.textAlign = 'center';
     ctx.fillText(`${formattedDate} at ${formattedTime}`, width / 2, 900);
 
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.font = '14px system-ui, -apple-system, sans-serif';
+    ctx.fillText(`Game: ${gameId.slice(0, 8)}`, width / 2, 925);
+
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.font = 'bold 16px system-ui, -apple-system, sans-serif';
     ctx.fillText('pizzadao.xyz', width / 2, 955);
-  }, [stats, score, level, displayName, skillRating, formattedDate, formattedTime]);
+
+    setImageGenerated(true);
+  }, [stats, score, level, playerName, gameId, skillRating, formattedDate, formattedTime]);
 
   useEffect(() => {
     if (imagesLoaded) {
       generateImage();
     }
   }, [imagesLoaded, generateImage]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const nameToSubmit = playerName.trim() || DEFAULT_NAME;
-
-    if (nameToSubmit.length > 50) {
-      setError('Name must be 50 characters or less');
-      return;
-    }
-
-    setSubmitting(true);
-    setError('');
-
-    const [scoreSuccess, session] = await Promise.all([
-      submitScore(nameToSubmit, score),
-      createGameSession(nameToSubmit, score, level, stats)
-    ]);
-
-    if (scoreSuccess && session) {
-      onSubmitted(session, nameToSubmit);
-      setSubmittedName(nameToSubmit);
-      setScoreSubmitted(true);
-      setShowLeaderboard(true);
-    } else if (scoreSuccess) {
-      const fallbackSession: GameSession = {
-        id: crypto.randomUUID(),
-        player_name: nameToSubmit,
-        score,
-        level,
-        slices_baked: stats.slicesBaked,
-        customers_served: stats.customersServed,
-        longest_streak: stats.longestCustomerStreak,
-        plates_caught: stats.platesCaught,
-        largest_plate_streak: stats.largestPlateStreak,
-        oven_upgrades: stats.ovenUpgradesMade,
-        power_ups_used: stats.powerUpsUsed,
-        created_at: new Date().toISOString()
-      };
-      onSubmitted(fallbackSession, nameToSubmit);
-      setSubmittedName(nameToSubmit);
-      setScoreSubmitted(true);
-      setShowLeaderboard(true);
-    } else {
-      setError('Failed to submit score. Please try again.');
-      setSubmitting(false);
-    }
-  };
 
   const copyImageToClipboard = async () => {
     const canvas = canvasRef.current;
@@ -382,11 +363,39 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
     if (!canvas) return;
 
     const link = document.createElement('a');
-    link.download = `pizza-chef-score.png`;
+    link.download = `pizza-chef-score-${gameId.slice(0, 8)}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
     setCopySuccess('image');
     setTimeout(() => setCopySuccess(null), 2000);
+  };
+
+  const copyTextSummary = async () => {
+    const text = `Pizza Chef Score Card
+Player: ${playerName}
+Score: ${score.toLocaleString()} | Level: ${level}
+Ranking: ${skillRating.description}
+Customers: ${stats.customersServed} | Plates: ${stats.platesCaught} | Streak: ${stats.longestCustomerStreak}
+${achievements.length > 0 ? `Achievements: ${achievements.join(', ')}` : ''}
+Play at: ${shareUrl}`;
+
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopySuccess('text');
+      setTimeout(() => setCopySuccess(null), 2000);
+    } catch {
+      console.error('Failed to copy text');
+    }
+  };
+
+  const copyShareLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopySuccess('link');
+      setTimeout(() => setCopySuccess(null), 2000);
+    } catch {
+      console.error('Failed to copy link');
+    }
   };
 
   const handleNativeShare = async () => {
@@ -396,204 +405,81 @@ export default function GameOverScreen({ stats, score, level, onSubmitted, onPla
     try {
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
       if (blob) {
-        const file = new File([blob], `pizza-chef-score.png`, { type: 'image/png' });
+        const file = new File([blob], `pizza-chef-score-${gameId.slice(0, 8)}.png`, { type: 'image/png' });
         await navigator.share({
           title: 'Pizza Chef Score Card',
           text: `I scored ${score.toLocaleString()} points in Pizza Chef! Level ${level} - ${skillRating.description}`,
           files: [file],
+          url: shareUrl
         });
       }
     } catch {
-      copyImageToClipboard();
+      copyTextSummary();
     }
   };
 
-  if (showLeaderboard) {
-    const displayNameForScore = scoreSubmitted ? submittedName : (playerName.trim() || DEFAULT_NAME);
-
-    return (
-      <div className="flex flex-col items-center gap-4 w-full max-w-4xl mx-auto">
-        <HighScores userScore={{ name: displayNameForScore, score }} />
-
-        {scoreSubmitted ? (
-          <button
-            onClick={onPlayAgain}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
-          >
-            <RotateCcw className="w-5 h-5" />
-            Play Again
-          </button>
-        ) : (
-          <div className="w-full space-y-3">
-            <div className="bg-white rounded-lg shadow-lg p-4">
-              <form onSubmit={handleSubmit} className="space-y-3">
-                <div>
-                  <label htmlFor="leaderboardPlayerName" className="block text-sm font-medium text-gray-700 mb-1">
-                    Enter your name for the leaderboard:
-                  </label>
-                  <input
-                    type="text"
-                    id="leaderboardPlayerName"
-                    value={playerName}
-                    onChange={(e) => setPlayerName(e.target.value)}
-                    placeholder={DEFAULT_NAME}
-                    maxLength={50}
-                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none transition-colors text-base"
-                    disabled={submitting}
-                  />
-                  {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all font-semibold disabled:opacity-50"
-                >
-                  {submitting ? '...' : (
-                    <>
-                      <Send className="w-5 h-5" />
-                      Submit Score
-                    </>
-                  )}
-                </button>
-              </form>
-            </div>
-
-            <div className="flex gap-3 w-full">
-              <button
-                onClick={() => setShowLeaderboard(false)}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-semibold"
-              >
-                <ArrowLeft className="w-5 h-5" />
-                Back
-              </button>
-              <button
-                onClick={onPlayAgain}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
-              >
-                <RotateCcw className="w-5 h-5" />
-                Play Again
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
-
   return (
-    <div className="bg-white rounded-xl shadow-2xl p-3 sm:p-6 w-full max-w-lg mx-auto max-h-[95vh] overflow-y-auto">
-      <div className="text-center mb-3">
-        <h2 className="text-2xl sm:text-3xl font-bold text-red-600">Game Over!</h2>
-        <p className="text-lg text-gray-600">
-          Score: <span className="font-bold text-amber-600">{score.toLocaleString()}</span>
-          <span className="mx-2">|</span>
-          Level: <span className="font-bold">{level}</span>
-        </p>
+    <div className="bg-white rounded-xl shadow-2xl p-4 sm:p-6 w-full max-w-lg mx-auto">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Your Score Card</h2>
       </div>
 
-      <div className="flex justify-center mb-3 bg-red-700 rounded-lg p-2 overflow-hidden">
+      <div className="flex justify-center mb-4 bg-red-700 rounded-lg p-2 overflow-hidden">
         <canvas
           ref={canvasRef}
           className="max-w-full h-auto rounded"
-          style={{ maxHeight: '400px', width: 'auto' }}
+          style={{ maxHeight: '520px', width: 'auto' }}
         />
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-3">
-        {!scoreSubmitted && (
-          <>
-            <div>
-              <label htmlFor="playerName" className="block text-sm font-medium text-gray-700 mb-1">
-                Enter your name for the leaderboard:
-              </label>
-              <input
-                type="text"
-                id="playerName"
-                value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
-                placeholder={DEFAULT_NAME}
-                maxLength={50}
-                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none transition-colors text-base"
-                disabled={submitting}
-              />
-              {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
-            </div>
+      {imageGenerated && (
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={copyImageToClipboard}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all font-semibold text-sm"
+            >
+              {copySuccess === 'image' ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <ImageIcon className="w-4 h-4" />
+                  Copy Image
+                </>
+              )}
+            </button>
+            <button
+              onClick={downloadImage}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors font-semibold text-sm"
+            >
+              <Download className="w-4 h-4" />
+              Download
+            </button>
+          </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all font-semibold disabled:opacity-50"
-              >
-                {submitting ? '...' : (
-                  <>
-                    <Send className="w-5 h-5" />
-                    Submit Score
-                  </>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowLeaderboard(true)}
-                disabled={submitting}
-                className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-semibold disabled:opacity-50"
-              >
-                <Trophy className="w-5 h-5" />
-                Leaderboard
-              </button>
-            </div>
-          </>
-        )}
+          {'share' in navigator && (
+            <button
+              onClick={handleNativeShare}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all font-semibold"
+            >
+              <Share2 className="w-5 h-5" />
+              Share Score Card
+            </button>
+          )}
 
-        <button
-          type="button"
-          onClick={onPlayAgain}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
-        >
-          <RotateCcw className="w-5 h-5" />
-          Play Again
-        </button>
-
-        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-200">
-          <button
-            type="button"
-            onClick={copyImageToClipboard}
-            className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
-          >
-            {copySuccess === 'image' ? (
-              <>
-                <Check className="w-4 h-4" />
-                Copied!
-              </>
-            ) : (
-              <>
-                <ImageIcon className="w-4 h-4" />
-                Copy Image
-              </>
-            )}
-          </button>
-          <button
-            type="button"
-            onClick={downloadImage}
-            className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
-          >
-            <Download className="w-4 h-4" />
-            Download
-          </button>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="w-full mt-2 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-semibold"
+            >
+              Continue to Leaderboard
+            </button>
+          )}
         </div>
-
-        {'share' in navigator && (
-          <button
-            type="button"
-            onClick={handleNativeShare}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all font-semibold text-sm"
-          >
-            <Share2 className="w-4 h-4" />
-            Share Score Card
-          </button>
-        )}
-      </form>
+      )}
     </div>
   );
 }
