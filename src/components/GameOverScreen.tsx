@@ -407,19 +407,19 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
       ctx.fillText(powerUp.count.toString(), x + powerUpSize / 2, y + powerUpSize + 16 * scale);
     });
 
-    // Footer (shift up to stay consistent with the moved power-ups box)
+    const footerY = 575 * scale;
     ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
     ctx.font = `${13 * scale}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = 'left';
-    ctx.fillText(`${formattedDate} at ${formattedTime}`, 24 * scale, 568 * scale); // was 588 * scale
+    ctx.fillText(`${formattedDate} at ${formattedTime}`, 24 * scale, footerY);
 
     ctx.textAlign = 'right';
-    ctx.fillText(`#${gameId.slice(0, 8)}`, size - 24 * scale, 568 * scale); // was 588 * scale
+    ctx.fillText(`#${gameId.slice(0, 8)}`, size - 24 * scale, footerY);
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.font = `bold ${15 * scale}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('pizzadao.xyz', size / 2, 575 * scale); // was 595 * scale
+    ctx.fillText('pizzadao.xyz', size / 2, footerY);
   }, [stats, score, level, displayName, skillRating, gameId, formattedDate, formattedTime, lastStarLostReason]);
 
   useEffect(() => {
