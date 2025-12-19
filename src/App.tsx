@@ -152,7 +152,6 @@ function App() {
           <LandscapeControls
             gameOver={gameState.gameOver}
             paused={gameState.paused}
-            nyanSweepActive={gameState.nyanSweep?.active ?? false}
             onMoveUp={() => moveChef('up')}
             onMoveDown={() => moveChef('down')}
             onServePizza={servePizza}
@@ -171,8 +170,9 @@ function App() {
                   stats={gameState.stats}
                   score={gameState.score}
                   level={gameState.level}
-                  lastStarLostReason={gameState.lastStarLostReason}
-                  onSubmitted={() => {}}
+                  onSubmitted={() => {
+                    setShowGameOver(false);
+                  }}
                   onPlayAgain={() => {
                     resetGame();
                     setShowGameOver(false);
@@ -198,7 +198,7 @@ function App() {
           )}
 
           {gameState.showStore && (
-            <div className="absolute inset-0 bg-black bg-opacity-75 flex items-start justify-center z-30 pt-2">
+            <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center z-30">
               <ItemStore
                 gameState={gameState}
                 onUpgradeOven={upgradeOven}
@@ -256,13 +256,13 @@ function App() {
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-orange-200 via-yellow-100 to-red-200 flex items-center justify-center overflow-hidden">
       <div className="relative w-full h-full flex flex-col">
-        <div className={`flex-1 flex flex-col items-center p-2 sm:p-4 gap-2 sm:gap-4 ${isMobile ? 'justify-start pt-1' : 'justify-center'}`}>
-          <div className="w-full max-w-6xl">
-            <ScoreBoard gameState={gameState} onShowInstructions={() => setShowInstructions(true)} />
-          </div>
+        <div className="absolute top-2 left-2 right-2 z-30">
+          <ScoreBoard gameState={gameState} onShowInstructions={() => setShowInstructions(true)} />
+        </div>
 
+        <div className="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 gap-2">
           <div
-            className="relative w-full max-w-6xl aspect-[5/3]"
+            className="w-full max-w-6xl aspect-[5/3] sm:relative absolute top-[15%] sm:top-auto"
             onClick={handleGameBoardClick}
           >
             <GameBoard gameState={gameState} />
@@ -291,7 +291,7 @@ function App() {
             )}
 
             {gameState.showStore && (
-              <div className="absolute inset-0 bg-black bg-opacity-75 flex items-start justify-center rounded-lg z-30 pt-2">
+              <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center rounded-lg z-30">
                 <ItemStore
                   gameState={gameState}
                   onUpgradeOven={upgradeOven}
@@ -316,8 +316,9 @@ function App() {
                 stats={gameState.stats}
                 score={gameState.score}
                 level={gameState.level}
-                lastStarLostReason={gameState.lastStarLostReason}
-                onSubmitted={() => {}}
+                onSubmitted={() => {
+                  setShowGameOver(false);
+                }}
                 onPlayAgain={() => {
                   resetGame();
                   setShowGameOver(false);
@@ -370,7 +371,6 @@ function App() {
           <MobileGameControls
             gameOver={gameState.gameOver}
             paused={gameState.paused}
-            nyanSweepActive={gameState.nyanSweep?.active ?? false}
             onMoveUp={() => moveChef('up')}
             onMoveDown={() => moveChef('down')}
             onServePizza={servePizza}

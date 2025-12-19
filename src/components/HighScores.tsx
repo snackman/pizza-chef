@@ -67,7 +67,7 @@ const HighScores: React.FC<HighScoresProps> = ({ userScore }) => {
                       #{index + 1}
                     </span>
                     <span className="font-medium text-gray-800 truncate text-xs sm:text-base">
-                      {score.player_name.toUpperCase()}
+                      {score.player_name}
                     </span>
                   </div>
                   <span className="font-bold text-xs sm:text-xl text-gray-800 ml-1 flex-shrink-0">{score.score.toLocaleString()}</span>
@@ -87,7 +87,7 @@ const HighScores: React.FC<HighScoresProps> = ({ userScore }) => {
                         #{index + 6}
                       </span>
                       <span className="font-medium text-gray-800 truncate text-xs sm:text-base">
-                        {score.player_name.toUpperCase()}
+                        {score.player_name}
                       </span>
                     </div>
                     <span className="font-bold text-xs sm:text-xl text-gray-800 ml-1 flex-shrink-0">{score.score.toLocaleString()}</span>
@@ -101,9 +101,14 @@ const HighScores: React.FC<HighScoresProps> = ({ userScore }) => {
             <div className="mt-4 pt-4 border-t-2 border-gray-200">
               <div className="bg-gradient-to-r from-amber-100 to-orange-100 border-2 border-amber-500 rounded-lg p-2 sm:p-3">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs sm:text-base text-amber-700 flex-shrink-0">
-                    {userScore.name.toUpperCase()}
-                  </span>
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <span className="font-bold text-xs sm:text-base text-amber-700 flex-shrink-0">
+                      YOUR SCORE
+                    </span>
+                    <span className="font-medium text-gray-800 truncate text-xs sm:text-base">
+                      {userScore.name}
+                    </span>
+                  </div>
                   <span className="font-bold text-sm sm:text-xl text-amber-700 ml-2 flex-shrink-0">
                     {userScore.score.toLocaleString()}
                   </span>

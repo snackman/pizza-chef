@@ -26,7 +26,6 @@ const PowerUp: React.FC<PowerUpProps> = ({ powerUp }) => {
       case 'moltobenny':
         return 'https://i.imgur.com/5goVcAS.png';
       case 'star':
-        return 'https://i.imgur.com/hw0jkrq.png';
       default:
         return null;
     }
@@ -44,7 +43,7 @@ const PowerUp: React.FC<PowerUpProps> = ({ powerUp }) => {
         top: `${topPercent}%`,
       }}
     >
-      {image && (
+      {image ? (
         <img
           src={image}
           alt={powerUp.type}
@@ -52,6 +51,10 @@ const PowerUp: React.FC<PowerUpProps> = ({ powerUp }) => {
             powerUp.type === 'nyan' ? 'animate-bounce' : ''
           }`}
         />
+      ) : (
+        <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
+          ⭐
+        </div>
       )}
     </div>
   );

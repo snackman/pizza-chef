@@ -1,11 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React from 'react';
 import Customer from './Customer';
 import PizzaSlice from './PizzaSlice';
 import EmptyPlate from './EmptyPlate';
-import DroppedPlate from './DroppedPlate';
 import PowerUp from './PowerUp';
 import PizzaSliceStack from './PizzaSliceStack';
-import FloatingScore from './FloatingScore';
 import { GameState } from '../types/game';
 import pizzaShopBg from '/pizza shop background v2.png';
 import chefImg from '/Sprites/chefemoji.png';
@@ -17,11 +15,6 @@ interface GameBoardProps {
 const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
   const lanes = [0, 1, 2, 3];
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
-  const [completedScores, setCompletedScores] = useState<Set<string>>(new Set());
-
-  const handleScoreComplete = useCallback((id: string) => {
-    setCompletedScores(prev => new Set(prev).add(id));
-  }, []);
 
   React.useEffect(() => {
     const interval = setInterval(forceUpdate, 100);
@@ -129,7 +122,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
             }}
           >
             {gameState.gameOver ? (
-              <img src="https://i.imgur.com/PwRdw0u.png" alt="game over" className="w-full h-full object-contain" style={{ transform: 'scale(15)' }} />
+              <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>🧟</div>
             ) : (
               <img src={"https://i.imgur.com/EPCSa79.png"} alt="chef" className="w-full h-full object-contain" style={{ transform: 'scale(15)' }} />
             )}
@@ -184,24 +177,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
         <EmptyPlate key={plate.id} plate={plate} />
       ))}
 
-      {gameState.droppedPlates.map((droppedPlate) => (
-        <DroppedPlate key={droppedPlate.id} droppedPlate={droppedPlate} />
-      ))}
-
       {gameState.powerUps.map((powerUp) => (
         <PowerUp key={powerUp.id} powerUp={powerUp} />
-      ))}
-
-      {/* Floating score indicators */}
-      {gameState.floatingScores.filter(fs => !completedScores.has(fs.id)).map((floatingScore) => (
-        <FloatingScore
-          key={floatingScore.id}
-          id={floatingScore.id}
-          points={floatingScore.points}
-          lane={floatingScore.lane}
-          position={floatingScore.position}
-          onComplete={handleScoreComplete}
-        />
       ))}
 
       {/* Falling pizza when game over */}

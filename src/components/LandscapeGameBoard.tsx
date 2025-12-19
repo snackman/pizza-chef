@@ -1,11 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React from 'react';
 import LandscapeCustomer from './LandscapeCustomer';
 import PizzaSlice from './PizzaSlice';
 import EmptyPlate from './EmptyPlate';
-import LandscapeDroppedPlate from './LandscapeDroppedPlate';
 import PowerUp from './PowerUp';
 import PizzaSliceStack from './PizzaSliceStack';
-import FloatingScore from './FloatingScore';
 import { GameState } from '../types/game';
 import landscapeBg from '../assets/landscape version pizza chef.png';
 import chefImg from '/Sprites/chefemoji.png';
@@ -17,11 +15,6 @@ interface LandscapeGameBoardProps {
 const LandscapeGameBoard: React.FC<LandscapeGameBoardProps> = ({ gameState }) => {
   const lanes = [0, 1, 2, 3];
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
-  const [completedScores, setCompletedScores] = useState<Set<string>>(new Set());
-
-  const handleScoreComplete = useCallback((id: string) => {
-    setCompletedScores(prev => new Set(prev).add(id));
-  }, []);
 
   React.useEffect(() => {
     const interval = setInterval(forceUpdate, 100);
@@ -129,11 +122,7 @@ const LandscapeGameBoard: React.FC<LandscapeGameBoardProps> = ({ gameState }) =>
           }}
         >
           {gameState.gameOver ? (
-            <img
-              src="https://i.imgur.com/PwRdw0u.png"
-              alt="game over"
-              className="w-full h-full object-contain"
-            />
+            <div style={{ fontSize: 'clamp(1rem, 2vw, 1.5rem)' }}>🧟</div>
           ) : (
             <img
               src={"https://i.imgur.com/EPCSa79.png"}
@@ -179,24 +168,8 @@ const LandscapeGameBoard: React.FC<LandscapeGameBoardProps> = ({ gameState }) =>
         <EmptyPlate key={plate.id} plate={plate} />
       ))}
 
-      {gameState.droppedPlates.map((droppedPlate) => (
-        <LandscapeDroppedPlate key={droppedPlate.id} droppedPlate={droppedPlate} />
-      ))}
-
       {gameState.powerUps.map((powerUp) => (
         <PowerUp key={powerUp.id} powerUp={powerUp} />
-      ))}
-
-      {/* Floating score indicators */}
-      {gameState.floatingScores.filter(fs => !completedScores.has(fs.id)).map((floatingScore) => (
-        <FloatingScore
-          key={floatingScore.id}
-          id={floatingScore.id}
-          points={floatingScore.points}
-          lane={floatingScore.lane}
-          position={floatingScore.position}
-          onComplete={handleScoreComplete}
-        />
       ))}
 
       {/* Falling pizza when game over */}
