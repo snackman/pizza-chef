@@ -389,7 +389,14 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
       ctx.fillStyle = '#ffffff';
       ctx.font = `bold ${16 * scale}px system-ui, -apple-system, sans-serif`;
       ctx.textAlign = 'center';
-      ctx.fillText(powerUp.count.toString(), x + powerUpSize / 2, y + powerUpSize + 16 * scale);
+      const numberYOffset = 8 * scale;
+
+ctx.fillText(
+  powerUp.count.toString(),
+  x + powerUpSize / 2,
+  y + powerUpSize + 16 * scale + numberYOffset
+);
+
     });
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
