@@ -65,11 +65,11 @@ function calculateSkillRating(stats: GameStats, score: number, level: number): {
   points += Math.min(totalPowerUps * 0.05, 0.5);
 
   if (points >= 70) return { grade: 'S+', stars: 5, description: 'Legendary Pizzaiolo' };
-  if (points >= 44) return { grade: 'S', stars: 5, description: 'Master Chef' };
-  if (points >= 27) return { grade: 'A', stars: 4, description: 'Sous Chef' };
-  if (points >= 12) return { grade: 'B', stars: 3, description: 'Chef de Partie' };
+  if (points >= 44) return { grade: 'S', stars: 5, description: 'Master Pizzaiolo' };
+  if (points >= 27) return { grade: 'A', stars: 4, description: 'Pizzaiolo' };
+  if (points >= 12) return { grade: 'B', stars: 3, description: 'Line Cook' };
   if (points >= 6) return { grade: 'C', stars: 2, description: 'Prep Cook' };
-  if (points >= 3) return { grade: 'D', stars: 1, description: 'Novice' };
+  if (points >= 3) return { grade: 'D', stars: 1, description: 'Dishwasher' };
   return { grade: 'F', stars: 0, description: 'Noob' };
 }
 
