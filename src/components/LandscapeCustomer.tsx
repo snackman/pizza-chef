@@ -7,7 +7,6 @@ const spicyfaceImg = "https://i.imgur.com/MDS5EVg.png";
 import woozyfaceImg from '/Sprites/woozyface.png';
 const criticImg = "https://i.imgur.com/ZygBTOI.png";
 const badLuckBrianImg = "https://i.imgur.com/cs0LDgJ.png";
-const badLuckBrianPukeImg = "https://i.imgur.com/yRXQDIT.png";
 
 interface LandscapeCustomerProps {
   customer: CustomerType;
@@ -20,7 +19,6 @@ const LandscapeCustomer: React.FC<LandscapeCustomerProps> = ({ customer }) => {
 
   const getDisplay = () => {
     if (customer.frozen) return { type: 'image', value: frozenfaceImg, alt: 'frozen' };
-    if (customer.vomit && customer.badLuckBrian) return { type: 'image', value: badLuckBrianPukeImg, alt: 'brian-puke' };
     if (customer.vomit) return { type: 'emoji', value: '🤮' };
     if (customer.woozy) {
       if (customer.woozyState === 'drooling') return { type: 'image', value: droolfaceImg, alt: 'drooling' };
