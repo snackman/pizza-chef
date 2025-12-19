@@ -201,19 +201,18 @@ const LandscapeGameBoard: React.FC<LandscapeGameBoardProps> = ({ gameState }) =>
 
       {/* Falling pizza when game over */}
       {gameState.fallingPizza && (
-        <img
-          src="https://i.imgur.com/4gWxncs.png"
-          alt="falling pizza"
-          className="absolute transition-none object-contain"
+        <div
+          className="absolute transition-none"
           style={{
             left: '22%',
-            width: '2vw',
-            aspectRatio: '1',
             top: `calc(${23.5 + gameState.fallingPizza.lane * 18.5}% + ${gameState.fallingPizza.y}px)`,
             transform: `rotate(${gameState.fallingPizza.y * 2}deg)`,
             zIndex: 19,
+            fontSize: 'clamp(0.75rem, 2vw, 1.25rem)',
           }}
-        />
+        >
+          🍕
+        </div>
       )}
     </div>
   );

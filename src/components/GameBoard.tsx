@@ -206,19 +206,18 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
 
       {/* Falling pizza when game over */}
       {gameState.fallingPizza && (
-        <img
-          src="https://i.imgur.com/4gWxncs.png"
-          alt="falling pizza"
-          className="absolute transition-none object-contain"
+        <div
+          className="absolute transition-none"
           style={{
             left: '13%',
-            width: '5%',
-            aspectRatio: '1',
             top: `calc(${gameState.fallingPizza.lane * 25 + 6}% + ${gameState.fallingPizza.y}px)`,
             transform: `rotate(${gameState.fallingPizza.y * 2}deg)`,
             zIndex: 19,
+            fontSize: 'clamp(1.5rem, 4vw, 2.5rem)',
           }}
-        />
+        >
+          🍕
+        </div>
       )}
     </div>
   );

@@ -55,12 +55,12 @@ const PizzaSlice: React.FC<PizzaSliceProps> = ({ slice }) => {
       />
 
       {/* Pizza on top - centered within plate */}
-      <img
-        src="https://i.imgur.com/4gWxncs.png"
-        alt="pizza slice"
-        className="absolute inset-0 w-[70%] h-[70%] z-10 object-contain"
-        style={{ zIndex: 10 }}
-      />
+      <div
+        className="absolute inset-0 w-[70%] h-[70%] flex items-center justify-center z-10"
+        style={{ fontSize: 'clamp(1.5rem, 4vw, 2.5rem)' }}
+      >
+        🍕
+      </div>
     </div>
   );
 };
