@@ -48,7 +48,7 @@ const PizzaSlice: React.FC<PizzaSliceProps> = ({ slice }) => {
     >
       {/* White plate image underneath */}
       <img
-        src="https://i.imgur.com/cCGTf1H.png"
+        src="https://i.imgur.com/XFdXriH.png"
         alt="slice1plate"
         className="absolute inset-0 w-[80%] h-[80%] object-contain"
         style={{ zIndex: 1 }}
