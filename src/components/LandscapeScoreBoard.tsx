@@ -42,7 +42,7 @@ const LandscapeScoreBoard: React.FC<LandscapeScoreBoardProps> = ({ gameState, on
 
         <div className="flex items-center space-x-1">
           <Layers className="w-4 h-4 text-blue-300" />
-          <span className="font-medium">Lvl {gameState.level}</span>
+          <span className="font-bold">{gameState.level}</span>
         </div>
 
         <button

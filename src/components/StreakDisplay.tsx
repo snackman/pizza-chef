@@ -5,6 +5,9 @@ interface StreakDisplayProps {
 }
 
 export function getStreakMultiplier(streak: number): number {
+  if (streak < 5) {
+    return 1.0;
+  }
   return 1.0 + 0.01 * streak;
 }
 

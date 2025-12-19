@@ -42,7 +42,7 @@ export async function getTopScores(limit: number = 10): Promise<HighScore[]> {
 export async function submitScore(playerName: string, score: number): Promise<boolean> {
   const { error } = await supabase
     .from('high_scores')
-    .insert([{ player_name: playerName, score }]);
+    .insert([{ player_name: playerName.toLowerCase(), score }]);
 
   if (error) {
     console.error('Error submitting score:', error);
@@ -61,7 +61,7 @@ export async function createGameSession(
   const { data, error } = await supabase
     .from('game_sessions')
     .insert([{
-      player_name: playerName,
+      player_name: playerName.toLowerCase(),
       score,
       level,
       slices_baked: stats.slicesBaked,
