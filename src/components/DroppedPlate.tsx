@@ -33,16 +33,12 @@ const DroppedPlate: React.FC<DroppedPlateProps> = ({ droppedPlate }) => {
     return null;
   }
 
-  const topPercent = droppedPlate.lane * 25 + 10;
-
   return (
     <div
-      className="absolute w-[6%] aspect-square transition-transform duration-100 ease-linear"
+      className="absolute w-[6%] aspect-square transition-all duration-100"
       style={{
-        left: 0,
-        top: 0,
-        transform: `translate3d(${droppedPlate.position}vw, ${topPercent}cqh, 0)`,
-        willChange: 'transform',
+        left: `${droppedPlate.position}%`,
+        top: `${droppedPlate.lane * 25 + 10}%`,
         opacity: visible ? 1 : 0,
       }}
     >

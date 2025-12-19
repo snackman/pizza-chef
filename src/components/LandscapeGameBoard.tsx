@@ -119,14 +119,12 @@ const LandscapeGameBoard: React.FC<LandscapeGameBoardProps> = ({ gameState }) =>
       {/* Chef positioned at current lane - only shown when NOT in nyan sweep */}
       {!gameState.nyanSweep?.active && (
         <div
-          className="absolute flex items-center justify-center transition-transform duration-100 ease-linear"
+          className="absolute flex items-center justify-center"
           style={{
             width: '15%',
             height: '15%',
             left: '15%',
-            top: 0,
-            transform: `translate3d(0, ${23 + gameState.chefLane * 20}cqh, 0)`,
-            willChange: 'transform',
+            top: `${23 + gameState.chefLane * 20}%`,
             zIndex: gameState.gameOver ? 19 : 10
           }}
         >
@@ -155,14 +153,12 @@ const LandscapeGameBoard: React.FC<LandscapeGameBoardProps> = ({ gameState }) =>
       {/* Nyan Cat Chef - positioned directly on game board during sweep */}
       {gameState.nyanSweep?.active && (
         <div
-          className="absolute flex items-center justify-center transition-transform duration-100 ease-linear"
+          className="absolute flex items-center justify-center"
           style={{
             width: '3%',
             height: '3%',
-            left: 0,
-            top: 0,
-            transform: `translate3d(${gameState.nyanSweep.xPosition}vw, ${23 + gameState.chefLane * 20}cqh, 0)`,
-            willChange: 'transform',
+            left: `${gameState.nyanSweep.xPosition}%`,
+            top: `${23 + gameState.chefLane * 20}%`,
             zIndex: 20
           }}
         >

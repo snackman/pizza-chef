@@ -40,7 +40,7 @@ const ScoreBoard: React.FC<ScoreBoardProps> = ({ gameState, onShowInstructions }
 
           <div className="flex items-center space-x-2">
             <Layers className="w-4 h-4 sm:w-5 sm:h-5 text-blue-300" />
-            <span className="hidden sm:inline text-sm font-medium">Level:</span>
+            <span className="sm:inline text-sm font-medium">Level:</span>
             <span className="text-base sm:text-lg font-bold">{gameState.level}</span>
           </div>
 

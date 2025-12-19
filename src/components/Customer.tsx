@@ -7,7 +7,6 @@ const spicyfaceImg = "https://i.imgur.com/MDS5EVg.png";
 import woozyfaceImg from '/Sprites/woozyface.png';
 const criticImg = "https://i.imgur.com/ZygBTOI.png";
 const badLuckBrianImg = "https://i.imgur.com/cs0LDgJ.png";
-const badLuckBrianPukeImg = "https://i.imgur.com/yRXQDIT.png";
 
 interface CustomerProps {
   customer: CustomerType;
@@ -18,7 +17,6 @@ const Customer: React.FC<CustomerProps> = ({ customer }) => {
 
   const getDisplay = () => {
     if (customer.frozen) return { type: 'image', value: frozenfaceImg, alt: 'frozen' };
-    if (customer.vomit && customer.badLuckBrian) return { type: 'image', value: badLuckBrianPukeImg, alt: 'brian-puke' };
     if (customer.vomit) return { type: 'emoji', value: '🤮' };
     if (customer.woozy) {
       if (customer.woozyState === 'drooling') return { type: 'image', value: droolfaceImg, alt: 'drooling' };
@@ -34,17 +32,13 @@ const Customer: React.FC<CustomerProps> = ({ customer }) => {
 
   const display = getDisplay();
 
-  const topPercent = customer.lane * 25 + 6;
-
   return (
     <>
       <div
-        className="absolute w-[8%] aspect-square transition-transform duration-100 ease-linear flex items-center justify-center"
+        className="absolute w-[8%] aspect-square transition-all duration-100 flex items-center justify-center"
         style={{
-          left: 0,
-          top: 0,
-          transform: `translate3d(${leftPosition}vw, ${topPercent}cqh, 0)`,
-          willChange: 'transform',
+          left: `${leftPosition}%`,
+          top: `${customer.lane * 25 + 6}%`,
         }}
       >
         {display.type === 'image' ? (
@@ -64,12 +58,11 @@ const Customer: React.FC<CustomerProps> = ({ customer }) => {
       </div>
       {customer.textMessage && (
         <div
-          className="absolute px-2 py-1 bg-white text-black rounded border-2 border-black text-xs font-bold whitespace-nowrap transition-transform duration-100 ease-linear"
+          className="absolute px-2 py-1 bg-white text-black rounded border-2 border-black text-xs font-bold whitespace-nowrap"
           style={{
-            left: 0,
-            top: 0,
-            transform: `translate3d(calc(${leftPosition}vw - 50%), ${customer.lane * 25 + 18}cqh, 0)`,
-            willChange: 'transform',
+            left: `${leftPosition}%`,
+            top: `${customer.lane * 25 + 18}%`,
+            transform: 'translateX(-50%)',
           }}
         >
           {customer.textMessage}
