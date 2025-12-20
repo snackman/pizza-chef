@@ -108,8 +108,8 @@ const MobileGameControls: React.FC<MobileGameControlsProps> = ({
                ovenStatus === 'burning' ? 'Burning!' :
                ovenStatus === 'warning' ? 'Warning!' :
                ovenStatus === 'ready' ? 'Take Out!' :
-               ovenStatus === 'cooking' ? 'Cooking...' :
-               'Put Pizza'}
+               ovenStatus === 'cooking' ? 'Heating...' :
+               'Heat Pizza'}
             </div>
             <button
               onClick={handleOvenAction}
