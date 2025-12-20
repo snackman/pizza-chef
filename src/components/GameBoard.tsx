@@ -73,7 +73,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
 
   return (
     <div
-      className="relative w-full aspect-[5/3] border-4 border-amber-600 rounded-lg overflow-hidden"
+      className="relative w-full aspect-[5/3] border-0 border-amber-600 rounded-lg overflow-hidden"
       style={{
         backgroundImage: `url(${pizzaShopBg})`,
         backgroundSize: 'cover',
