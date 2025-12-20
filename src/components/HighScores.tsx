@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Trophy } from 'lucide-react';
-import { getTopScores, HighScore, getGameSession, GameSession } from '../services/highScores';
-import Scorecard from './Scorecard';
+import { getTopScores, HighScore, getGameSession } from '../services/highScores';
+import ScorecardImageView from './ScorecardImageView';
 
 interface HighScoresProps {
   userScore?: { name: string; score: number };
@@ -10,7 +10,8 @@ interface HighScoresProps {
 const HighScores: React.FC<HighScoresProps> = ({ userScore }) => {
   const [scores, setScores] = useState<HighScore[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedSession, setSelectedSession] = useState<GameSession | null>(null);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const [selectedPlayerName, setSelectedPlayerName] = useState<string>('');
   const [showScorecard, setShowScorecard] = useState(false);
 
   useEffect(() => {
@@ -27,13 +28,15 @@ const HighScores: React.FC<HighScoresProps> = ({ userScore }) => {
   const handleNameClick = async (score: HighScore) => {
     if (!score.game_session_id) return;
     const session = await getGameSession(score.game_session_id);
-    setSelectedSession(session);
+    setSelectedImageUrl(session?.scorecard_image_url || null);
+    setSelectedPlayerName(score.player_name);
     setShowScorecard(true);
   };
 
   const handleCloseScorecard = () => {
     setShowScorecard(false);
-    setSelectedSession(null);
+    setSelectedImageUrl(null);
+    setSelectedPlayerName('');
   };
 
   const leftColumn = scores.slice(0, 5);
@@ -140,7 +143,11 @@ const HighScores: React.FC<HighScoresProps> = ({ userScore }) => {
       )}
 
       {showScorecard && (
-        <Scorecard session={selectedSession} onClose={handleCloseScorecard} />
+        <ScorecardImageView
+          imageUrl={selectedImageUrl}
+          playerName={selectedPlayerName}
+          onClose={handleCloseScorecard}
+        />
       )}
     </div>
   );

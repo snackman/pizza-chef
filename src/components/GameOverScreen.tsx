@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Send, Trophy, Download, Share2, Check, Image as ImageIcon, ArrowLeft, RotateCcw } from 'lucide-react';
-import { submitScore, createGameSession, GameSession } from '../services/highScores';
+import { submitScore, createGameSession, GameSession, uploadScorecardImage, updateGameSessionImage } from '../services/highScores';
 import { GameStats, StarLostReason } from '../types/game';
 import HighScores from './HighScores';
 
@@ -435,10 +435,23 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
     setSubmitting(true);
     setError('');
 
-    const [scoreSuccess, session] = await Promise.all([
-      submitScore(nameToSubmit, score),
-      createGameSession(nameToSubmit, score, level, stats)
-    ]);
+    const session = await createGameSession(nameToSubmit, score, level, stats);
+
+    if (session) {
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+        if (blob) {
+          const imageUrl = await uploadScorecardImage(session.id, blob);
+          if (imageUrl) {
+            await updateGameSessionImage(session.id, imageUrl);
+            session.scorecard_image_url = imageUrl;
+          }
+        }
+      }
+    }
+
+    const scoreSuccess = await submitScore(nameToSubmit, score, session?.id);
 
     if (scoreSuccess && session) {
       setSubmittedName(nameToSubmit);
