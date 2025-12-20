@@ -100,7 +100,7 @@ const MobileGameControls: React.FC<MobileGameControlsProps> = ({
         </div>
 
         {/* Right side controls - Oven and Serve stacked */}
-        <div className="flex flex-col space-y-6"></div>
+        <div className="flex flex-col space-y-6">
           {/* Oven Control */}
           <div className="flex items-center space-x-3">
             <div className="text-white text-xs font-bold text-right min-w-[60px]">
@@ -108,8 +108,8 @@ const MobileGameControls: React.FC<MobileGameControlsProps> = ({
                ovenStatus === 'burning' ? 'Burning!' :
                ovenStatus === 'warning' ? 'Warning!' :
                ovenStatus === 'ready' ? 'Take Out!' :
-               ovenStatus === 'cooking' ? 'Heating...' :
-               'Heat Pizza'}
+               ovenStatus === 'cooking' ? 'Cooking...' :
+               'Put Pizza'}
             </div>
             <button
               onClick={handleOvenAction}
