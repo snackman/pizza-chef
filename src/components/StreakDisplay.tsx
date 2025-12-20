@@ -23,7 +23,12 @@ export default function StreakDisplay({ stats }: StreakDisplayProps) {
   const plateMultiplier = getStreakMultiplier(stats.currentPlateStreak);
 
   return (
-    <div className="absolute top-2 right-2 z-10 flex flex-col gap-2">
+    <div className="
+  absolute top-2 right-2 z-10
+  flex flex-col gap-2
+  transform scale-[0.33] md:scale-100
+  origin-top-right
+">
       {showCustomerStreak && (
         <div className="bg-gradient-to-br from-yellow-400 to-orange-500 text-white px-4 py-2 rounded-lg shadow-lg border-2 border-yellow-200 animate-pulse">
           <div className="flex items-center gap-2">
