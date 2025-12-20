@@ -26,7 +26,7 @@ export default function StreakDisplay({ stats }: StreakDisplayProps) {
     <div className="
   absolute top-2 right-2 z-10
   flex flex-col gap-2
-  transform scale-[0.33] md:scale-100
+  transform scale-[0.5] md:scale-100
   origin-top-right
 ">
       {showCustomerStreak && (
