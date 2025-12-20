@@ -86,7 +86,7 @@ const MobileGameControls: React.FC<MobileGameControlsProps> = ({
           <button
             onClick={onMoveUp}
             disabled={isDisabled || safeLane === 0}
-            className="w-24 h-[108px] bg-gray-500 text-white rounded-t-xl hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95 active:bg-gray-700 flex items-center justify-center text-3xl font-bold shadow-lg border-b border-gray-400"
+            className="w-36 h-[108px] bg-gray-500 text-white rounded-t-xl hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95 active:bg-gray-700 flex items-center justify-center text-3xl font-bold shadow-lg border-b border-gray-400"
           >
             ↑
           </button>
