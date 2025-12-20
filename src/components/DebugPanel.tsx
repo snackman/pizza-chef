@@ -10,7 +10,7 @@ const DebugPanel: React.FC<DebugPanelProps> = ({ onActivatePowerUp }) => {
     { type: 'honey', label: 'Hot Honey', icon: '/Sprites/hothoney.png', color: 'bg-orange-500 hover:bg-orange-600' },
     { type: 'ice-cream', label: 'Ice Cream', icon: '/Sprites/sundae.png', color: 'bg-cyan-500 hover:bg-cyan-600' },
     { type: 'beer', label: 'Beer', icon: '/Sprites/beer.png', color: 'bg-amber-500 hover:bg-amber-600' },
-    { type: 'star', label: 'Star', icon: '/Sprites/gotchi.png', color: 'bg-yellow-500 hover:bg-yellow-600' },
+    { type: 'star', label: 'Star', icon: '/Sprites/starpower.png', color: 'bg-yellow-500 hover:bg-yellow-600' },
     { type: 'doge', label: 'Doge', icon: '/Sprites/doge.png', color: 'bg-yellow-600 hover:bg-yellow-700' },
     { type: 'nyan', label: 'Nyan Cat', icon: '/Sprites/nyancat.png', color: 'bg-pink-500 hover:bg-pink-600' },
   ];
