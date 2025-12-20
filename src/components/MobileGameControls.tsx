@@ -100,7 +100,7 @@ const MobileGameControls: React.FC<MobileGameControlsProps> = ({
         </div>
 
         {/* Right side controls - Oven and Serve stacked */}
-        <div className="flex flex-col space-y-6">
+        <div className="flex flex-col space-y-6"></div>
           {/* Oven Control */}
           <div className="flex items-center space-x-3">
             <div className="text-white text-xs font-bold text-right min-w-[60px]">
