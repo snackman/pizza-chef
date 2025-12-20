@@ -413,7 +413,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.font = `bold ${15 * scale}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('pizzadao.xyz', size / 2, footerY);
+    ctx.fillText('pizzachef.bolt.host', size / 2, footerY);
   }, [stats, score, level, displayName, skillRating, gameId, formattedDate, formattedTime, lastStarLostReason]);
 
   useEffect(() => {
