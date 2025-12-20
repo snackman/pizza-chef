@@ -6,6 +6,7 @@ export interface HighScore {
   player_name: string;
   score: number;
   created_at: string;
+  game_session_id?: string;
 }
 
 export interface GameSession {
@@ -39,10 +40,10 @@ export async function getTopScores(limit: number = 10): Promise<HighScore[]> {
   return data || [];
 }
 
-export async function submitScore(playerName: string, score: number): Promise<boolean> {
+export async function submitScore(playerName: string, score: number, gameSessionId?: string): Promise<boolean> {
   const { error } = await supabase
     .from('high_scores')
-    .insert([{ player_name: playerName.toLowerCase(), score }]);
+    .insert([{ player_name: playerName.toLowerCase(), score, game_session_id: gameSessionId }]);
 
   if (error) {
     console.error('Error submitting score:', error);

@@ -32,10 +32,8 @@ const SubmitScore: React.FC<SubmitScoreProps> = ({ score, level, stats, onSubmit
     setSubmitting(true);
     setError('');
 
-    const [scoreSuccess, session] = await Promise.all([
-      submitScore(playerName.trim(), score),
-      createGameSession(playerName.trim(), score, level, stats)
-    ]);
+    const session = await createGameSession(playerName.trim(), score, level, stats);
+    const scoreSuccess = await submitScore(playerName.trim(), score, session?.id);
 
     if (scoreSuccess && session) {
       onSubmitted(session, playerName.trim());

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Trophy } from 'lucide-react';
-import { getTopScores, HighScore } from '../services/highScores';
+import { getTopScores, HighScore, getGameSession, GameSession } from '../services/highScores';
+import Scorecard from './Scorecard';
 
 interface HighScoresProps {
   userScore?: { name: string; score: number };
@@ -9,6 +10,8 @@ interface HighScoresProps {
 const HighScores: React.FC<HighScoresProps> = ({ userScore }) => {
   const [scores, setScores] = useState<HighScore[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedSession, setSelectedSession] = useState<GameSession | null>(null);
+  const [showScorecard, setShowScorecard] = useState(false);
 
   useEffect(() => {
     loadScores();
@@ -19,6 +22,18 @@ const HighScores: React.FC<HighScoresProps> = ({ userScore }) => {
     const topScores = await getTopScores(10);
     setScores(topScores);
     setLoading(false);
+  };
+
+  const handleNameClick = async (score: HighScore) => {
+    if (!score.game_session_id) return;
+    const session = await getGameSession(score.game_session_id);
+    setSelectedSession(session);
+    setShowScorecard(true);
+  };
+
+  const handleCloseScorecard = () => {
+    setShowScorecard(false);
+    setSelectedSession(null);
   };
 
   const leftColumn = scores.slice(0, 5);
@@ -66,7 +81,12 @@ const HighScores: React.FC<HighScoresProps> = ({ userScore }) => {
                     >
                       #{index + 1}
                     </span>
-                    <span className="font-medium text-gray-800 truncate text-xs sm:text-base">
+                    <span
+                      className={`font-medium text-gray-800 truncate text-xs sm:text-base ${
+                        score.game_session_id ? 'cursor-pointer hover:text-amber-600 transition-colors' : ''
+                      }`}
+                      onClick={() => score.game_session_id && handleNameClick(score)}
+                    >
                       {score.player_name.toUpperCase()}
                     </span>
                   </div>
@@ -86,7 +106,12 @@ const HighScores: React.FC<HighScoresProps> = ({ userScore }) => {
                       <span className="font-bold text-xs sm:text-lg w-5 sm:w-8 text-gray-500 flex-shrink-0">
                         #{index + 6}
                       </span>
-                      <span className="font-medium text-gray-800 truncate text-xs sm:text-base">
+                      <span
+                        className={`font-medium text-gray-800 truncate text-xs sm:text-base ${
+                          score.game_session_id ? 'cursor-pointer hover:text-amber-600 transition-colors' : ''
+                        }`}
+                        onClick={() => score.game_session_id && handleNameClick(score)}
+                      >
                         {score.player_name.toUpperCase()}
                       </span>
                     </div>
@@ -112,6 +137,10 @@ const HighScores: React.FC<HighScoresProps> = ({ userScore }) => {
             </div>
           )}
         </>
+      )}
+
+      {showScorecard && (
+        <Scorecard session={selectedSession} onClose={handleCloseScorecard} />
       )}
     </div>
   );
