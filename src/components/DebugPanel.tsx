@@ -26,7 +26,7 @@ const DebugPanel: React.FC<DebugPanelProps> = ({ onActivatePowerUp }) => {
             className={`${color} text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors shadow-md`}
           >
             <img src={icon} alt={label} className="w-5 h-5 object-contain" />
-            <span>{label}</span>
+            <span className="hidden sm:inline">{label}</span>
           </button>
         ))}
       </div>
