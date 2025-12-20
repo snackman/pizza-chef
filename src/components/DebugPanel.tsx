@@ -16,16 +16,18 @@ const DebugPanel: React.FC<DebugPanelProps> = ({ onActivatePowerUp }) => {
   ];
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-2 bg-gray-800 bg-opacity-90 rounded-lg">
+    <div className="relative z-50 pointer-events-auto w-full max-w-6xl mx-auto p-2 bg-gray-800 bg-opacity-90 rounded-lg">
       <div className="flex items-center gap-2 flex-wrap justify-center">
         <span className="text-white text-xs font-bold uppercase tracking-wide mr-2">Debug:</span>
+
         {powerUps.map(({ type, label, icon, color }) => (
           <button
             key={type}
+            type="button"
             onClick={() => onActivatePowerUp(type)}
-            className={`${color} text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors shadow-md`}
+            className={`${color} touch-manipulation select-none text-white px-2 sm:px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors shadow-md active:scale-95`}
           >
-            <img src={icon} alt={label} className="w-5 h-5 object-contain" />
+            <img src={icon} alt={label} className="w-5 h-5 object-contain" draggable={false} />
             <span className="hidden sm:inline">{label}</span>
           </button>
         ))}
