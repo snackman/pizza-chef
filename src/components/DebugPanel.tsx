@@ -16,7 +16,7 @@ const DebugPanel: React.FC<DebugPanelProps> = ({ onActivatePowerUp }) => {
   ];
 
   return (
-    <div className="w-full max-w-6xl mx-auto mt-2 p-2 bg-gray-800 bg-opacity-90 rounded-lg">
+    <div className="w-full max-w-6xl mx-auto p-2 bg-gray-800 bg-opacity-90 rounded-lg">
       <div className="flex items-center gap-2 flex-wrap justify-center">
         <span className="text-white text-xs font-bold uppercase tracking-wide mr-2">Debug:</span>
         {powerUps.map(({ type, label, icon, color }) => (
