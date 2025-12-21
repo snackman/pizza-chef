@@ -23,12 +23,12 @@ const DebugPanel: React.FC<DebugPanelProps> = ({
     icon: string;
     color: string;
   }[] = [
-    { type: 'honey', label: 'Hot Honey', icon: '/Sprites/hothoney.png', color: 'bg-orange-500/90 hover:bg-orange-500' },
-    { type: 'ice-cream', label: 'Ice Cream', icon: '/Sprites/sundae.png', color: 'bg-cyan-500/90 hover:bg-cyan-500' },
-    { type: 'beer', label: 'Beer', icon: '/Sprites/beer.png', color: 'bg-amber-500/90 hover:bg-amber-500' },
-    { type: 'star', label: 'Star Power', icon: '/Sprites/starpower.png', color: 'bg-yellow-500/90 hover:bg-yellow-500' },
-    { type: 'doge', label: 'Doge', icon: '/Sprites/doge.png', color: 'bg-yellow-600/90 hover:bg-yellow-600' },
-    { type: 'nyan', label: 'Nyan Cat', icon: '/Sprites/nyancat.png', color: 'bg-pink-500/90 hover:bg-pink-500' },
+    { type: 'honey', label: 'Hot Honey', icon: '/Sprites/hothoney.png', color: 'bg-orange-400 hover:bg-orange-500' },
+    { type: 'ice-cream', label: 'Ice Cream', icon: '/Sprites/sundae.png', color: 'bg-cyan-400 hover:bg-cyan-500' },
+    { type: 'beer', label: 'Beer', icon: '/Sprites/beer.png', color: 'bg-amber-400 hover:bg-amber-500' },
+    { type: 'star', label: 'Star Power', icon: '/Sprites/starpower.png', color: 'bg-yellow-400 hover:bg-yellow-500' },
+    { type: 'doge', label: 'Doge', icon: '/Sprites/doge.png', color: 'bg-yellow-500 hover:bg-yellow-600' },
+    { type: 'nyan', label: 'Nyan Cat', icon: '/Sprites/nyancat.png', color: 'bg-pink-400 hover:bg-pink-500' },
   ];
 
   return (
@@ -47,7 +47,6 @@ const DebugPanel: React.FC<DebugPanelProps> = ({
               className={`
                 relative
                 ${color}
-                bg-white/20 backdrop-blur-sm
                 ${disabled ? 'opacity-50 grayscale cursor-not-allowed' : ''}
                 touch-manipulation select-none
                 text-white px-3 sm:px-4 py-2
@@ -55,25 +54,27 @@ const DebugPanel: React.FC<DebugPanelProps> = ({
                 flex items-center gap-2
                 transition-all
                 shadow-md
-                ring-1 ring-white/20
-                hover:ring-white/30
+                ring-1 ring-white/30
                 active:scale-95
+                overflow-hidden
               `}
             >
+              {/* Light overlay to pastel-ize color */}
+              <div className="absolute inset-0 bg-white/30 pointer-events-none" />
+
               {/* Inventory badge */}
-              <div className="absolute -top-1.5 -right-1.5 bg-black/85 text-white text-[11px] px-1.5 py-0.5 rounded-full leading-none shadow ring-1 ring-white/20">
+              <div className="absolute -top-1.5 -right-1.5 bg-black/85 text-white text-[11px] px-1.5 py-0.5 rounded-full leading-none shadow ring-1 ring-white/20 z-10">
                 ×{count}
               </div>
 
               <img
                 src={icon}
                 alt={label}
-                className="w-6 h-6 object-contain"
+                className="relative z-10 w-6 h-6 object-contain"
                 draggable={false}
               />
 
-              {/* Hide labels on mobile */}
-              <span className="hidden sm:inline whitespace-nowrap">
+              <span className="relative z-10 hidden sm:inline whitespace-nowrap">
                 {label}
               </span>
             </button>
