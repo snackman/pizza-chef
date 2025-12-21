@@ -32,8 +32,8 @@ const DebugPanel: React.FC<DebugPanelProps> = ({
   ];
 
   return (
-    <div className="relative z-50 pointer-events-auto w-full max-w-6xl mx-auto p-2 bg-slate-900/80 backdrop-blur-md rounded-2xl border border-white/10 shadow-lg">
-      <div className="flex items-center gap-3 flex-wrap justify-center">
+    <div className="relative z-50 pointer-events-auto w-full max-w-6xl mx-auto p-2 bg-gray-800/90 rounded-xl">
+      <div className="flex items-center gap-2 flex-wrap justify-center">
         {powerUps.map(({ type, label, icon, color }) => {
           const count = inventory[type] ?? 0;
           const disabled = count <= 0;
@@ -48,40 +48,29 @@ const DebugPanel: React.FC<DebugPanelProps> = ({
                 relative ${color}
                 ${disabled ? 'opacity-50 grayscale cursor-not-allowed' : ''}
                 touch-manipulation select-none
-                text-white px-3 sm:px-4 py-2
-                rounded-xl text-xs font-semibold
+                text-white px-2 sm:px-3 py-1.5
+                rounded-lg text-xs font-medium
                 flex items-center gap-2
-                transition-all
-                shadow-md
-                ring-1 ring-white/15
-                hover:ring-white/30
+                transition-all shadow-md
                 active:scale-95
               `}
             >
               {/* Inventory badge */}
-              <div className="
-                absolute -top-1.5 -right-1.5
-                bg-black/90
-                text-white text-[11px] font-bold
-                px-1.5 py-0.5
-                rounded-full
-                shadow
-                ring-1 ring-white/20
-              ">
+              <div className="absolute -top-1 -right-1 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded-full leading-none">
                 ×{count}
               </div>
 
-              {/* Icon container for contrast */}
-              <div className="bg-black/20 rounded-lg p-1">
+              {/* Lighter icon background */}
+              <div className="bg-white/25 rounded-md p-1">
                 <img
                   src={icon}
                   alt={label}
-                  className="w-7 h-7 object-contain"
+                  className="w-6 h-6 object-contain"
                   draggable={false}
                 />
               </div>
 
-              {/* Label (desktop only) */}
+              {/* Hide labels on mobile */}
               <span className="hidden sm:inline whitespace-nowrap">
                 {label}
               </span>
