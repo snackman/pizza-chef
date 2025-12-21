@@ -630,7 +630,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
           className="w-full h-full rounded object-contain"
         />
 
-        <div className="absolute bottom-7 right-3 z-10 flex flex-col gap-2">
+        <div className="absolute bottom-7 right-3 z-10 flex flex-col gap-1">
           <button
             type="button"
             onClick={copyImageToClipboard}
