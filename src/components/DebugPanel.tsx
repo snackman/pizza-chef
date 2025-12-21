@@ -68,7 +68,7 @@ const DebugPanel: React.FC<DebugPanelProps> = ({
               <img
                 src={icon}
                 alt={label}
-                className="relative z-10 w-7 h-7 object-contain"
+                className="relative z-10 w-8 h-8 object-contain"
                 draggable={false}
               />
 
