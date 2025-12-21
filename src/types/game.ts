@@ -128,5 +128,6 @@ export interface GameState {
   starPowerActive?: boolean;
   powerUpAlert?: { type: PowerUpType; endTime: number; chefLane: number };
   nyanSweep?: { active: boolean; xPosition: number; laneDirection: 1 | -1; startTime: number; lastUpdateTime: number; startingLane: number };
+  powerUpInventory: Partial<Record<PowerUpType, number>>;
   stats: GameStats;
 }
