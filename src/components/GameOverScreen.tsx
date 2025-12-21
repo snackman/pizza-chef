@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { Send, Trophy, Download, Share2, Check, Copy as CopyIcon, ArrowLeft, RotateCcw } from 'lucide-react';
+import { Send, Trophy, Download, Share2, Check, Image as ImageIcon, ArrowLeft, RotateCcw } from 'lucide-react';
 import { submitScore, createGameSession, GameSession, uploadScorecardImage, updateGameSessionImage } from '../services/highScores';
 import { GameStats, StarLostReason } from '../types/game';
 import HighScores from './HighScores';
@@ -88,7 +88,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  // Separate success states so download doesn't toggle copy UI
+  // Separate success states so Download doesn't toggle Copy UI
   const [copySuccess, setCopySuccess] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
 
@@ -96,6 +96,10 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
   const [submittedName, setSubmittedName] = useState('');
+
+  // X share popup
+  const [showSharePopup, setShowSharePopup] = useState(false);
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imagesRef = useRef<LoadedImages>({
     splashLogo: null,
@@ -118,6 +122,9 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
   const timestamp = new Date();
   const formattedDate = timestamp.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const formattedTime = timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+  const shareText = `I scored ${score.toLocaleString()} points in Pizza Chef! Level ${level} - ${skillRating.description}`;
+  const shareUrl = 'https://pizzachef.bolt.host';
 
   useEffect(() => {
     async function loadAllImages() {
@@ -489,25 +496,8 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
     }
   };
 
-  const copyImageToClipboard = async () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    try {
-      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
-      if (blob) {
-        await navigator.clipboard.write([
-          new ClipboardItem({ 'image/png': blob })
-        ]);
-        setCopySuccess(true);
-        setTimeout(() => setCopySuccess(false), 2000);
-      }
-    } catch {
-      downloadImage();
-    }
-  };
-
-  const downloadImage = () => {
+  // Desktop-only download helper (kept for fallback)
+  const downloadImageDesktop = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -520,22 +510,112 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
     setTimeout(() => setDownloadSuccess(false), 2000);
   };
 
-  const handleNativeShare = async () => {
+  // Save to camera roll behavior on mobile via share sheet
+  const saveImageToPhotos = async () => {
     const canvas = canvasRef.current;
-    if (!canvas || !navigator.share) return;
+    if (!canvas) return;
 
-    try {
-      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
-      if (blob) {
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+    if (!blob) {
+      // If blob fails, fallback to desktop download
+      downloadImageDesktop();
+      return;
+    }
+
+    // On mobile, the best you can do is open the share sheet with the image.
+    // User selects "Save Image" → Camera Roll.
+    if (navigator.share) {
+      try {
         const file = new File([blob], `pizza-chef-score-${gameId.slice(0, 8)}.png`, { type: 'image/png' });
-        await navigator.share({
-          title: 'Pizza Chef Score Card',
-          text: `I scored ${score.toLocaleString()} points in Pizza Chef! Level ${level} - ${skillRating.description}`,
-          files: [file],
-        });
+        const canShareFiles = (navigator as any).canShare?.({ files: [file] }) ?? true;
+
+        if (canShareFiles) {
+          await navigator.share({
+            title: 'Pizza Chef Score Card',
+            files: [file],
+          });
+
+          setDownloadSuccess(true);
+          setTimeout(() => setDownloadSuccess(false), 2000);
+          return;
+        }
+      } catch {
+        // Fall through to desktop download
       }
+    }
+
+    // Desktop fallback
+    downloadImageDesktop();
+  };
+
+  const copyImageToClipboard = async () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+    if (!blob) return;
+
+    const canCopyImage =
+      typeof window !== 'undefined' &&
+      'ClipboardItem' in window &&
+      !!navigator.clipboard &&
+      typeof (navigator.clipboard as any).write === 'function';
+
+    if (canCopyImage) {
+      try {
+        await (navigator.clipboard as any).write([
+          new (window as any).ClipboardItem({ 'image/png': blob }),
+        ]);
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000);
+        return;
+      } catch {
+        // fall through to share fallback below
+      }
+    }
+
+    // Mobile-friendly fallback: open share sheet with the image (no "download file" prompt)
+    if (navigator.share) {
+      try {
+        const file = new File([blob], `pizza-chef-score-${gameId.slice(0, 8)}.png`, { type: 'image/png' });
+        const canShareFiles = (navigator as any).canShare?.({ files: [file] }) ?? true;
+
+        if (canShareFiles) {
+          await navigator.share({
+            title: 'Pizza Chef Score Card',
+            text: shareText,
+            files: [file],
+          });
+          setCopySuccess(true);
+          setTimeout(() => setCopySuccess(false), 2000);
+          return;
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    // Final fallback: copy caption+link instead of downloading
+    try {
+      await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
     } catch {
-      copyImageToClipboard();
+      // If clipboard blocked, do nothing (better than forcing a download on mobile)
+    }
+  };
+
+  const openXComposer = () => {
+    const intent =
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+    window.open(intent, '_blank', 'noopener,noreferrer');
+  };
+
+  const copyShareCaption = async () => {
+    try {
+      await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+    } catch {
+      // ignore
     }
   };
 
@@ -630,7 +710,8 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
           className="w-full h-full rounded object-contain"
         />
 
-        <div className="absolute bottom-8 right-3 z-10 flex flex-col gap-1">
+        {/* Move these up/down by changing bottom-* (e.g., bottom-10) */}
+        <div className="absolute bottom-7 right-3 z-10 flex flex-col gap-2">
           <button
             type="button"
             onClick={copyImageToClipboard}
@@ -641,16 +722,16 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
             {copySuccess ? (
               <Check className="w-5 h-5" />
             ) : (
-              <CopyIcon className="w-5 h-5" />
+              <ImageIcon className="w-5 h-5" />
             )}
           </button>
 
           <button
             type="button"
-            onClick={downloadImage}
+            onClick={saveImageToPhotos}
             className="w-10 h-10 rounded-lg bg-black/50 hover:bg-black/60 backdrop-blur flex items-center justify-center text-white transition-colors"
-            aria-label="Download scorecard image"
-            title={downloadSuccess ? 'Downloaded!' : 'Download'}
+            aria-label="Save scorecard image"
+            title={downloadSuccess ? 'Saved!' : 'Save image'}
           >
             {downloadSuccess ? (
               <Check className="w-5 h-5" />
@@ -727,17 +808,85 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
           Play Again
         </button>
 
-        {'share' in navigator && (
+        {/* Share Score Card → popup for X */}
+        <button
+          type="button"
+          onClick={() => setShowSharePopup(true)}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all font-semibold text-sm"
+        >
+          <Share2 className="w-4 h-4" />
+          Share Score Card
+        </button>
+      </form>
+
+      {/* X SHARE POPUP */}
+      {showSharePopup && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
           <button
             type="button"
-            onClick={handleNativeShare}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all font-semibold text-sm"
-          >
-            <Share2 className="w-4 h-4" />
-            Share Score Card
-          </button>
-        )}
-      </form>
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowSharePopup(false)}
+            aria-label="Close share popup"
+          />
+          <div className="relative w-full sm:max-w-md mx-3 mb-3 sm:mb-0 bg-white rounded-2xl shadow-2xl p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="text-base font-semibold text-gray-900">Post on X</div>
+                <div className="text-sm text-gray-600 mt-1">
+                  Tap <b>Save image</b>, then open X to post it with the caption.
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowSharePopup(false)}
+                className="shrink-0 w-9 h-9 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700"
+                aria-label="Close"
+                title="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="mt-3 p-3 rounded-xl bg-gray-50 border border-gray-200">
+              <div className="text-sm text-gray-800 whitespace-pre-wrap">
+                {shareText}
+                {'\n'}
+                {shareUrl}
+              </div>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={saveImageToPhotos}
+                className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gray-900 text-white hover:bg-gray-800 font-semibold"
+              >
+                <Download className="w-4 h-4" />
+                Save Image
+              </button>
+
+              <button
+                type="button"
+                onClick={openXComposer}
+                className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-semibold"
+              >
+                <Share2 className="w-4 h-4" />
+                Open X
+              </button>
+
+              <button
+                type="button"
+                onClick={copyShareCaption}
+                className="sm:col-span-2 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 font-medium"
+              >
+                <ImageIcon className="w-4 h-4" />
+                Copy Caption + Link
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
