@@ -45,7 +45,8 @@ const DebugPanel: React.FC<DebugPanelProps> = ({
               onClick={() => !disabled && onActivatePowerUp(type)}
               disabled={disabled}
               className={`
-                relative ${color}
+                relative overflow-hidden
+                ${color}
                 ${disabled ? 'opacity-50 grayscale cursor-not-allowed' : ''}
                 touch-manipulation select-none
                 text-white px-2 sm:px-3 py-1.5
@@ -53,25 +54,26 @@ const DebugPanel: React.FC<DebugPanelProps> = ({
                 flex items-center gap-2
                 transition-all shadow-md
                 active:scale-95
+                ring-1 ring-white/15 hover:ring-white/25
               `}
             >
+              {/* Light semi-transparent tile overlay (applies to whole button) */}
+              <div className="absolute inset-0 bg-white/20 pointer-events-none" />
+
               {/* Inventory badge */}
-              <div className="absolute -top-1 -right-1 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded-full leading-none">
+              <div className="absolute -top-1 -right-1 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded-full leading-none z-10">
                 ×{count}
               </div>
 
-              {/* Lighter icon background */}
-              <div className="bg-white/25 rounded-md p-1">
-                <img
-                  src={icon}
-                  alt={label}
-                  className="w-6 h-6 object-contain"
-                  draggable={false}
-                />
-              </div>
+              <img
+                src={icon}
+                alt={label}
+                className="relative z-10 w-6 h-6 object-contain"
+                draggable={false}
+              />
 
               {/* Hide labels on mobile */}
-              <span className="hidden sm:inline whitespace-nowrap">
+              <span className="relative z-10 hidden sm:inline whitespace-nowrap">
                 {label}
               </span>
             </button>
