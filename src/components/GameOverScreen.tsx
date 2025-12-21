@@ -564,7 +564,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
   const tweetUrl =
     `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
   window.open(tweetUrl, '_blank', 'noopener,noreferrer');
-};
+};Z
 
   if (showLeaderboard) {
     const displayNameForScore = scoreSubmitted ? submittedName : (playerName.trim() || DEFAULT_NAME);
@@ -757,13 +757,12 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
         {'share' in navigator && (
           <button
             type="button"
-            onClick={shareToSocials}
+            onClick={handleNativeShare}
             className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all font-semibold text-sm"
           >
             <Share2 className="w-4 h-4" />
-            Share to Socials
+            Share Score Card
           </button>
-
         )}
       </form>
     </div>
