@@ -520,24 +520,51 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
     setTimeout(() => setDownloadSuccess(false), 2000);
   };
 
-  const handleNativeShare = async () => {
-    const canvas = canvasRef.current;
-    if (!canvas || !navigator.share) return;
+  const shareToSocials = async () => {
+  const canvas = canvasRef.current;
+  if (!canvas) return;
 
+  const shareText = `I scored ${score.toLocaleString()} points in Pizza Chef! Level ${level} - ${skillRating.description}`;
+  const shareUrl = 'https://pizzachef.bolt.host';
+
+  // Try: native share sheet WITH image file (best for socials)
+  if (navigator.share) {
     try {
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
       if (blob) {
         const file = new File([blob], `pizza-chef-score-${gameId.slice(0, 8)}.png`, { type: 'image/png' });
-        await navigator.share({
-          title: 'Pizza Chef Score Card',
-          text: `I scored ${score.toLocaleString()} points in Pizza Chef! Level ${level} - ${skillRating.description}`,
-          files: [file],
-        });
+
+        // Some browsers require canShare for files
+        const canShareFiles = (navigator as any).canShare?.({ files: [file] }) ?? true;
+
+        if (canShareFiles) {
+          await navigator.share({
+            title: 'Pizza Chef Score Card',
+            text: shareText,
+            url: shareUrl,
+            files: [file],
+          });
+          return;
+        }
       }
     } catch {
-      copyImageToClipboard();
+      // fall through to desktop fallback
     }
-  };
+  }
+
+  // Fallback: download image + copy caption + open X composer
+  try {
+    await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+  } catch {
+    // ignore
+  }
+
+  downloadImage();
+
+  const tweetUrl =
+    `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+  window.open(tweetUrl, '_blank', 'noopener,noreferrer');
+};
 
   if (showLeaderboard) {
     const displayNameForScore = scoreSubmitted ? submittedName : (playerName.trim() || DEFAULT_NAME);
@@ -730,12 +757,13 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
         {'share' in navigator && (
           <button
             type="button"
-            onClick={handleNativeShare}
+            onClick={shareToSocials}
             className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all font-semibold text-sm"
           >
             <Share2 className="w-4 h-4" />
-            Share Score Card
+            Share to Socials
           </button>
+
         )}
       </form>
     </div>
