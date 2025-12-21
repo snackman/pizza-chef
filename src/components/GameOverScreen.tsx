@@ -87,7 +87,11 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
   const [playerName, setPlayerName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [copySuccess, setCopySuccess] = useState<'image' | 'text' | 'link' | null>(null);
+
+  // Separate success states so download doesn't toggle copy UI
+  const [copySuccess, setCopySuccess] = useState(false);
+  const [downloadSuccess, setDownloadSuccess] = useState(false);
+
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
@@ -349,11 +353,13 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
     });
 
     // --- POWER-UPS COLLECTED ---
+    // Make spacing between STATISTICS and POWER-UPS match other section gaps (~10 * scale).
+    // Stats box ends at (301 + 145) * scale = 446 * scale, so start power-ups at 446 + 10 = 456 * scale.
     ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
     ctx.beginPath();
 
     const powerUpsBoxExtraBottomPadding = 16 * scale;
-    const powerUpsBoxY = 456 * scale;
+    const powerUpsBoxY = 456 * scale; // was 476 * scale
 
     ctx.roundRect(
       24 * scale,
@@ -368,7 +374,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
     ctx.fillStyle = '#ffffff';
     ctx.font = `bold ${15 * scale}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = 'left';
-    ctx.fillText('POWER-UPS COLLECTED', 40 * scale, powerUpsBoxY + 23 * scale);
+    ctx.fillText('POWER-UPS COLLECTED', 40 * scale, powerUpsBoxY + 23 * scale); // was 499 * scale
 
     const powerUpIcons = [
       { img: images.honey, count: stats.powerUpsUsed.honey },
@@ -387,7 +393,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
 
     powerUpIcons.forEach((powerUp, index) => {
       const x = powerUpStartX + index * (powerUpSize + powerUpSpacing);
-      const y = powerUpsBoxY + 37 * scale;
+      const y = powerUpsBoxY + 37 * scale; // was 513 * scale
 
       if (powerUp.img) {
         ctx.drawImage(powerUp.img, x, y, powerUpSize, powerUpSize);
@@ -493,8 +499,8 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
         await navigator.clipboard.write([
           new ClipboardItem({ 'image/png': blob })
         ]);
-        setCopySuccess('image');
-        setTimeout(() => setCopySuccess(null), 2000);
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000);
       }
     } catch {
       downloadImage();
@@ -509,8 +515,9 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
     link.download = `pizza-chef-score-${gameId.slice(0, 8)}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
-    setCopySuccess('image');
-    setTimeout(() => setCopySuccess(null), 2000);
+
+    setDownloadSuccess(true);
+    setTimeout(() => setDownloadSuccess(false), 2000);
   };
 
   const handleNativeShare = async () => {
@@ -629,9 +636,9 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
             onClick={copyImageToClipboard}
             className="w-10 h-10 rounded-lg bg-black/50 hover:bg-black/60 backdrop-blur flex items-center justify-center text-white transition-colors"
             aria-label="Copy scorecard image"
-            title={copySuccess === 'image' ? 'Copied!' : 'Copy image'}
+            title={copySuccess ? 'Copied!' : 'Copy image'}
           >
-            {copySuccess === 'image' ? (
+            {copySuccess ? (
               <Check className="w-5 h-5" />
             ) : (
               <ImageIcon className="w-5 h-5" />
@@ -643,9 +650,13 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
             onClick={downloadImage}
             className="w-10 h-10 rounded-lg bg-black/50 hover:bg-black/60 backdrop-blur flex items-center justify-center text-white transition-colors"
             aria-label="Download scorecard image"
-            title="Download"
+            title={downloadSuccess ? 'Downloaded!' : 'Download'}
           >
-            <Download className="w-5 h-5" />
+            {downloadSuccess ? (
+              <Check className="w-5 h-5" />
+            ) : (
+              <Download className="w-5 h-5" />
+            )}
           </button>
         </div>
       </div>
