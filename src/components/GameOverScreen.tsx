@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { Send, Trophy, Download, Share2, Check, Image as ImageIcon, ArrowLeft, RotateCcw } from 'lucide-react';
+import { Send, Trophy, Download, Share2, Check, Copy as CopyIcon, ArrowLeft, RotateCcw } from 'lucide-react';
 import { submitScore, createGameSession, GameSession, uploadScorecardImage, updateGameSessionImage } from '../services/highScores';
 import { GameStats, StarLostReason } from '../types/game';
 import HighScores from './HighScores';
@@ -641,7 +641,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
             {copySuccess ? (
               <Check className="w-5 h-5" />
             ) : (
-              <ImageIcon className="w-5 h-5" />
+              <CopyIcon className="w-5 h-5" />
             )}
           </button>
 
