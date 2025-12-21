@@ -305,10 +305,7 @@ function App() {
           </div>
 
           {gameStarted && !gameState.gameOver && !gameState.showStore && (
-            <DebugPanel
-              onActivatePowerUp={debugActivatePowerUp}
-              inventory={gameState.powerUpInventory}
-            />
+            <DebugPanel onActivatePowerUp={debugActivatePowerUp} />
           )}
         </div>
 

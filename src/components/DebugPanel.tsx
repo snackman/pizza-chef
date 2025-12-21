@@ -8,7 +8,14 @@ interface DebugPanelProps {
 
 const DebugPanel: React.FC<DebugPanelProps> = ({
   onActivatePowerUp,
-  inventory = {},
+  inventory = {
+    honey: 2,
+    'ice-cream': 2,
+    beer: 3,
+    star: 1,
+    doge: 0,
+    nyan: 3,
+  },
 }) => {
   const powerUps: {
     type: PowerUpType;

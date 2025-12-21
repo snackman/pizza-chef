@@ -46,7 +46,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     fallingPizza: undefined,
     starPowerActive: false,
     powerUpAlert: undefined,
-    powerUpInventory: {},
     stats: {
       slicesBaked: 0,
       customersServed: 0,
@@ -646,7 +645,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       const powerUpScores: Array<{ points: number; lane: number; position: number }> = [];
       newState.powerUps.forEach(powerUp => {
         if (powerUp.position <= 15 && powerUp.lane === newState.chefLane && !newState.nyanSweep?.active) {
-          // Chef grabbed the power-up - add to inventory
+          // Chef grabbed the power-up - activate it
           soundManager.powerUpCollected(powerUp.type);
           const baseScore = 100;
           const scoreMultiplier = hasDoge ? 2 : 1;
@@ -655,12 +654,149 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           powerUpScores.push({ points: pointsEarned, lane: powerUp.lane, position: powerUp.position });
           caughtPowerUpIds.add(powerUp.id);
 
-          // Add to inventory
-          const currentCount = newState.powerUpInventory[powerUp.type] || 0;
-          newState.powerUpInventory = {
-            ...newState.powerUpInventory,
-            [powerUp.type]: currentCount + 1,
-          };
+          // Activate the power-up
+          newState.stats.powerUpsUsed[powerUp.type] += 1;
+
+          if (powerUp.type === 'beer') {
+            // Make all current unsatisfied customers woozy, existing woozy customers become vomit faces
+            // Beer overrides hot honey and frozen states
+            let livesLost = 0;
+            let lastReason: StarLostReason | undefined;
+            newState.customers = newState.customers.map(customer => {
+              if (customer.woozy) {
+                // Existing woozy customers become vomit/dissatisfied
+                // Critic customers lose 2 lives instead of 1
+                livesLost += customer.critic ? 2 : 1;
+                lastReason = customer.critic ? 'beer_critic_vomit' : 'beer_vomit';
+                return {
+                  ...customer,
+                  woozy: false,
+                  vomit: true,
+                  disappointed: true,
+                  movingRight: true,
+                };
+              }
+              if (!customer.served && !customer.vomit && !customer.disappointed) {
+                // Bad Luck Brian can't handle beer - hurls and loses you a star
+                if (customer.badLuckBrian) {
+                  livesLost += 1;
+                  lastReason = 'brian_hurled';
+                  return {
+                    ...customer,
+                    vomit: true,
+                    disappointed: true,
+                    movingRight: true,
+                    flipped: false,
+                    textMessage: "Oh man I hurled",
+                    textMessageTime: Date.now(),
+                    hotHoneyAffected: false,
+                    frozen: false,
+                  };
+                }
+                return {
+                  ...customer,
+                  woozy: true,
+                  woozyState: 'normal',
+                  movingRight: true,
+                  hotHoneyAffected: false,
+                  frozen: false,
+                };
+              }
+              return customer;
+            });
+            newState.lives = Math.max(0, newState.lives - livesLost);
+            if (livesLost > 0) {
+              soundManager.lifeLost();
+              newState.stats.currentCustomerStreak = 0;
+              if (lastReason) {
+                newState.lastStarLostReason = lastReason;
+              }
+            }
+            if (newState.lives === 0) {
+              newState.gameOver = true;
+              soundManager.gameOver();
+              // Drop the pizza if holding one
+              if (newState.availableSlices > 0) {
+                newState.fallingPizza = { lane: newState.chefLane, y: 0 };
+                newState.availableSlices = 0;
+              }
+            }
+          } else if (powerUp.type === 'star') {
+            // Star power-up gives 8-slice pizza and auto-feeds customers on contact
+            newState.availableSlices = 8;
+            newState.starPowerActive = true;
+            newState.activePowerUps = [
+              ...newState.activePowerUps.filter(p => p.type !== 'star'),
+              { type: 'star', endTime: now + POWERUP_DURATION }
+            ];
+          } else if (powerUp.type === 'doge') {
+            // Doge power-up doubles dollars, scores, and stars received during duration
+            newState.activePowerUps = [
+              ...newState.activePowerUps.filter(p => p.type !== 'doge'),
+              { type: 'doge', endTime: now + POWERUP_DURATION }
+            ];
+            // Show Doge alert for 5 seconds
+            newState.powerUpAlert = { type: 'doge', endTime: now + 5000, chefLane: newState.chefLane };
+          } else if (powerUp.type === 'nyan') {
+            if (!newState.nyanSweep?.active) {
+              newState.nyanSweep = {
+                active: true,
+                xPosition: 15,
+                laneDirection: 1,
+                startTime: now,
+                lastUpdateTime: now,
+                startingLane: newState.chefLane
+              };
+              soundManager.nyanCatPowerUp();
+              const dogeActive = newState.activePowerUps.some(p => p.type === 'doge');
+              if (!dogeActive || newState.powerUpAlert?.type !== 'doge') {
+                newState.powerUpAlert = { type: 'nyan', endTime: now + 3000, chefLane: newState.chefLane };
+              }
+            }
+          } else if (powerUp.type === 'moltobenny') {
+            // Moltobenny power-up gives 10,000 points (affected by doge multiplier)
+            const moltoScore = 10000 * scoreMultiplier;
+            newState.score += moltoScore;
+            powerUpScores.push({ points: moltoScore, lane: newState.chefLane, position: 15 });
+          } else {
+            // Add to active power-ups (hot honey and ice-cream)
+            newState.activePowerUps = [
+              ...newState.activePowerUps.filter(p => p.type !== powerUp.type),
+              { type: powerUp.type, endTime: now + POWERUP_DURATION }
+            ];
+            // If honey, mark all current non-served customers as affected
+            // Hot honey overrides frozen and woozy states
+            if (powerUp.type === 'honey') {
+              newState.customers = newState.customers.map(c =>
+                (!c.served && !c.disappointed && !c.vomit)
+                  ? { ...c, shouldBeHotHoneyAffected: true, hotHoneyAffected: true, frozen: false, woozy: false, woozyState: undefined }
+                  : c
+              );
+            }
+            // If ice cream, mark all current non-served customers to be frozen (except Bad Luck Brian)
+            if (powerUp.type === 'ice-cream') {
+              newState.customers = newState.customers.map(c => {
+                if (!c.served && !c.disappointed && !c.vomit) {
+                  if (c.badLuckBrian) {
+                    return {
+                      ...c,
+                      textMessage: "I'm lactose intolerant",
+                      textMessageTime: Date.now()
+                    };
+                  }
+                  return {
+                    ...c,
+                    shouldBeFrozenByIceCream: true,
+                    frozen: true,
+                    hotHoneyAffected: false,
+                    woozy: false,
+                    woozyState: undefined
+                  };
+                }
+                return c;
+              });
+            }
+          }
         }
       });
 
@@ -1356,16 +1492,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     setGameState(prev => {
       if (prev.gameOver) return prev;
 
-      const currentInventory = prev.powerUpInventory[type] || 0;
-      if (currentInventory <= 0) return prev;
-
       const now = Date.now();
       let newState = {
         ...prev,
-        powerUpInventory: {
-          ...prev.powerUpInventory,
-          [type]: currentInventory - 1,
-        },
         stats: {
           ...prev.stats,
           powerUpsUsed: {
@@ -1380,6 +1509,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         let lastReason: StarLostReason | undefined;
         newState.customers = newState.customers.map(customer => {
           if (customer.woozy) {
+            // Critic customers lose 2 lives instead of 1
             livesLost += customer.critic ? 2 : 1;
             lastReason = customer.critic ? 'beer_critic_vomit' : 'beer_vomit';
             return {
@@ -1391,6 +1521,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             };
           }
           if (!customer.served && !customer.vomit && !customer.disappointed) {
+            // Bad Luck Brian can't handle beer - hurls and loses you a star
             if (customer.badLuckBrian) {
               livesLost += 1;
               lastReason = 'brian_hurled';
@@ -1419,7 +1550,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         });
         newState.lives = Math.max(0, newState.lives - livesLost);
         if (livesLost > 0) {
-          soundManager.lifeLost();
           newState.stats.currentCustomerStreak = 0;
           if (lastReason) {
             newState.lastStarLostReason = lastReason;
@@ -1427,11 +1557,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         }
         if (newState.lives === 0) {
           newState.gameOver = true;
-          soundManager.gameOver();
-          if (newState.availableSlices > 0) {
-            newState.fallingPizza = { lane: newState.chefLane, y: 0 };
-            newState.availableSlices = 0;
-          }
         }
       } else if (type === 'star') {
         newState.availableSlices = 8;
@@ -1462,16 +1587,12 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             newState.powerUpAlert = { type: 'nyan', endTime: now + 3000, chefLane: newState.chefLane };
           }
         }
-      } else if (type === 'moltobenny') {
-        const hasDoge = newState.activePowerUps.some(p => p.type === 'doge');
-        const scoreMultiplier = hasDoge ? 2 : 1;
-        const moltoScore = 10000 * scoreMultiplier;
-        newState.score += moltoScore;
       } else {
         newState.activePowerUps = [
           ...newState.activePowerUps.filter(p => p.type !== type),
           { type: type, endTime: now + POWERUP_DURATION }
         ];
+        // Hot honey overrides frozen and woozy states
         if (type === 'honey') {
           newState.customers = newState.customers.map(c =>
             (!c.served && !c.disappointed && !c.vomit)
@@ -1479,6 +1600,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               : c
           );
         }
+        // Ice cream overrides hot honey and woozy states (except Bad Luck Brian)
         if (type === 'ice-cream') {
           newState.customers = newState.customers.map(c => {
             if (!c.served && !c.disappointed && !c.vomit) {
@@ -1540,7 +1662,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       fallingPizza: undefined,
       starPowerActive: false,
       powerUpAlert: undefined,
-      powerUpInventory: {},
       stats: {
         slicesBaked: 0,
         customersServed: 0,
