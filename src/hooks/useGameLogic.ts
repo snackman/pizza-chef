@@ -3,7 +3,7 @@ import { GameState, Customer, PizzaSlice, EmptyPlate, PowerUp, PowerUpType, Floa
 import { soundManager } from '../utils/sounds';
 import { getStreakMultiplier } from '../components/StreakDisplay';
 
-const CUSTOMER_SPAWN_RATE = 2.5;
+const CUSTOMER_SPAWN_RATE = 1.5;
 const PIZZA_SPEED = 3;
 const PLATE_SPEED = 2;
 const POWERUP_SPEED = 0.5;
@@ -133,7 +133,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       id: `customer-${now}-${lane}`,
       lane,
       position: 90,
-      speed: 0.4,
+      speed: 0.2,
       served: false,
       hasPlate: false,
       disappointed: false,
@@ -1789,7 +1789,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         // Only spawn if not paused
         if (!current.paused && !current.gameOver) {
           // Increase spawn rate based on level (slower ramp)
-          const levelSpawnRate = CUSTOMER_SPAWN_RATE + (current.level - 1) * 0.1;
+          const levelSpawnRate = CUSTOMER_SPAWN_RATE + (current.level - 1) * 0.05;
           if (Math.random() < levelSpawnRate * 0.01) {
             spawnCustomer();
           }
