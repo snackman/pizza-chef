@@ -1,7 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { GameState, Customer, PizzaSlice, EmptyPlate, PowerUp, PowerUpType, FloatingScore, DroppedPlate, StarLostReason } from '../types/game';
+import { GameState, Customer, PizzaSlice, EmptyPlate, PowerUp, PowerUpType, FloatingScore, DroppedPlate, StarLostReason, BossMinion, BossBattle } from '../types/game';
 import { soundManager } from '../utils/sounds';
 import { getStreakMultiplier } from '../components/StreakDisplay';
+
+const BOSS_LEVEL = 10;
+const BOSS_WAVES = 3;
+const MINIONS_PER_WAVE = 8;
+const BOSS_HEALTH = 8;
+const MINION_SPEED = 0.15;
 
 const CUSTOMER_SPAWN_RATE = 1.5;
 const PIZZA_SPEED = 3;
@@ -151,6 +157,43 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
     setLastCustomerSpawn(now);
   }, [lastCustomerSpawn, gameState.level, gameState.activePowerUps]);
+
+  const spawnBossWave = useCallback((waveNumber: number): BossMinion[] => {
+    const minions: BossMinion[] = [];
+    const now = Date.now();
+    for (let i = 0; i < MINIONS_PER_WAVE; i++) {
+      const lane = i % 4;
+      minions.push({
+        id: `minion-${now}-${waveNumber}-${i}`,
+        lane,
+        position: 95 + (Math.floor(i / 4) * 15),
+        speed: MINION_SPEED,
+        defeated: false,
+      });
+    }
+    return minions;
+  }, []);
+
+  const startBossBattle = useCallback(() => {
+    setGameState(prev => {
+      if (prev.bossBattle?.active) return prev;
+
+      const initialMinions = spawnBossWave(1);
+      return {
+        ...prev,
+        customers: [],
+        bossBattle: {
+          active: true,
+          bossHealth: BOSS_HEALTH,
+          currentWave: 1,
+          minions: initialMinions,
+          bossVulnerable: false,
+          bossDefeated: false,
+          bossPosition: 85,
+        },
+      };
+    });
+  }, [spawnBossWave]);
 
   const servePizza = useCallback(() => {
     if (gameState.gameOver || gameState.paused || gameState.availableSlices <= 0 || gameState.nyanSweep?.active) return;
@@ -1361,11 +1404,147 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             newState.showStore = true;
           }
         }
+
+        // Start boss battle at level 10
+        if (targetLevel === BOSS_LEVEL && !newState.bossBattle?.active && !newState.bossBattle?.bossDefeated) {
+          const initialMinions: BossMinion[] = [];
+          for (let i = 0; i < MINIONS_PER_WAVE; i++) {
+            const lane = i % 4;
+            initialMinions.push({
+              id: `minion-${now}-1-${i}`,
+              lane,
+              position: 95 + (Math.floor(i / 4) * 15),
+              speed: MINION_SPEED,
+              defeated: false,
+            });
+          }
+          newState.customers = [];
+          newState.bossBattle = {
+            active: true,
+            bossHealth: BOSS_HEALTH,
+            currentWave: 1,
+            minions: initialMinions,
+            bossVulnerable: false,
+            bossDefeated: false,
+            bossPosition: 85,
+          };
+        }
+      }
+
+      // Boss battle logic
+      if (newState.bossBattle?.active && !newState.bossBattle.bossDefeated) {
+        const bossScores: Array<{ points: number; lane: number; position: number }> = [];
+
+        // Move minions
+        newState.bossBattle.minions = newState.bossBattle.minions.map(minion => {
+          if (minion.defeated) return minion;
+          return {
+            ...minion,
+            position: minion.position - minion.speed,
+          };
+        });
+
+        // Check if any minion reached the chef (lose a life)
+        newState.bossBattle.minions = newState.bossBattle.minions.map(minion => {
+          if (minion.defeated) return minion;
+          if (minion.position <= 15) {
+            soundManager.lifeLost();
+            newState.lives = Math.max(0, newState.lives - 1);
+            if (newState.lives === 0) {
+              newState.gameOver = true;
+              soundManager.gameOver();
+              if (newState.availableSlices > 0) {
+                newState.fallingPizza = { lane: newState.chefLane, y: 0 };
+                newState.availableSlices = 0;
+              }
+            }
+            return { ...minion, defeated: true };
+          }
+          return minion;
+        });
+
+        // Check pizza-minion collisions
+        const consumedSliceIds = new Set<string>();
+        newState.pizzaSlices.forEach(slice => {
+          if (consumedSliceIds.has(slice.id)) return;
+
+          newState.bossBattle!.minions = newState.bossBattle!.minions.map(minion => {
+            if (minion.defeated || consumedSliceIds.has(slice.id)) return minion;
+
+            if (minion.lane === slice.lane && Math.abs(minion.position - slice.position) < 8) {
+              consumedSliceIds.add(slice.id);
+              soundManager.customerServed();
+              const pointsEarned = 100;
+              newState.score += pointsEarned;
+              bossScores.push({ points: pointsEarned, lane: minion.lane, position: minion.position });
+              return { ...minion, defeated: true };
+            }
+            return minion;
+          });
+        });
+
+        // Check pizza-boss collision (only if vulnerable)
+        if (newState.bossBattle.bossVulnerable) {
+          newState.pizzaSlices.forEach(slice => {
+            if (consumedSliceIds.has(slice.id)) return;
+
+            // Boss spans all 4 lanes, check if pizza is near boss position
+            if (Math.abs(newState.bossBattle!.bossPosition - slice.position) < 10) {
+              consumedSliceIds.add(slice.id);
+              soundManager.customerServed();
+              newState.bossBattle!.bossHealth -= 1;
+              const pointsEarned = 500;
+              newState.score += pointsEarned;
+              bossScores.push({ points: pointsEarned, lane: slice.lane, position: slice.position });
+
+              if (newState.bossBattle!.bossHealth <= 0) {
+                newState.bossBattle!.bossDefeated = true;
+                newState.bossBattle!.active = false;
+                newState.score += 5000;
+                bossScores.push({ points: 5000, lane: 1, position: newState.bossBattle!.bossPosition });
+              }
+            }
+          });
+        }
+
+        // Remove consumed slices
+        newState.pizzaSlices = newState.pizzaSlices.filter(slice => !consumedSliceIds.has(slice.id));
+
+        // Add floating scores for boss battle
+        bossScores.forEach(({ points, lane, position }) => {
+          newState = addFloatingScore(points, lane, position, newState);
+        });
+
+        // Check if all minions in current wave are defeated
+        const activeMinions = newState.bossBattle.minions.filter(m => !m.defeated);
+        if (activeMinions.length === 0) {
+          if (newState.bossBattle.currentWave < BOSS_WAVES) {
+            // Spawn next wave
+            const nextWave = newState.bossBattle.currentWave + 1;
+            const newMinions: BossMinion[] = [];
+            for (let i = 0; i < MINIONS_PER_WAVE; i++) {
+              const lane = i % 4;
+              newMinions.push({
+                id: `minion-${now}-${nextWave}-${i}`,
+                lane,
+                position: 95 + (Math.floor(i / 4) * 15),
+                speed: MINION_SPEED,
+                defeated: false,
+              });
+            }
+            newState.bossBattle.currentWave = nextWave;
+            newState.bossBattle.minions = newMinions;
+          } else if (!newState.bossBattle.bossVulnerable) {
+            // All waves completed, boss becomes vulnerable
+            newState.bossBattle.bossVulnerable = true;
+            newState.bossBattle.minions = [];
+          }
+        }
       }
 
       return newState;
     });
-  }, [gameState.gameOver, gameState.paused, ovenSoundStates]);
+  }, [gameState.gameOver, gameState.paused, ovenSoundStates, addFloatingScore]);
 
   const cleanOven = useCallback(() => {
     if (gameState.gameOver || gameState.paused) return;
@@ -1681,6 +1860,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         },
         ovenUpgradesMade: 0,
       },
+      bossBattle: undefined,
     });
     setLastCustomerSpawn(0);
     setLastPowerUpSpawn(0);
@@ -1788,12 +1968,15 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       setGameState(current => {
         // Only spawn if not paused
         if (!current.paused && !current.gameOver) {
-          // Increase spawn rate based on level (slower ramp)
-          const levelSpawnRate = CUSTOMER_SPAWN_RATE + (current.level - 1) * 0.05;
-          if (Math.random() < levelSpawnRate * 0.01) {
-            spawnCustomer();
+          // Don't spawn regular customers during boss battle
+          if (!current.bossBattle?.active) {
+            // Increase spawn rate based on level (slower ramp)
+            const levelSpawnRate = CUSTOMER_SPAWN_RATE + (current.level - 1) * 0.05;
+            if (Math.random() < levelSpawnRate * 0.01) {
+              spawnCustomer();
+            }
           }
-          // Spawn power-ups occasionally
+          // Spawn power-ups occasionally (also during boss battle)
           if (Math.random() < 2 * 0.01) {
             spawnPowerUp();
           }

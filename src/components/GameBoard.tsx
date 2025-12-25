@@ -6,6 +6,7 @@ import DroppedPlate from './DroppedPlate';
 import PowerUp from './PowerUp';
 import PizzaSliceStack from './PizzaSliceStack';
 import FloatingScore from './FloatingScore';
+import Boss from './Boss';
 import { GameState } from '../types/game';
 import pizzaShopBg from '/pizza shop background v2.png';
 import chefImg from '/Sprites/chefemoji.png';
@@ -191,6 +192,11 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
       {gameState.powerUps.map((powerUp) => (
         <PowerUp key={powerUp.id} powerUp={powerUp} />
       ))}
+
+      {/* Boss Battle */}
+      {gameState.bossBattle && (
+        <Boss bossBattle={gameState.bossBattle} />
+      )}
 
       {/* Floating score indicators */}
       {gameState.floatingScores.filter(fs => !completedScores.has(fs.id)).map((floatingScore) => (

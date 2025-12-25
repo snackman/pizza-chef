@@ -70,6 +70,24 @@ export interface DroppedPlate {
   hasSlice?: boolean;
 }
 
+export interface BossMinion {
+  id: string;
+  lane: number;
+  position: number;
+  speed: number;
+  defeated: boolean;
+}
+
+export interface BossBattle {
+  active: boolean;
+  bossHealth: number;
+  currentWave: number;
+  minions: BossMinion[];
+  bossVulnerable: boolean;
+  bossDefeated: boolean;
+  bossPosition: number;
+}
+
 export interface GameStats {
   slicesBaked: number;
   customersServed: number;
@@ -129,4 +147,5 @@ export interface GameState {
   powerUpAlert?: { type: PowerUpType; endTime: number; chefLane: number };
   nyanSweep?: { active: boolean; xPosition: number; laneDirection: 1 | -1; startTime: number; lastUpdateTime: number; startingLane: number };
   stats: GameStats;
+  bossBattle?: BossBattle;
 }
