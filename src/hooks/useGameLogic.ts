@@ -9,7 +9,7 @@ const MINIONS_PER_WAVE = 8;
 const BOSS_HEALTH = 8;
 const MINION_SPEED = 0.15;
 
-const CUSTOMER_SPAWN_RATE = 1.5;
+const CUSTOMER_SPAWN_RATE = 2.5;
 const PIZZA_SPEED = 3;
 const PLATE_SPEED = 2;
 const POWERUP_SPEED = 0.5;
@@ -139,7 +139,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       id: `customer-${now}-${lane}`,
       lane,
       position: 90,
-      speed: 0.2,
+      speed: 0.4,
       served: false,
       hasPlate: false,
       disappointed: false,
