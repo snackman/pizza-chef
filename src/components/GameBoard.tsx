@@ -158,7 +158,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
           style={{
             left: '5%', // adjust if you want him closer/farther from ovens
             top: `${gameState.chefLane * 25 + 13}%`,
-            width: '8%',
+            width: '10%',
             aspectRatio: '1 / 1',
             transform: 'translate3d(0, -50%, 0)', // center on lane
             zIndex: gameState.gameOver ? 19 : 10,
