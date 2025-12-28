@@ -177,7 +177,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
             className={`absolute ${gameState.starPowerActive ? 'animate-pulse' : ''}`}
             style={{
               left: '55%',
-              top: '90%',
+              top: '100%',
               width: '91%',
               height: '91%',
               transform: 'translateY(-50%)',
