@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Customer from './Customer';
 import PizzaSlice from './PizzaSlice';
 import EmptyPlate from './EmptyPlate';
@@ -19,6 +19,27 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
   const lanes = [0, 1, 2, 3];
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
   const [completedScores, setCompletedScores] = useState<Set<string>>(new Set());
+
+  // ✅ Measure board size (for px-based translate3d positioning)
+  const boardRef = useRef<HTMLDivElement | null>(null);
+  const [boardSize, setBoardSize] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    const el = boardRef.current;
+    if (!el) return;
+
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      setBoardSize({ width: rect.width, height: rect.height });
+    };
+
+    update();
+
+    const ro = new ResizeObserver(() => update());
+    ro.observe(el);
+
+    return () => ro.disconnect();
+  }, []);
 
   const handleScoreComplete = useCallback((id: string) => {
     setCompletedScores(prev => new Set(prev).add(id));
@@ -74,6 +95,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
 
   return (
     <div
+      ref={boardRef}
       className="relative w-full aspect-[5/3] border-4 border-amber-600 rounded-lg overflow-hidden"
       style={{
         backgroundImage: `url(${pizzaShopBg})`,
@@ -164,17 +186,20 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
           key={lane}
           className="absolute w-full h-[20%]"
           style={{ top: `${lane * 25 + 4}%` }}
-        >
-        </div>
+        />
       ))}
 
       {/* Customer End Area */}
-      <div className="absolute right-0 top-0 w-[10%] h-full flex flex-col items-center justify-center">
-      </div>
+      <div className="absolute right-0 top-0 w-[10%] h-full flex flex-col items-center justify-center" />
 
       {/* Game Elements */}
       {gameState.customers.map((customer) => (
-        <Customer key={customer.id} customer={customer} />
+        <Customer
+          key={customer.id}
+          customer={customer}
+          boardWidth={boardSize.width}
+          boardHeight={boardSize.height}
+        />
       ))}
 
       {gameState.pizzaSlices.map((slice) => (
