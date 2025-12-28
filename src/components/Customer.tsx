@@ -11,10 +11,18 @@ const badLuckBrianPukeImg = "https://i.imgur.com/yRXQDIT.png";
 
 interface CustomerProps {
   customer: CustomerType;
+  boardWidth: number;
+  boardHeight: number;
 }
 
-const Customer: React.FC<CustomerProps> = ({ customer }) => {
-  const leftPosition = customer.position;
+const Customer: React.FC<CustomerProps> = ({ customer, boardWidth, boardHeight }) => {
+  // Original coordinate system (percent of board)
+  const xPct = customer.position;
+  const yPct = customer.lane * 25 + 6;
+
+  // Convert % of board → px
+  const xPx = (xPct / 100) * boardWidth;
+  const yPx = (yPct / 100) * boardHeight;
 
   const getDisplay = () => {
     if (customer.frozen) return { type: 'image', value: frozenfaceImg, alt: 'frozen' };
@@ -34,16 +42,18 @@ const Customer: React.FC<CustomerProps> = ({ customer }) => {
 
   const display = getDisplay();
 
+  // Avoid doing weird transforms before we know board size
+  const ready = boardWidth > 0 && boardHeight > 0;
+
   return (
     <>
       <div
         className="absolute w-[8%] aspect-square flex items-center justify-center"
         style={{
-          left: `${leftPosition}%`,
-          top: `${customer.lane * 25 + 6}%`,
-          // GPU hint without changing positioning math:
-          transform: 'translate3d(0,0,0)',
-          willChange: 'left, top',
+          left: 0,
+          top: 0,
+          transform: ready ? `translate3d(${xPx}px, ${yPx}px, 0)` : undefined,
+          willChange: 'transform',
         }}
       >
         {display.type === 'image' ? (
@@ -51,10 +61,14 @@ const Customer: React.FC<CustomerProps> = ({ customer }) => {
             src={display.value}
             alt={display.alt}
             className="w-full h-full object-contain"
-            style={{ transform: customer.flipped ? 'scaleX(-1)' : 'none' }}
+            style={{
+              transform: customer.flipped ? 'scaleX(-1)' : 'none',
+            }}
           />
         ) : (
-          <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>{display.value}</div>
+          <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
+            {display.value}
+          </div>
         )}
       </div>
 
@@ -62,10 +76,12 @@ const Customer: React.FC<CustomerProps> = ({ customer }) => {
         <div
           className="absolute px-2 py-1 bg-white text-black rounded border-2 border-black text-xs font-bold whitespace-nowrap"
           style={{
-            left: `${leftPosition}%`,
-            top: `${customer.lane * 25 + 18}%`,
-            transform: 'translate3d(-50%, 0, 0)', // keep your centering
-            willChange: 'left, top',
+            left: 0,
+            top: 0,
+            transform: ready
+              ? `translate3d(${xPx}px, ${((customer.lane * 25 + 18) / 100) * boardHeight}px, 0) translateX(-50%)`
+              : 'translateX(-50%)',
+            willChange: 'transform',
           }}
         >
           {customer.textMessage}
