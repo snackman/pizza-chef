@@ -172,14 +172,16 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
             style={{ transform: 'none' }}
           />
 
-          {/* Slice stack stays attached to chef */}
+          {/* ✅ Slice stack (restored to same relative size as before) */}
           <div
             className={`absolute ${gameState.starPowerActive ? 'animate-pulse' : ''}`}
             style={{
-              width: '1360%',
-              height: '1360%',
-              top: '-10%',
-              left: '100%',
+              left: '105%',
+              top: '50%',
+              width: '91%',
+              height: '91%',
+              transform: 'translateY(-50%)',
+              pointerEvents: 'none',
             }}
           >
             <PizzaSliceStack sliceCount={gameState.availableSlices} />
