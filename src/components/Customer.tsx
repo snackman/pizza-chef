@@ -54,6 +54,7 @@ const Customer: React.FC<CustomerProps> = ({ customer, boardWidth, boardHeight }
           top: 0,
           transform: ready ? `translate3d(${xPx}px, ${yPx}px, 0)` : undefined,
           willChange: 'transform',
+          transition: 'transform 100ms linear',
         }}
       >
         {display.type === 'image' ? (
@@ -82,6 +83,7 @@ const Customer: React.FC<CustomerProps> = ({ customer, boardWidth, boardHeight }
               ? `translate3d(${xPx}px, ${((customer.lane * 25 + 18) / 100) * boardHeight}px, 0) translateX(-50%)`
               : 'translateX(-50%)',
             willChange: 'transform',
+            transition: 'transform 100ms linear',
           }}
         >
           {customer.textMessage}
