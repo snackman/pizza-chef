@@ -14,7 +14,8 @@ interface CustomerProps {
 }
 
 const Customer: React.FC<CustomerProps> = ({ customer }) => {
-  const leftPosition = customer.position;
+  const x = customer.position; // percent across the board
+  const y = customer.lane * 25 + 6; // percent down the board
 
   const getDisplay = () => {
     if (customer.frozen) return { type: 'image', value: frozenfaceImg, alt: 'frozen' };
@@ -37,10 +38,14 @@ const Customer: React.FC<CustomerProps> = ({ customer }) => {
   return (
     <>
       <div
-        className="absolute w-[8%] aspect-square transition-all duration-100 flex items-center justify-center"
+        className="absolute w-[8%] aspect-square flex items-center justify-center"
         style={{
-          left: `${leftPosition}%`,
-          top: `${customer.lane * 25 + 6}%`,
+          left: '0%',
+          top: '0%',
+          transform: `translate3d(${x}%, ${y}%, 0)`,
+          willChange: 'transform',
+          // If you want smoothing, uncomment:
+          // transition: 'transform 50ms linear',
         }}
       >
         {display.type === 'image' ? (
@@ -58,13 +63,15 @@ const Customer: React.FC<CustomerProps> = ({ customer }) => {
           </div>
         )}
       </div>
+
       {customer.textMessage && (
         <div
           className="absolute px-2 py-1 bg-white text-black rounded border-2 border-black text-xs font-bold whitespace-nowrap"
           style={{
-            left: `${leftPosition}%`,
-            top: `${customer.lane * 25 + 18}%`,
-            transform: 'translateX(-50%)',
+            left: '0%',
+            top: '0%',
+            transform: `translate3d(${x}%, ${customer.lane * 25 + 18}%, 0) translateX(-50%)`,
+            willChange: 'transform',
           }}
         >
           {customer.textMessage}
