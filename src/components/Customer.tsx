@@ -14,8 +14,7 @@ interface CustomerProps {
 }
 
 const Customer: React.FC<CustomerProps> = ({ customer }) => {
-  const x = customer.position; // percent across the board
-  const y = customer.lane * 25 + 6; // percent down the board
+  const leftPosition = customer.position;
 
   const getDisplay = () => {
     if (customer.frozen) return { type: 'image', value: frozenfaceImg, alt: 'frozen' };
@@ -40,12 +39,11 @@ const Customer: React.FC<CustomerProps> = ({ customer }) => {
       <div
         className="absolute w-[8%] aspect-square flex items-center justify-center"
         style={{
-          left: '0%',
-          top: '0%',
-          transform: `translate3d(${x}%, ${y}%, 0)`,
-          willChange: 'transform',
-          // If you want smoothing, uncomment:
-          // transition: 'transform 50ms linear',
+          left: `${leftPosition}%`,
+          top: `${customer.lane * 25 + 6}%`,
+          // GPU hint without changing positioning math:
+          transform: 'translate3d(0,0,0)',
+          willChange: 'left, top',
         }}
       >
         {display.type === 'image' ? (
@@ -53,14 +51,10 @@ const Customer: React.FC<CustomerProps> = ({ customer }) => {
             src={display.value}
             alt={display.alt}
             className="w-full h-full object-contain"
-            style={{
-              transform: customer.flipped ? 'scaleX(-1)' : 'none',
-            }}
+            style={{ transform: customer.flipped ? 'scaleX(-1)' : 'none' }}
           />
         ) : (
-          <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
-            {display.value}
-          </div>
+          <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>{display.value}</div>
         )}
       </div>
 
@@ -68,10 +62,10 @@ const Customer: React.FC<CustomerProps> = ({ customer }) => {
         <div
           className="absolute px-2 py-1 bg-white text-black rounded border-2 border-black text-xs font-bold whitespace-nowrap"
           style={{
-            left: '0%',
-            top: '0%',
-            transform: `translate3d(${x}%, ${customer.lane * 25 + 18}%, 0) translateX(-50%)`,
-            willChange: 'transform',
+            left: `${leftPosition}%`,
+            top: `${customer.lane * 25 + 18}%`,
+            transform: 'translate3d(-50%, 0, 0)', // keep your centering
+            willChange: 'left, top',
           }}
         >
           {customer.textMessage}
