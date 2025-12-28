@@ -1654,7 +1654,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         const newPowerUp: PowerUp = {
           id: `powerup-bought-${now}`,
           lane,
-          position: 90,
+          position: 95,
           speed: POWERUP_SPEED,
           type: type === 'ice-cream' ? 'ice-cream' : type === 'beer' ? 'beer' : 'honey',
         };
