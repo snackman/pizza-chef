@@ -156,7 +156,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
         <div
           className="absolute flex items-center justify-center"
           style={{
-            left: '12%', // adjust if you want him closer/farther from ovens
+            left: '5%', // adjust if you want him closer/farther from ovens
             top: `${gameState.chefLane * 25 + 13}%`,
             width: '8%',
             aspectRatio: '1 / 1',
