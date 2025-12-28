@@ -138,7 +138,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     const newCustomer: Customer = {
       id: `customer-${now}-${lane}`,
       lane,
-      position: 98,
+      position: 95,
       speed: 0.4,
       served: false,
       hasPlate: false,
