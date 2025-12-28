@@ -1421,7 +1421,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               defeated: false,
             });
           }
-          newState.customers = [];
           newState.bossBattle = {
             active: true,
             bossHealth: BOSS_HEALTH,
