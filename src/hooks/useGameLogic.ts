@@ -797,7 +797,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               }
             }
           } else if (powerUp.type === 'moltobenny') {
-            // Moltobenny power-up gives 10,000 points (affected by doge multiplier)
+            // Moltobenny power-up gives 10,000 points and $69 (affected by doge multiplier)
             const moltoScore = 10000 * scoreMultiplier;
             const moltoMoney = 69 * scoreMultiplier;
             newState.score += moltoScore;
