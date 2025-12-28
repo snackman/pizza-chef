@@ -551,16 +551,17 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           const speedModifier = customer.hotHoneyAffected ? 0.5 : 1;
           const newPosition = customer.position - (customer.speed * speedModifier);
 
-          if (newPosition <= 15) {
+          if (newPosition <= 15) { /*
             const counterMessages = [
               "Damn! They sold out again!",
               "You don't have gluten free?"
             ];
             const randomMessage = counterMessages[Math.floor(Math.random() * counterMessages.length)];
+            */
             return {
               ...customer,
               position: newPosition,
-              textMessage: randomMessage,
+              textMessage: "You don't have gluten free?",
               textMessageTime: Date.now(),
               flipped: false,
               movingRight: true,
