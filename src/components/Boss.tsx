@@ -59,8 +59,8 @@ const Boss: React.FC<BossProps> = ({ bossBattle }) => {
             style={{
               left: `${minion.position}%`,
               top: `${minion.lane * 25 + 8}%`,
-              width: '3%',
-              height: '15%',
+              width: '9%',
+              height: '45%',
             }}
           >
             <img
