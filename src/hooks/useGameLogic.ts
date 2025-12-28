@@ -3,7 +3,7 @@ import { GameState, Customer, PizzaSlice, EmptyPlate, PowerUp, PowerUpType, Floa
 import { soundManager } from '../utils/sounds';
 import { getStreakMultiplier } from '../components/StreakDisplay';
 
-const BOSS_LEVEL = 10;
+const BOSS_LEVEL = 20;
 const BOSS_WAVES = 3;
 const MINIONS_PER_WAVE = 8;
 const BOSS_HEALTH = 8;
