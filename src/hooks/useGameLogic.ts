@@ -1153,8 +1153,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
             // Critic customer special star mechanics
             if (customer.critic) {
-              if (customer.position >= 55) {
-                // Served before xPosition 55 - add a star
+              if (customer.position >= 50) {
+                // Served before xPosition 50 - add a star
                 if (newState.lives < 5) {
                   newState.lives += 1;
                   soundManager.lifeGained();
