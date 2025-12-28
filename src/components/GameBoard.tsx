@@ -72,9 +72,10 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
 
     // Calculate cook time based on speed upgrades
     const speedUpgrade = gameState.ovenSpeedUpgrades[lane] || 0;
-    const cookingTime = speedUpgrade === 0 ? 3000 :
-                        speedUpgrade === 1 ? 2500 :
-                        speedUpgrade === 2 ? 2000 : 1500;
+    const cookingTime =
+      speedUpgrade === 0 ? 3000 :
+      speedUpgrade === 1 ? 2500 :
+      speedUpgrade === 2 ? 2000 : 1500;
 
     const warningTime = 7000; // 7 seconds (start blinking)
     const burnTime = 8000; // 8 seconds total
@@ -121,7 +122,17 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
             }}
           >
             {showSlices && (
-              <div className="absolute" style={{ width: '75%', height: '75%', top: '40%', left: '70%', transform: 'translate(-50%, -50%)', zIndex: 1 }}>
+              <div
+                className="absolute"
+                style={{
+                  width: '75%',
+                  height: '75%',
+                  top: '40%',
+                  left: '70%',
+                  transform: 'translate(-50%, -50%)',
+                  zIndex: 1
+                }}
+              >
                 <PizzaSliceStack sliceCount={oven.sliceCount} />
               </div>
             )}
@@ -140,28 +151,38 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
         );
       })}
 
-      {/* Kitchen/Chef Area - only shown when NOT in nyan sweep */}
+      {/* ✅ Chef (no scale(15), positioned directly on board) */}
       {!gameState.nyanSweep?.active && (
-        <div className="absolute top-0 h-full flex flex-col items-center justify-center" style={{ width: '7.5%', left: '9%' }}>
+        <div
+          className="absolute flex items-center justify-center"
+          style={{
+            left: '12%', // adjust if you want him closer/farther from ovens
+            top: `${gameState.chefLane * 25 + 13}%`,
+            width: '8%',
+            aspectRatio: '1 / 1',
+            transform: 'translate3d(0, -50%, 0)', // center on lane
+            zIndex: gameState.gameOver ? 19 : 10,
+            willChange: 'transform',
+          }}
+        >
+          <img
+            src={gameState.gameOver ? "https://i.imgur.com/PwRdw0u.png" : "https://i.imgur.com/EPCSa79.png"}
+            alt={gameState.gameOver ? "game over" : "chef"}
+            className="w-full h-full object-contain"
+            style={{ transform: 'none' }}
+          />
+
+          {/* Slice stack stays attached to chef */}
           <div
-            className="absolute w-[8%] aspect-square flex items-center justify-center"
+            className={`absolute ${gameState.starPowerActive ? 'animate-pulse' : ''}`}
             style={{
-              top: `${gameState.chefLane * 25 + 13}%`,
-              left: '10%',
-              zIndex: gameState.gameOver ? 19 : 10
+              width: '1360%',
+              height: '1360%',
+              top: '-10%',
+              left: '100%',
             }}
           >
-            {gameState.gameOver ? (
-              <img src="https://i.imgur.com/PwRdw0u.png" alt="game over" className="w-full h-full object-contain" style={{ transform: 'scale(15)' }} />
-            ) : (
-              <img src={"https://i.imgur.com/EPCSa79.png"} alt="chef" className="w-full h-full object-contain" style={{ transform: 'scale(15)' }} />
-            )}
-            <div
-              className={`absolute ${gameState.starPowerActive ? 'animate-pulse' : ''}`}
-              style={{ width: '1360%', height: '1360%', top: '-10%', left: '100%'}}
-            >
-              <PizzaSliceStack sliceCount={gameState.availableSlices} />
-            </div>
+            <PizzaSliceStack sliceCount={gameState.availableSlices} />
           </div>
         </div>
       )}
@@ -176,7 +197,12 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
             zIndex: 20
           }}
         >
-          <img src="https://i.imgur.com/fGPU4Pu.png" alt="nyan chef" className="w-full h-full object-contain" style={{ transform: 'scale(1.5)' }} />
+          <img
+            src="https://i.imgur.com/fGPU4Pu.png"
+            alt="nyan chef"
+            className="w-full h-full object-contain"
+            style={{ transform: 'scale(1.5)' }}
+          />
         </div>
       )}
 
