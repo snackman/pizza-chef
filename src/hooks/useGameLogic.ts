@@ -736,14 +736,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                     frozen: false,
                   };
                 }
-                // Critics don't drink beer - says "I prefer wine"
-                if (customer.isCritic) {
-                  return {
-                    ...customer,
-                    textMessage: "I prefer wine",
-                    textMessageTime: Date.now(),
-                  };
-                }
                 return {
                   ...customer,
                   woozy: true,
@@ -1726,14 +1718,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 frozen: false,
               };
             }
-                // Critics don't drink beer - says "I prefer wine"
-                if (customer.isCritic) {
-                  return {
-                    ...customer,
-                    textMessage: "I prefer wine",
-                    textMessageTime: Date.now(),
-                  };
-                }
             return {
               ...customer,
               woozy: true,
