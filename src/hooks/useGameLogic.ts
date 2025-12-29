@@ -1408,7 +1408,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           }
         }
 
-        // Start boss battle at level 10
+        // Start boss battle at BOSS_LEVEL
         if (targetLevel === BOSS_LEVEL && !newState.bossBattle?.active && !newState.bossBattle?.bossDefeated) {
           const initialMinions: BossMinion[] = [];
           for (let i = 0; i < MINIONS_PER_WAVE; i++) {
