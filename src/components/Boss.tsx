@@ -71,14 +71,14 @@ const Boss: React.FC<BossProps> = ({ bossBattle }) => {
           </div>
         );
       })}
-
+/*
       {bossBattle.bossDefeated && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="bg-green-600 text-white px-8 py-4 rounded-xl text-3xl font-bold animate-bounce">
             BOSS DEFEATED!
           </div>
         </div>
-      )}
+      )} */
     </>
   );
 };
