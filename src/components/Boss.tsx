@@ -51,26 +51,24 @@ const Boss: React.FC<BossProps> = ({ bossBattle }) => {
       )}
 
       {bossBattle.minions.map(minion => {
-        if (minion.defeated) return null;
-        return (
-          <div
-            key={minion.id}
-            className="absolute transition-all duration-100 flex items-center justify-center"
-            style={{
-              left: `${minion.position}%`,
-              top: `${minion.lane * 25 + 8}%`,
-              width: '3%',
-              height: '15%',
-            }}
-          >
-            <img
-              src={bossImg}
-              alt="minion"
-              className="w-full h-full object-contain"
-            />
-          </div>
-        );
-      })}
+  if (minion.defeated) return null;
+  return (
+    <div
+      key={minion.id}
+      className="absolute transition-all duration-100 flex items-center justify-center w-[8%] aspect-square"
+      style={{
+        left: `${minion.position}%`,
+        top: `${minion.lane * 25 + 6}%`,
+      }}
+    >
+      <img
+        src={bossImg}
+        alt="minion"
+        className="w-full h-full object-contain"
+      />
+    </div>
+  );
+})}
     </>
   );
 };
