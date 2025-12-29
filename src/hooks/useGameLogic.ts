@@ -187,7 +187,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           bossHealth: BOSS_HEALTH,
           currentWave: 1,
           minions: initialMinions,
-          bossVulnerable: false,
+          bossVulnerable: true,
           bossDefeated: false,
           bossPosition: 85,
         },
@@ -1396,9 +1396,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       if (targetLevel > newState.level) {
         newState.level = targetLevel;
 
-        // Show store if we crossed any 5-level threshold (only once)
-        const highestStoreLevel = Math.floor(targetLevel / 5) * 5;
-        if (highestStoreLevel >= 5 && highestStoreLevel > newState.lastStoreLevelShown) {
+        // Show store if we crossed any 10-level threshold (only once)
+        const highestStoreLevel = Math.floor(targetLevel / 10) * 10;
+        if (highestStoreLevel >= 10 && highestStoreLevel > newState.lastStoreLevelShown) {
           newState.lastStoreLevelShown = highestStoreLevel;
           // If nyan sweep is active, delay showing the store until it ends
           if (newState.nyanSweep?.active) {
@@ -1426,7 +1426,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             bossHealth: BOSS_HEALTH,
             currentWave: 1,
             minions: initialMinions,
-            bossVulnerable: false,
+            bossVulnerable: true,
             bossDefeated: false,
             bossPosition: 85,
           };
