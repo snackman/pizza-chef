@@ -1972,9 +1972,11 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         if (!current.paused && !current.gameOver) {
             // Increase spawn rate based on level (slower ramp)
             const levelSpawnRate = CUSTOMER_SPAWN_RATE + (current.level - 1) * 0.05;
-            if (Math.random() < levelSpawnRate * 0.01) {
+            const effectiveSpawnRate = current.bossBattle?.active ? levelSpawnRate * 0.5 : levelSpawnRate;
+            if (Math.random() < effectiveSpawnRate * 0.01) {
               spawnCustomer();
             }
+
           // Spawn power-ups occasionally (also during boss battle)
           if (Math.random() < 2 * 0.01) {
             spawnPowerUp();
