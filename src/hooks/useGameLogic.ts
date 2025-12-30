@@ -142,6 +142,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       speed: 0.4,
       served: false,
       hasPlate: false,
+      leaving: false,
       disappointed: false,
       disappointedEmoji: disappointedEmojis[Math.floor(Math.random() * disappointedEmojis.length)],
       movingRight: false,
@@ -629,6 +630,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               return {
                 ...customer,
                 flipped: false,
+                leaving: true,
                 movingRight: true,
                 textMessage: "Ugh! I dropped my slice!",
                 textMessageTime: Date.now()
@@ -907,6 +909,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               return {
                 ...customer,
                 frozen: false,
+                leaving: true,
                 flipped: false,
                 movingRight: true,
                 textMessage: "Ugh! I dropped my slice!",
@@ -986,6 +989,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               return {
                 ...customer,
                 woozy: false,
+                leaving: true,
                 flipped: false,
                 movingRight: true,
                 textMessage: "Ugh! I dropped my slice!",
@@ -1128,7 +1132,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               return {
                 ...customer,
                 flipped: false,
-                brianDropped: true,
+                leaving: true,
                 movingRight: true,
                 textMessage: "Ugh! I dropped my slice!",
                 textMessageTime: Date.now()
