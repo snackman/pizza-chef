@@ -535,7 +535,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         }
 
         // Vomit/disappointed customers move back to the right
-        if (customer.disappointed || customer.vomit) {
+        if (customer.disappointed || customer.vomit || customer.brianDropped) {
           const newPosition = customer.position + (customer.speed * 2);
           return { ...customer, position: newPosition, hotHoneyAffected: false };
         }
@@ -1129,7 +1129,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               return {
                 ...customer,
                 flipped: false,
-                brianDrop: true,
+                brianDropped: true,
                 movingRight: true,
                 textMessage: "Ugh! I dropped my slice!",
                 textMessageTime: Date.now()
