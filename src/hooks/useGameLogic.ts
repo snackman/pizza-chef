@@ -1731,7 +1731,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               movingRight: true,
             };
           }
-          if (!customer.served && !customer.vomit && !customer.disappointed) {
+          if (!customer.served && !customer.vomit && !customer.leaving) {
             // Bad Luck Brian can't handle beer - hurls and loses you a star
             if (customer.badLuckBrian) {
               livesLost += 1;
