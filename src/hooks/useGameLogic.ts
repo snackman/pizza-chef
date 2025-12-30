@@ -1318,7 +1318,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 ...customer,
                 brianNyaned: true,
                 leaving: true,        // stop pizza collisions / other interactions
-                served: true,         // treat as cleared
                 hasPlate: false,
                 flipped: false,
                 movingRight: true,    // harmless, but consistent with "leaving"
