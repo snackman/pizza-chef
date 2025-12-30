@@ -439,9 +439,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       const iceCreamEndTime = iceCreamPowerUp?.endTime || 0;
 
       newState.customers = newState.customers.map(customer => {
-        const isDeparting = customer.served || customer.disappointed || customer.vomit;
+        const isDeparting = customer.served || customer.disappointed || customer.vomit || customer.leaving;
         if (isDeparting) return customer;
-
         // Woozy customers (beer effect) override both frozen and hot honey
         // Beer clears these states at activation, so woozy customers stay woozy
         if (customer.woozy) {
