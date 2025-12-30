@@ -26,20 +26,26 @@ const Customer: React.FC<CustomerProps> = ({ customer, boardWidth, boardHeight }
   const yPx = (yPct / 100) * boardHeight;
 
   const getDisplay = () => {
-    if (customer.frozen) return { type: 'image', value: frozenfaceImg, alt: 'frozen' };
-    if (customer.vomit && customer.badLuckBrian) return { type: 'image', value: badLuckBrianPukeImg, alt: 'brian-puke' };
-    if (customer.vomit) return { type: 'emoji', value: '🤮' };
-    if (customer.woozy) {
-      if (customer.woozyState === 'drooling') return { type: 'image', value: droolfaceImg, alt: 'drooling' };
-      return { type: 'image', value: woozyfaceImg, alt: 'woozy' };
-    }
-    if (customer.served) return { type: 'image', value: yumfaceImg, alt: 'yum' };
-    if (customer.disappointed) return { type: 'emoji', value: customer.disappointedEmoji || '😢' };
-    if (customer.hotHoneyAffected) return { type: 'image', value: spicyfaceImg, alt: 'spicy' };
-    if (customer.badLuckBrian) return { type: 'image', value: badLuckBrianImg, alt: 'badluckbrian' };
-    if (customer.critic) return { type: 'image', value: criticImg, alt: 'critic' };
-    return { type: 'image', value: droolfaceImg, alt: 'drool' };
-  };
+  // 🌈 Rainbow Brian (nyan hit) — override everything else
+  if (customer.brianNyaned) {
+    return { type: 'image', value: rainbowBrian, alt: 'rainbow-brian' };
+  }
+
+  if (customer.frozen) return { type: 'image', value: frozenfaceImg, alt: 'frozen' };
+  if (customer.vomit && customer.badLuckBrian) return { type: 'image', value: badLuckBrianPukeImg, alt: 'brian-puke' };
+  if (customer.vomit) return { type: 'emoji', value: '🤮' };
+  if (customer.woozy) {
+    if (customer.woozyState === 'drooling') return { type: 'image', value: droolfaceImg, alt: 'drooling' };
+    return { type: 'image', value: woozyfaceImg, alt: 'woozy' };
+  }
+  if (customer.served) return { type: 'image', value: yumfaceImg, alt: 'yum' };
+  if (customer.disappointed) return { type: 'emoji', value: customer.disappointedEmoji || '😢' };
+  if (customer.hotHoneyAffected) return { type: 'image', value: spicyfaceImg, alt: 'spicy' };
+  if (customer.badLuckBrian) return { type: 'image', value: badLuckBrianImg, alt: 'badluckbrian' };
+  if (customer.critic) return { type: 'image', value: criticImg, alt: 'critic' };
+  return { type: 'image', value: droolfaceImg, alt: 'drool' };
+};
+
 
   const display = getDisplay();
 
