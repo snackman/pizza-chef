@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { GameState, Customer, PizzaSlice, EmptyPlate, PowerUp, PowerUpType, FloatingScore, DroppedPlate, StarLostReason, BossMinion } from '../types/game';
+import { GameState, PowerUp, PowerUpType, FloatingScore, StarLostReason, BossMinion, EmptyPlate, PizzaSlice } from '../types/game';
 import { soundManager } from '../utils/sounds';
 import { getStreakMultiplier } from '../components/StreakDisplay';
 import { 
@@ -7,7 +7,6 @@ import {
   OVEN_CONFIG, 
   ENTITY_SPEEDS, 
   SPAWN_RATES, 
-  PROBABILITIES, 
   SCORING, 
   COSTS, 
   BOSS_CONFIG, 
@@ -15,6 +14,8 @@ import {
   TIMINGS, 
   POSITIONS 
 } from '../lib/constants';
+import * as Spawners from '../game/spawners';
+import { processOvenTick } from '../game/ovenLogic';
 
 export const useGameLogic = (gameStarted: boolean = true) => {
   const [gameState, setGameState] = useState<GameState>({
@@ -71,6 +72,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
   const [lastCustomerSpawn, setLastCustomerSpawn] = useState(0);
   const [lastPowerUpSpawn, setLastPowerUpSpawn] = useState(0);
+  // We keep this for now to prevent sound overlapping, though logic is moved to helper
   const [ovenSoundStates, setOvenSoundStates] = useState<{[key: number]: 'idle' | 'cooking' | 'ready' | 'warning' | 'burning'}>({
     0: 'idle', 1: 'idle', 2: 'idle', 3: 'idle'
   });
@@ -80,151 +82,69 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     const now = Date.now();
     const newFloatingScore: FloatingScore = {
       id: `score-${now}-${Math.random()}`,
-      points,
-      lane,
-      position,
-      startTime: now,
+      points, lane, position, startTime: now,
     };
-
-    return {
-      ...state,
-      floatingScores: [...state.floatingScores, newFloatingScore],
-    };
+    return { ...state, floatingScores: [...state.floatingScores, newFloatingScore] };
   }, []);
 
+  // --- SPAWNERS ---
   const spawnPowerUp = useCallback(() => {
     const now = Date.now();
     if (now - lastPowerUpSpawn < SPAWN_RATES.POWERUP_MIN_INTERVAL) return;
-
-    const lane = Math.floor(Math.random() * GAME_CONFIG.LANE_COUNT);
-    const rand = Math.random();
-    const randomType = rand < PROBABILITIES.POWERUP_STAR_CHANCE ? 'star' : POWERUPS.TYPES[Math.floor(Math.random() * POWERUPS.TYPES.length)];
-
-    const newPowerUp: PowerUp = {
-      id: `powerup-${now}-${lane}`,
-      lane,
-      position: POSITIONS.POWERUP_SPAWN_X,
-      speed: ENTITY_SPEEDS.POWERUP,
-      type: randomType,
-    };
-
-    setGameState(prev => ({
-      ...prev,
-      powerUps: [...prev.powerUps, newPowerUp],
-    }));
-
+    setGameState(prev => ({ ...prev, powerUps: [...prev.powerUps, Spawners.createPowerUp(now)] }));
     setLastPowerUpSpawn(now);
   }, [lastPowerUpSpawn]);
 
   const spawnCustomer = useCallback(() => {
     const now = Date.now();
     const spawnDelay = SPAWN_RATES.CUSTOMER_MIN_INTERVAL_BASE - (gameState.level * SPAWN_RATES.CUSTOMER_MIN_INTERVAL_DECREMENT);
-    if (now - lastCustomerSpawn < spawnDelay) return;
-
-    if (gameState.paused) return;
-
-    const lane = Math.floor(Math.random() * GAME_CONFIG.LANE_COUNT);
-    const disappointedEmojis = ['😢', '😭', '😠', '🤬'];
-    const isCritic = Math.random() < PROBABILITIES.CRITIC_CHANCE;
-    const isBadLuckBrian = !isCritic && Math.random() < PROBABILITIES.BAD_LUCK_BRIAN_CHANCE;
-    
-    const newCustomer: Customer = {
-      id: `customer-${now}-${lane}`,
-      lane,
-      position: POSITIONS.SPAWN_X,
-      speed: ENTITY_SPEEDS.CUSTOMER_BASE,
-      served: false,
-      hasPlate: false,
-      leaving: false,
-      disappointed: false,
-      disappointedEmoji: disappointedEmojis[Math.floor(Math.random() * disappointedEmojis.length)],
-      movingRight: false,
-      critic: isCritic,
-      badLuckBrian: isBadLuckBrian,
-      flipped: isBadLuckBrian,
-    };
-
-    setGameState(prev => ({
-      ...prev,
-      customers: [...prev.customers, newCustomer],
-    }));
-
+    if (now - lastCustomerSpawn < spawnDelay || gameState.paused) return;
+    setGameState(prev => ({ ...prev, customers: [...prev.customers, Spawners.createCustomer(now, gameState.level)] }));
     setLastCustomerSpawn(now);
   }, [lastCustomerSpawn, gameState.level, gameState.paused]);
 
   const spawnBossWave = useCallback((waveNumber: number): BossMinion[] => {
-    const minions: BossMinion[] = [];
-    const now = Date.now();
-    for (let i = 0; i < BOSS_CONFIG.MINIONS_PER_WAVE; i++) {
-      const lane = i % 4;
-      minions.push({
-        id: `minion-${now}-${waveNumber}-${i}`,
-        lane,
-        position: POSITIONS.SPAWN_X + (Math.floor(i / 4) * 15),
-        speed: ENTITY_SPEEDS.MINION,
-        defeated: false,
-      });
-    }
-    return minions;
+    return Spawners.createBossWave(Date.now(), waveNumber);
   }, []);
 
   const startBossBattle = useCallback(() => {
     setGameState(prev => {
       if (prev.bossBattle?.active) return prev;
-
-      const initialMinions = spawnBossWave(1);
       return {
         ...prev,
         customers: [],
         bossBattle: {
-          active: true,
-          bossHealth: BOSS_CONFIG.HEALTH,
-          currentWave: 1,
-          minions: initialMinions,
-          bossVulnerable: true,
-          bossDefeated: false,
-          bossPosition: BOSS_CONFIG.BOSS_POSITION,
+          active: true, bossHealth: BOSS_CONFIG.HEALTH, currentWave: 1, 
+          minions: Spawners.createBossWave(Date.now(), 1), 
+          bossVulnerable: true, bossDefeated: false, bossPosition: BOSS_CONFIG.BOSS_POSITION,
         },
       };
     });
-  }, [spawnBossWave]);
+  }, []);
 
+  // --- ACTIONS ---
   const servePizza = useCallback(() => {
     if (gameState.gameOver || gameState.paused || gameState.availableSlices <= 0 || gameState.nyanSweep?.active) return;
-
     soundManager.servePizza();
-
-    const newSlice: PizzaSlice = {
-      id: `pizza-${Date.now()}-${gameState.chefLane}`,
-      lane: gameState.chefLane,
-      position: GAME_CONFIG.CHEF_X_POSITION,
-      speed: ENTITY_SPEEDS.PIZZA,
-    };
-
     setGameState(prev => ({
       ...prev,
-      pizzaSlices: [...prev.pizzaSlices, newSlice],
+      pizzaSlices: [...prev.pizzaSlices, Spawners.createPizza(Date.now(), prev.chefLane)],
       availableSlices: prev.availableSlices - 1,
     }));
   }, [gameState.gameOver, gameState.paused, gameState.chefLane, gameState.availableSlices, gameState.nyanSweep?.active]);
 
   const moveChef = useCallback((direction: 'up' | 'down') => {
     if (gameState.gameOver || gameState.paused || gameState.nyanSweep?.active) return;
-
     setGameState(prev => {
       let newLane = prev.chefLane;
-      if (direction === 'up' && newLane > GAME_CONFIG.LANE_TOP) {
-        newLane -= 1;
-      } else if (direction === 'down' && newLane < GAME_CONFIG.LANE_BOTTOM) {
-        newLane += 1;
-      }
+      if (direction === 'up' && newLane > GAME_CONFIG.LANE_TOP) newLane -= 1;
+      else if (direction === 'down' && newLane < GAME_CONFIG.LANE_BOTTOM) newLane += 1;
       return { ...prev, chefLane: newLane };
     });
   }, [gameState.gameOver, gameState.paused, gameState.nyanSweep?.active]);
 
   const useOven = useCallback(() => {
     if (gameState.gameOver || gameState.paused) return;
-
     setGameState(prev => {
       const currentOven = prev.ovens[prev.chefLane];
       const now = Date.now();
@@ -237,33 +157,22 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         const slicesProduced = 1 + (prev.ovenUpgrades[prev.chefLane] || 0);
         return {
           ...prev,
-          ovens: {
-            ...prev.ovens,
-            [prev.chefLane]: { cooking: true, startTime: now, burned: false, cleaningStartTime: 0, sliceCount: slicesProduced }
-          }
+          ovens: { ...prev.ovens, [prev.chefLane]: { cooking: true, startTime: now, burned: false, cleaningStartTime: 0, sliceCount: slicesProduced } }
         };
       } else {
         const speedUpgrade = prev.ovenSpeedUpgrades[prev.chefLane] || 0;
         const cookTime = OVEN_CONFIG.COOK_TIMES[speedUpgrade];
-
         if (now - currentOven.startTime >= cookTime && now - currentOven.startTime < OVEN_CONFIG.BURN_TIME) {
           const slicesProduced = currentOven.sliceCount;
           const newTotal = prev.availableSlices + slicesProduced;
-
           if (newTotal <= GAME_CONFIG.MAX_SLICES) {
             soundManager.servePizza();
             setOvenSoundStates(prevStates => ({ ...prevStates, [prev.chefLane]: 'idle' }));
             return {
               ...prev,
               availableSlices: newTotal,
-              ovens: {
-                ...prev.ovens,
-                [prev.chefLane]: { cooking: false, startTime: 0, burned: false, cleaningStartTime: 0, sliceCount: 0 }
-              },
-              stats: {
-                ...prev.stats,
-                slicesBaked: prev.stats.slicesBaked + slicesProduced,
-              }
+              ovens: { ...prev.ovens, [prev.chefLane]: { cooking: false, startTime: 0, burned: false, cleaningStartTime: 0, sliceCount: 0 } },
+              stats: { ...prev.stats, slicesBaked: prev.stats.slicesBaked + slicesProduced }
             };
           }
         }
@@ -272,14 +181,13 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     });
   }, [gameState.gameOver, gameState.paused, gameState.chefLane]);
 
+  // --- GAME LOOP ---
   const updateGame = useCallback(() => {
     setGameState(prev => {
       if (prev.gameOver) {
         if (prev.fallingPizza) {
           const newY = prev.fallingPizza.y + ENTITY_SPEEDS.FALLING_PIZZA;
-          if (newY > 400) {
-            return { ...prev, fallingPizza: undefined };
-          }
+          if (newY > 400) return { ...prev, fallingPizza: undefined };
           return { ...prev, fallingPizza: { ...prev.fallingPizza, y: newY } };
         }
         return prev;
@@ -289,62 +197,61 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       let newState = { ...prev, stats: { ...prev.stats, powerUpsUsed: { ...prev.stats.powerUpsUsed } } };
       const now = Date.now();
-      const updatedOvens = { ...newState.ovens };
-      const newOvenSoundStates = { ...ovenSoundStates };
 
-      // Check Ovens
-      Object.keys(updatedOvens).forEach(laneKey => {
-        const lane = parseInt(laneKey);
-        const oven = updatedOvens[lane];
+      // 1. Process Ovens (Extracted Logic)
+      const { updatedOvens, soundEvents, lifeLost } = processOvenTick(
+        prev.ovens, prev.ovenSpeedUpgrades, now, prev.paused
+      );
+      newState.ovens = updatedOvens;
 
-        if (oven.cooking && !oven.burned) {
-          const elapsed = oven.pausedElapsed !== undefined ? oven.pausedElapsed : now - oven.startTime;
-          const speedUpgrade = newState.ovenSpeedUpgrades[lane] || 0;
-          const cookTime = OVEN_CONFIG.COOK_TIMES[speedUpgrade];
-
-          let currentState: 'idle' | 'cooking' | 'ready' | 'warning' | 'burning' = 'cooking';
-          if (elapsed >= OVEN_CONFIG.BURN_TIME) currentState = 'burning';
-          else if (elapsed >= OVEN_CONFIG.WARNING_TIME) currentState = 'warning';
-          else if (elapsed >= cookTime) currentState = 'ready';
-
-          const previousState = newOvenSoundStates[lane];
-          if (currentState !== previousState) {
-            if (currentState === 'ready' && previousState === 'cooking') soundManager.ovenReady();
-            else if (currentState === 'warning' && previousState === 'ready') soundManager.ovenWarning();
-            else if (currentState === 'burning' && previousState === 'warning') soundManager.ovenBurning();
-            newOvenSoundStates[lane] = currentState;
-          }
-
-          if (elapsed >= OVEN_CONFIG.BURN_TIME) {
-            soundManager.ovenBurned();
-            soundManager.lifeLost();
-            newState.lives = Math.max(0, newState.lives - 1);
-            newState.lastStarLostReason = 'burned_pizza';
-            if (newState.lives === 0) {
-              newState.gameOver = true;
-              soundManager.gameOver();
-              if (newState.availableSlices > 0) {
-                newState.fallingPizza = { lane: newState.chefLane, y: 0 };
-                newState.availableSlices = 0;
-              }
-            }
-            updatedOvens[lane] = { cooking: false, startTime: 0, burned: true, cleaningStartTime: 0, sliceCount: 0 };
-            newOvenSoundStates[lane] = 'idle';
-          }
-        } else if (!oven.cooking && newOvenSoundStates[lane] !== 'idle') {
-          newOvenSoundStates[lane] = 'idle';
-        }
-
-        if (oven.burned && oven.cleaningStartTime > 0 && now - oven.cleaningStartTime >= OVEN_CONFIG.CLEANING_TIME) {
-          soundManager.cleaningComplete();
-          updatedOvens[lane] = { cooking: false, startTime: 0, burned: false, cleaningStartTime: 0, sliceCount: 0 };
+      // Handle Sounds from pure function events
+      // We still update ovenSoundStates to keep the UI in sync if needed, 
+      // but primarily we trigger sounds here.
+      soundEvents.forEach(evt => {
+        if (evt === 'ready') soundManager.ovenReady();
+        if (evt === 'warning') soundManager.ovenWarning();
+        if (evt === 'burning') soundManager.ovenBurning();
+        if (evt === 'burned') {
+          soundManager.ovenBurned();
+          soundManager.lifeLost();
         }
       });
-
-      if (JSON.stringify(newOvenSoundStates) !== JSON.stringify(ovenSoundStates)) {
-        setOvenSoundStates(newOvenSoundStates);
+      
+      // Update sound states based on current oven status for next tick comparisons
+      const nextSoundStates = { ...ovenSoundStates };
+      Object.keys(updatedOvens).forEach(key => {
+         const lane = parseInt(key);
+         const oven = updatedOvens[lane];
+         if(oven.burned) nextSoundStates[lane] = 'idle';
+         else if(!oven.cooking) nextSoundStates[lane] = 'idle';
+         // We rely on the pure function events for transitions, so this state is mostly for 'idle' reset
+      });
+      if (JSON.stringify(nextSoundStates) !== JSON.stringify(ovenSoundStates)) {
+         setOvenSoundStates(nextSoundStates);
       }
-      newState.ovens = updatedOvens;
+
+      if (lifeLost) {
+        newState.lives = Math.max(0, newState.lives - 1);
+        newState.lastStarLostReason = 'burned_pizza';
+        if (newState.lives === 0) {
+          newState.gameOver = true;
+          soundManager.gameOver();
+          if (newState.availableSlices > 0) {
+            newState.fallingPizza = { lane: newState.chefLane, y: 0 };
+            newState.availableSlices = 0;
+          }
+        }
+      }
+
+      // Check for cleaning completion
+      Object.keys(newState.ovens).forEach(key => {
+         const lane = parseInt(key);
+         const oven = newState.ovens[lane];
+         if (oven.burned && oven.cleaningStartTime > 0 && now - oven.cleaningStartTime >= OVEN_CONFIG.CLEANING_TIME) {
+           soundManager.cleaningComplete();
+           newState.ovens[lane] = { cooking: false, startTime: 0, burned: false, cleaningStartTime: 0, sliceCount: 0 };
+         }
+      });
 
       // Clean up expirations
       newState.floatingScores = newState.floatingScores.filter(fs => now - fs.startTime < TIMINGS.FLOATING_SCORE_LIFETIME);
@@ -959,18 +866,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         }
 
         if (targetLevel === BOSS_CONFIG.TRIGGER_LEVEL && !newState.bossBattle?.active && !newState.bossBattle?.bossDefeated) {
-          const initialMinions: BossMinion[] = [];
-          for (let i = 0; i < BOSS_CONFIG.MINIONS_PER_WAVE; i++) {
-            initialMinions.push({
-              id: `minion-${now}-1-${i}`,
-              lane: i % 4,
-              position: POSITIONS.SPAWN_X + (Math.floor(i / 4) * 15),
-              speed: ENTITY_SPEEDS.MINION,
-              defeated: false,
-            });
-          }
           newState.bossBattle = {
-            active: true, bossHealth: BOSS_CONFIG.HEALTH, currentWave: 1, minions: initialMinions, bossVulnerable: true, bossDefeated: false, bossPosition: BOSS_CONFIG.BOSS_POSITION,
+            active: true, bossHealth: BOSS_CONFIG.HEALTH, currentWave: 1, 
+            minions: Spawners.createBossWave(Date.now(), 1), 
+            bossVulnerable: true, bossDefeated: false, bossPosition: BOSS_CONFIG.BOSS_POSITION,
           };
         }
       }
@@ -1044,18 +943,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         if (activeMinions.length === 0) {
           if (newState.bossBattle.currentWave < BOSS_CONFIG.WAVES) {
             const nextWave = newState.bossBattle.currentWave + 1;
-            const newMinions: BossMinion[] = [];
-            for (let i = 0; i < BOSS_CONFIG.MINIONS_PER_WAVE; i++) {
-              newMinions.push({
-                id: `minion-${now}-${nextWave}-${i}`,
-                lane: i % 4,
-                position: POSITIONS.SPAWN_X + (Math.floor(i / 4) * 15),
-                speed: ENTITY_SPEEDS.MINION,
-                defeated: false,
-              });
-            }
             newState.bossBattle.currentWave = nextWave;
-            newState.bossBattle.minions = newMinions;
+            newState.bossBattle.minions = Spawners.createBossWave(Date.now(), nextWave);
           } else if (!newState.bossBattle.bossVulnerable) {
             newState.bossBattle.bossVulnerable = true;
             newState.bossBattle.minions = [];
