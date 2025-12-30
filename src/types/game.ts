@@ -18,6 +18,8 @@ export interface Customer {
   shouldBeHotHoneyAffected?: boolean;
   critic?: boolean;
   badLuckBrian?: boolean;
+  leaving?: boolean;
+  brianNyaned?: boolean; // Brian got hit by Nyan + is flying away
   flipped?: boolean;
   textMessage?: string;
   textMessageTime?: number;
