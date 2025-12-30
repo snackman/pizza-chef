@@ -561,6 +561,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             return {
               ...customer,
               position: newPosition,
+              disappointed: true,
               textMessage: "You don't have gluten free?",
               textMessageTime: Date.now(),
               flipped: false,
