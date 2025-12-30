@@ -881,7 +881,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         // Check pizza-customer collisions first
         newState.customers = newState.customers.map(customer => {
           // Skip customers that are leaving (disappointed or vomit or brian)
-          if (customer.disappointed || customer.vomit) {
+          if (customer.disappointed || customer.vomit || customer.leaving) {
             return customer;
           }
 
