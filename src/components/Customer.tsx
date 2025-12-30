@@ -8,6 +8,7 @@ import woozyfaceImg from '/Sprites/woozyface.png';
 const criticImg = "https://i.imgur.com/ZygBTOI.png";
 const badLuckBrianImg = "https://i.imgur.com/cs0LDgJ.png";
 const badLuckBrianPukeImg = "https://i.imgur.com/yRXQDIT.png";
+import rainbowBrian from '/Sprites/rainbowBrian.png';
 
 interface CustomerProps {
   customer: CustomerType;
