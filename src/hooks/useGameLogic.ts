@@ -471,6 +471,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               textMessage: "You don't have gluten free?",
               textMessageTime: Date.now(),
               flipped: false,
+              leaving: true,
               movingRight: true,
               hotHoneyAffected: false
             };
