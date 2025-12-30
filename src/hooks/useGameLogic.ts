@@ -1502,6 +1502,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               if (newState.bossBattle!.bossHealth <= 0) {
                 newState.bossBattle!.bossDefeated = true;
                 newState.bossBattle!.active = false;
+                newState.bossBattle!.minions = [];
                 newState.score += 5000;
                 bossScores.push({ points: 5000, lane: 1, position: newState.bossBattle!.bossPosition });
               }
