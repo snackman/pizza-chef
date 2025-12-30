@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import GameBoard from './components/GameBoard';
 import ScoreBoard from './components/ScoreBoard';
-// LandscapeGameBoard import removed
+import LandscapeGameBoard from './components/LandscapeGameBoard';
 import LandscapeScoreBoard from './components/LandscapeScoreBoard';
 import LandscapeControls from './components/LandscapeControls';
 import MobileGameControls from './components/MobileGameControls';
@@ -139,8 +139,7 @@ function App() {
     return (
       <div className="fixed inset-0 bg-gradient-to-br from-orange-200 via-yellow-100 to-red-200 overflow-hidden">
         <div className="relative w-full h-full">
-          {/* Unified GameBoard with landscape prop */}
-          <GameBoard gameState={gameState} isLandscape={true} />
+          <LandscapeGameBoard gameState={gameState} />
 
           {gameState.powerUpAlert && (
             <PowerUpAlert powerUpType={gameState.powerUpAlert.type} chefLane={gameState.powerUpAlert.chefLane} />
@@ -267,7 +266,6 @@ function App() {
             className="relative w-full max-w-6xl aspect-[5/3]"
             onClick={handleGameBoardClick}
           >
-            {/* Unified GameBoard without landscape prop (defaults false) */}
             <GameBoard gameState={gameState} />
 
             {gameState.powerUpAlert && (
@@ -390,4 +388,4 @@ function App() {
   );
 }
 
-export default App
+export default App;
