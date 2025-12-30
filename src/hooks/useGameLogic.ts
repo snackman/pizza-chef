@@ -1129,7 +1129,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               return {
                 ...customer,
                 flipped: false,
-                disappointed: true,
+                brianDrop: true,
                 movingRight: true,
                 textMessage: "Ugh! I dropped my slice!",
                 textMessageTime: Date.now()
