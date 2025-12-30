@@ -1372,6 +1372,30 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
           return customer;
         });
+        // ✅ Nyan Cat sweep should also defeat boss minions (and optionally damage boss)
+        if (newState.bossBattle?.active && !newState.bossBattle.bossDefeated) {
+          const nyanX = newState.nyanSweep.xPosition;
+        
+          // Because chefLane is fractional during sweep, compare with tolerance
+          const chefLaneFloat = newState.chefLane;
+        
+          newState.bossBattle.minions = newState.bossBattle.minions.map(minion => {
+            if (minion.defeated) return minion;
+        
+            const laneHit = Math.abs(minion.lane - chefLaneFloat) < 0.6;
+            const xHit = Math.abs(minion.position - nyanX) < 10;
+        
+            if (laneHit && xHit) {
+              soundManager.customerServed();
+              const pointsEarned = 100;
+              newState.score += pointsEarned;
+              newState = addFloatingScore(pointsEarned, minion.lane, minion.position, newState);
+              return { ...minion, defeated: true };
+            }
+        
+            return minion;
+          });
+        }
 
         // Add floating scores for nyan sweep
         nyanScores.forEach(({ points, lane, position }) => {
