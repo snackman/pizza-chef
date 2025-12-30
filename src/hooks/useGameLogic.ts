@@ -1310,29 +1310,26 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           if (customer.lane === newState.chefLane &&
               Math.abs(customer.position - newState.nyanSweep!.xPosition) < 10) {
 
-            // Bad Luck Brian drops the plate immediately (nyan cat doesn't create plates anyway)
+            // Bad Luck Brian gets Nyan’d: becomes Rainbow Brian and flies away up-right
             if (customer.badLuckBrian) {
-              soundManager.plateDropped();
-              newState.stats.currentCustomerStreak = 0;
-              newState.stats.currentPlateStreak = 0;
-
-              const droppedPlate = {
-                id: `dropped-${Date.now()}-${customer.id}`,
-                lane: customer.lane,
-                position: customer.position,
-                startTime: Date.now(),
-                hasSlice: true,
-              };
-              newState.droppedPlates = [...newState.droppedPlates, droppedPlate];
-
+              soundManager.customerServed(); // or a special sound if you have one
+            
               return {
                 ...customer,
+                brianNyaned: true,
+                leaving: true,        // stop pizza collisions / other interactions
+                served: true,         // treat as cleared
+                hasPlate: false,
                 flipped: false,
-                movingRight: true,
-                textMessage: "Ugh! I dropped my slice!",
-                textMessageTime: Date.now()
+                movingRight: true,    // harmless, but consistent with "leaving"
+                woozy: false,
+                frozen: false,
+                unfrozenThisPeriod: undefined,
+                textMessage: "NYAN'D!",
+                textMessageTime: Date.now(),
               };
             }
+
 
             soundManager.customerServed();
             const baseScore = customer.critic ? 300 : 150;
