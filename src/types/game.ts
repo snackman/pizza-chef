@@ -18,6 +18,8 @@ export interface Customer {
   shouldBeHotHoneyAffected?: boolean;
   critic?: boolean;
   badLuckBrian?: boolean;
+  leaving?: boolean;
+  brianNyaned?: boolean; // Brian got hit by Nyan + is flying away
   flipped?: boolean;
   textMessage?: string;
   textMessageTime?: number;
@@ -68,6 +70,24 @@ export interface DroppedPlate {
   position: number;
   startTime: number;
   hasSlice?: boolean;
+}
+
+export interface BossMinion {
+  id: string;
+  lane: number;
+  position: number;
+  speed: number;
+  defeated: boolean;
+}
+
+export interface BossBattle {
+  active: boolean;
+  bossHealth: number;
+  currentWave: number;
+  minions: BossMinion[];
+  bossVulnerable: boolean;
+  bossDefeated: boolean;
+  bossPosition: number;
 }
 
 export interface GameStats {
@@ -129,4 +149,5 @@ export interface GameState {
   powerUpAlert?: { type: PowerUpType; endTime: number; chefLane: number };
   nyanSweep?: { active: boolean; xPosition: number; laneDirection: 1 | -1; startTime: number; lastUpdateTime: number; startingLane: number };
   stats: GameStats;
+  bossBattle?: BossBattle;
 }
