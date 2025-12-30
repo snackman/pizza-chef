@@ -60,7 +60,7 @@ const ItemStore: React.FC<ItemStoreProps> = ({
           <div className="flex items-center bg-green-100 border border-green-300 rounded-md px-2 sm:px-4 py-1 sm:py-2 shadow-sm">
             <DollarSign className="w-4 h-4 sm:w-6 sm:h-6 text-green-700 mr-0.5 sm:mr-1" />
             <span className="text-xs sm:text-lg font-bold text-green-800">
-              ${gameState.bank}
+              {gameState.bank}
             </span>
           </div>
         </div>
