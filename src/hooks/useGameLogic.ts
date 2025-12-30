@@ -1340,8 +1340,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 woozy: false,
                 frozen: false,
                 unfrozenThisPeriod: undefined,
-                textMessage: "NYAN'D!",
-                textMessageTime: Date.now(),
               };
             }
 
