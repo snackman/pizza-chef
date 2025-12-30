@@ -71,7 +71,7 @@ const Customer: React.FC<CustomerProps> = ({ customer, boardWidth, boardHeight }
             className="w-full h-full object-contain"
             style={{
               transform: customer.brianNyaned
-                ? 'scale(1.5)'
+                ? 'scale(2)'
                 : customer.flipped
                   ? 'scaleX(-1)'
                   : 'none',
