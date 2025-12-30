@@ -487,6 +487,22 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       // Move customers (with speed modifier if hot honey affected, or frozen if ice cream)
       // Move customers that are not frozen (or ice cream is not active)
       newState.customers = newState.customers.map(customer => {
+        // Rainbow Brian (nyan hit) flies up + to the right
+if (customer.brianNyaned) {
+  const newPosition = customer.position + (customer.speed * 3);  // right faster
+  const newLane = customer.lane - 0.06;                          // up over time (fractional lane ok)
+
+  return {
+    ...customer,
+    position: newPosition,
+    lane: newLane,
+    flipped: false,
+    hotHoneyAffected: false,
+    frozen: false,
+    woozy: false,
+  };
+}
+
         // Skip frozen customers (unless hot honey overrides it)
         if (customer.frozen && !customer.hotHoneyAffected) {
           return { ...customer, hotHoneyAffected: false };
