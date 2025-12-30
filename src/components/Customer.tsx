@@ -30,8 +30,6 @@ const Customer: React.FC<CustomerProps> = ({ customer, boardWidth, boardHeight }
   if (customer.brianNyaned) {
     return { type: 'image', value: rainbowBrian, alt: 'rainbow-brian' };
   }
-if (customer.disappointed)
-  return { type: 'image', value: disappointedFaceImg, alt: 'disappointed' };
 
   if (customer.frozen) return { type: 'image', value: frozenfaceImg, alt: 'frozen' };
   if (customer.vomit && customer.badLuckBrian) return { type: 'image', value: badLuckBrianPukeImg, alt: 'brian-puke' };
