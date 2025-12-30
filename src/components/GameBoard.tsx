@@ -1,26 +1,28 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Customer from './Customer';
+import LandscapeCustomer from './LandscapeCustomer';
 import PizzaSlice from './PizzaSlice';
 import EmptyPlate from './EmptyPlate';
 import DroppedPlate from './DroppedPlate';
+import LandscapeDroppedPlate from './LandscapeDroppedPlate';
 import PowerUp from './PowerUp';
 import PizzaSliceStack from './PizzaSliceStack';
 import FloatingScore from './FloatingScore';
 import Boss from './Boss';
 import { GameState } from '../types/game';
 import pizzaShopBg from '/pizza shop background v2.png';
-import chefImg from '/Sprites/chefemoji.png';
 
 interface GameBoardProps {
   gameState: GameState;
+  isLandscape?: boolean;
 }
 
-const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
+const GameBoard: React.FC<GameBoardProps> = ({ gameState, isLandscape = false }) => {
   const lanes = [0, 1, 2, 3];
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
   const [completedScores, setCompletedScores] = useState<Set<string>>(new Set());
 
-  // ✅ Measure board size (for px-based translate3d positioning)
+  // Measure board size (for Portrait px-based translate3d positioning)
   const boardRef = useRef<HTMLDivElement | null>(null);
   const [boardSize, setBoardSize] = useState({ width: 0, height: 0 });
 
@@ -56,7 +58,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
     if (oven.burned) {
       if (oven.cleaningStartTime > 0) {
         const cleaningElapsed = Date.now() - oven.cleaningStartTime;
-        const halfCleaning = 1500; // 1.5 seconds (half of 3 second cleaning time)
+        const halfCleaning = 1500; 
         if (cleaningElapsed < halfCleaning) {
           return 'extinguishing';
         }
@@ -70,12 +72,12 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
     // Use pausedElapsed if game is paused, otherwise calculate from startTime
     const elapsed = oven.pausedElapsed !== undefined ? oven.pausedElapsed : Date.now() - oven.startTime;
 
-    // Calculate cook time based on speed upgrades
+    // Calculate cook time based on speed upgrades (Unified to faster settings)
     const speedUpgrade = gameState.ovenSpeedUpgrades[lane] || 0;
     const cookingTime =
       speedUpgrade === 0 ? 3000 :
-      speedUpgrade === 1 ? 2500 :
-      speedUpgrade === 2 ? 2000 : 1500;
+      speedUpgrade === 1 ? 2000 :
+      speedUpgrade === 2 ? 1000 : 500;
 
     const warningTime = 7000; // 7 seconds (start blinking)
     const burnTime = 8000; // 8 seconds total
@@ -94,15 +96,25 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
     return 'cooking';
   };
 
+  const containerStyle: React.CSSProperties = isLandscape ? {
+    backgroundImage: `url("https://i.imgur.com/f2a5vFx.jpeg")`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+  } : {
+    backgroundImage: `url(${pizzaShopBg})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+  };
+
+  const containerClass = isLandscape
+    ? "relative w-full h-full overflow-hidden"
+    : "relative w-full aspect-[5/3] border-4 border-amber-600 rounded-lg overflow-hidden";
+
   return (
     <div
       ref={boardRef}
-      className="relative w-full aspect-[5/3] border-4 border-amber-600 rounded-lg overflow-hidden"
-      style={{
-        backgroundImage: `url(${pizzaShopBg})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
+      className={containerClass}
+      style={containerStyle}
     >
       {/* Pizza Ovens - one per lane */}
       {lanes.map((lane) => {
@@ -110,29 +122,45 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
         const oven = gameState.ovens[lane];
         const showSlices = oven.cooking && !oven.burned;
 
+        // Conditional Styles for Ovens
+        const ovenStyle: React.CSSProperties = isLandscape ? {
+            width: '4%',
+            height: '4%',
+            left: '12vw',
+            top: `${30 + lane * 20}%`,
+            fontSize: 'clamp(0.75rem, 1.5vw, 1rem)',
+        } : {
+            width: '8%',
+            left: '1%',
+            top: `${lane * 25 + 6}%`,
+            fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
+            aspectRatio: '2/3'
+        };
+
+        const sliceStackStyle: React.CSSProperties = isLandscape ? {
+            width: '200%',
+            height: '200%',
+            top: '50%',
+            left: '100%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 1
+        } : {
+            width: '75%',
+            height: '75%',
+            top: '40%',
+            left: '70%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 1
+        };
+
         return (
           <div
             key={lane}
-            className="absolute aspect-[2/3] flex items-center justify-center"
-            style={{
-              width: '8%',
-              left: '1%',
-              top: `${lane * 25 + 6}%`,
-              fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
-            }}
+            className="absolute flex items-center justify-center"
+            style={ovenStyle}
           >
             {showSlices && (
-              <div
-                className="absolute"
-                style={{
-                  width: '75%',
-                  height: '75%',
-                  top: '40%',
-                  left: '70%',
-                  transform: 'translate(-50%, -50%)',
-                  zIndex: 1
-                }}
-              >
+              <div className="absolute" style={sliceStackStyle}>
                 <PizzaSliceStack sliceCount={oven.sliceCount} />
               </div>
             )}
@@ -151,16 +179,22 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
         );
       })}
 
-      {/* ✅ Chef (no scale(15), positioned directly on board) */}
+      {/* Chef Character */}
       {!gameState.nyanSweep?.active && (
         <div
           className="absolute flex items-center justify-center"
-          style={{
-            left: '5%', // adjust if you want him closer/farther from ovens
+          style={isLandscape ? {
+            width: '15%',
+            height: '15%',
+            left: '15%',
+            top: `${23 + gameState.chefLane * 20}%`,
+            zIndex: gameState.gameOver ? 19 : 10
+          } : {
+            left: '5%',
             top: `${gameState.chefLane * 25 + 13}%`,
             width: '10%',
             aspectRatio: '1 / 1',
-            transform: 'translate3d(0, -50%, 0)', // center on lane
+            transform: 'translate3d(0, -50%, 0)',
             zIndex: gameState.gameOver ? 19 : 10,
             willChange: 'transform',
           }}
@@ -172,16 +206,17 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
             style={{ transform: 'none' }}
           />
 
-          {/* ✅ Slice stack (restored to same relative size as before) */}
           <div
             className={`absolute ${gameState.starPowerActive ? 'animate-pulse' : ''}`}
-            style={{
-              left: '55%',
-              top: '90%',
-              width: '91%',
-              height: '91%',
-              transform: 'translateY(-50%)',
-              pointerEvents: 'none',
+            style={isLandscape ? {
+                width: '80%', height: '80%', top: '10%', left: '60%'
+            } : {
+                left: '55%',
+                top: '90%',
+                width: '91%',
+                height: '91%',
+                transform: 'translateY(-50%)',
+                pointerEvents: 'none',
             }}
           >
             <PizzaSliceStack sliceCount={gameState.availableSlices} />
@@ -189,11 +224,19 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
         </div>
       )}
 
-      {/* Nyan Cat Chef - positioned directly on game board during sweep */}
+      {/* Nyan Cat Chef */}
       {gameState.nyanSweep?.active && (
         <div
-          className="absolute w-[8%] aspect-square flex items-center justify-center"
-          style={{
+          className="absolute flex items-center justify-center"
+          style={isLandscape ? {
+            width: '3%',
+            height: '3%',
+            left: `${gameState.nyanSweep.xPosition}%`,
+            top: `${23 + gameState.chefLane * 20}%`,
+            zIndex: 20
+          } : {
+            width: '8%',
+            aspectRatio: '1/1',
             top: `${gameState.chefLane * 25 + 13}%`,
             left: `${gameState.nyanSweep.xPosition}%`,
             zIndex: 20
@@ -203,13 +246,13 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
             src="https://i.imgur.com/fGPU4Pu.png"
             alt="nyan chef"
             className="w-full h-full object-contain"
-            style={{ transform: 'scale(1.5)' }}
+            style={{ transform: isLandscape ? 'scale(0.5)' : 'scale(1.5)' }}
           />
         </div>
       )}
 
-      {/* Serving Counters */}
-      {lanes.map((lane) => (
+      {/* Serving Counters (Portrait Only) */}
+      {!isLandscape && lanes.map((lane) => (
         <div
           key={lane}
           className="absolute w-full h-[20%]"
@@ -217,17 +260,23 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
         />
       ))}
 
-      {/* Customer End Area */}
-      <div className="absolute right-0 top-0 w-[10%] h-full flex flex-col items-center justify-center" />
+      {/* Customer End Area (Portrait Only) */}
+      {!isLandscape && (
+        <div className="absolute right-0 top-0 w-[10%] h-full flex flex-col items-center justify-center" />
+      )}
 
       {/* Game Elements */}
       {gameState.customers.map((customer) => (
-        <Customer
-          key={customer.id}
-          customer={customer}
-          boardWidth={boardSize.width}
-          boardHeight={boardSize.height}
-        />
+        isLandscape ? (
+            <LandscapeCustomer key={customer.id} customer={customer} />
+        ) : (
+            <Customer
+                key={customer.id}
+                customer={customer}
+                boardWidth={boardSize.width}
+                boardHeight={boardSize.height}
+            />
+        )
       ))}
 
       {gameState.pizzaSlices.map((slice) => (
@@ -239,7 +288,11 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
       ))}
 
       {gameState.droppedPlates.map((droppedPlate) => (
-        <DroppedPlate key={droppedPlate.id} droppedPlate={droppedPlate} />
+        isLandscape ? (
+            <LandscapeDroppedPlate key={droppedPlate.id} droppedPlate={droppedPlate} />
+        ) : (
+            <DroppedPlate key={droppedPlate.id} droppedPlate={droppedPlate} />
+        )
       ))}
 
       {gameState.powerUps.map((powerUp) => (
@@ -267,7 +320,13 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
       {gameState.fallingPizza && (
         <div
           className="absolute transition-none"
-          style={{
+          style={isLandscape ? {
+            left: '22%',
+            top: `calc(${23.5 + gameState.fallingPizza.lane * 18.5}% + ${gameState.fallingPizza.y}px)`,
+            transform: `rotate(${gameState.fallingPizza.y * 2}deg)`,
+            zIndex: 19,
+            fontSize: 'clamp(0.75rem, 2vw, 1.25rem)',
+          } : {
             left: '13%',
             top: `calc(${gameState.fallingPizza.lane * 25 + 6}% + ${gameState.fallingPizza.y}px)`,
             transform: `rotate(${gameState.fallingPizza.y * 2}deg)`,
