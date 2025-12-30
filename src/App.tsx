@@ -23,7 +23,6 @@ function App() {
   const [gameStarted, setGameStarted] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const SHOW_DEBUG = false;
 
   const { gameState, servePizza, moveChef, useOven, cleanOven, resetGame, togglePause, upgradeOven, upgradeOvenSpeed, closeStore, bribeReviewer, buyPowerUp, debugActivatePowerUp } = useGameLogic(gameStarted);
 
@@ -305,7 +304,7 @@ function App() {
             )}
           </div>
 
-          {SHOW_DEBUG && gameStarted && !gameState.gameOver && !gameState.showStore && (
+          {gameStarted && !gameState.gameOver && !gameState.showStore && (
             <DebugPanel onActivatePowerUp={debugActivatePowerUp} />
           )}
         </div>
