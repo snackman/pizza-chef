@@ -2,24 +2,21 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { GameState, Customer, PizzaSlice, EmptyPlate, PowerUp, PowerUpType, FloatingScore, DroppedPlate, StarLostReason, BossMinion } from '../types/game';
 import { soundManager } from '../utils/sounds';
 import { getStreakMultiplier } from '../components/StreakDisplay';
-import {
-  GAME_CONFIG,
-  OVEN_CONFIG,
-  ENTITY_SPEEDS,
-  SPAWN_RATES,
-  PROBABILITIES,
-  SCORING,
-  COSTS,
-  BOSS_CONFIG,
-  POWERUPS,
-  TIMINGS,
-  POSITIONS
+import { 
+  GAME_CONFIG, 
+  OVEN_CONFIG, 
+  ENTITY_SPEEDS, 
+  SPAWN_RATES, 
+  PROBABILITIES, 
+  SCORING, 
+  COSTS, 
+  BOSS_CONFIG, 
+  POWERUPS, 
+  TIMINGS, 
+  POSITIONS 
 } from '../lib/constants';
 
 export const useGameLogic = (gameStarted: boolean = true) => {
-  // ==========================================
-  // 1. STATE & REFS
-  // ==========================================
   const [gameState, setGameState] = useState<GameState>({
     customers: [],
     pizzaSlices: [],
@@ -74,14 +71,11 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
   const [lastCustomerSpawn, setLastCustomerSpawn] = useState(0);
   const [lastPowerUpSpawn, setLastPowerUpSpawn] = useState(0);
-  const [ovenSoundStates, setOvenSoundStates] = useState<{ [key: number]: 'idle' | 'cooking' | 'ready' | 'warning' | 'burning' }>({
+  const [ovenSoundStates, setOvenSoundStates] = useState<{[key: number]: 'idle' | 'cooking' | 'ready' | 'warning' | 'burning'}>({
     0: 'idle', 1: 'idle', 2: 'idle', 3: 'idle'
   });
   const prevShowStoreRef = useRef(false);
 
-  // ==========================================
-  // 2. HELPER FUNCTIONS
-  // ==========================================
   const addFloatingScore = useCallback((points: number, lane: number, position: number, state: GameState): GameState => {
     const now = Date.now();
     const newFloatingScore: FloatingScore = {
@@ -98,9 +92,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     };
   }, []);
 
-  // ==========================================
-  // 3. SPAWNING LOGIC (Entities)
-  // ==========================================
   const spawnPowerUp = useCallback(() => {
     const now = Date.now();
     if (now - lastPowerUpSpawn < SPAWN_RATES.POWERUP_MIN_INTERVAL) return;
@@ -136,7 +127,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     const disappointedEmojis = ['😢', '😭', '😠', '🤬'];
     const isCritic = Math.random() < PROBABILITIES.CRITIC_CHANCE;
     const isBadLuckBrian = !isCritic && Math.random() < PROBABILITIES.BAD_LUCK_BRIAN_CHANCE;
-
+    
     const newCustomer: Customer = {
       id: `customer-${now}-${lane}`,
       lane,
@@ -198,23 +189,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     });
   }, [spawnBossWave]);
 
-  // ==========================================
-  // 4. CORE PLAYER ACTIONS
-  // ==========================================
-  const moveChef = useCallback((direction: 'up' | 'down') => {
-    if (gameState.gameOver || gameState.paused || gameState.nyanSweep?.active) return;
-
-    setGameState(prev => {
-      let newLane = prev.chefLane;
-      if (direction === 'up' && newLane > GAME_CONFIG.LANE_TOP) {
-        newLane -= 1;
-      } else if (direction === 'down' && newLane < GAME_CONFIG.LANE_BOTTOM) {
-        newLane += 1;
-      }
-      return { ...prev, chefLane: newLane };
-    });
-  }, [gameState.gameOver, gameState.paused, gameState.nyanSweep?.active]);
-
   const servePizza = useCallback(() => {
     if (gameState.gameOver || gameState.paused || gameState.availableSlices <= 0 || gameState.nyanSweep?.active) return;
 
@@ -233,6 +207,20 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       availableSlices: prev.availableSlices - 1,
     }));
   }, [gameState.gameOver, gameState.paused, gameState.chefLane, gameState.availableSlices, gameState.nyanSweep?.active]);
+
+  const moveChef = useCallback((direction: 'up' | 'down') => {
+    if (gameState.gameOver || gameState.paused || gameState.nyanSweep?.active) return;
+
+    setGameState(prev => {
+      let newLane = prev.chefLane;
+      if (direction === 'up' && newLane > GAME_CONFIG.LANE_TOP) {
+        newLane -= 1;
+      } else if (direction === 'down' && newLane < GAME_CONFIG.LANE_BOTTOM) {
+        newLane += 1;
+      }
+      return { ...prev, chefLane: newLane };
+    });
+  }, [gameState.gameOver, gameState.paused, gameState.nyanSweep?.active]);
 
   const useOven = useCallback(() => {
     if (gameState.gameOver || gameState.paused) return;
@@ -284,258 +272,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     });
   }, [gameState.gameOver, gameState.paused, gameState.chefLane]);
 
-  const cleanOven = useCallback(() => {
-    if (gameState.gameOver || gameState.paused) return;
-
-    setGameState(prev => {
-      const currentOven = prev.ovens[prev.chefLane];
-      const now = Date.now();
-
-      if (currentOven.burned && currentOven.cleaningStartTime === 0) {
-        soundManager.cleaningStart();
-        return {
-          ...prev,
-          ovens: {
-            ...prev.ovens,
-            [prev.chefLane]: { ...currentOven, cleaningStartTime: now }
-          }
-        };
-      }
-      return prev;
-    });
-  }, [gameState.gameOver, gameState.paused, gameState.chefLane]);
-
-  // ==========================================
-  // 5. SHOP & ECONOMY ACTIONS
-  // ==========================================
-  const upgradeOven = useCallback((lane: number) => {
-    setGameState(prev => {
-      const upgradeCost = COSTS.OVEN_UPGRADE;
-      const currentUpgrade = prev.ovenUpgrades[lane] || 0;
-      if (prev.bank >= upgradeCost && currentUpgrade < OVEN_CONFIG.MAX_UPGRADE_LEVEL) {
-        return {
-          ...prev,
-          bank: prev.bank - upgradeCost,
-          ovenUpgrades: { ...prev.ovenUpgrades, [lane]: currentUpgrade + 1 },
-          stats: { ...prev.stats, ovenUpgradesMade: prev.stats.ovenUpgradesMade + 1, }
-        };
-      }
-      return prev;
-    });
-  }, []);
-
-  const upgradeOvenSpeed = useCallback((lane: number) => {
-    setGameState(prev => {
-      const speedUpgradeCost = COSTS.OVEN_SPEED_UPGRADE;
-      const currentSpeedUpgrade = prev.ovenSpeedUpgrades[lane] || 0;
-      if (prev.bank >= speedUpgradeCost && currentSpeedUpgrade < OVEN_CONFIG.MAX_SPEED_LEVEL) {
-        return {
-          ...prev,
-          bank: prev.bank - speedUpgradeCost,
-          ovenSpeedUpgrades: { ...prev.ovenSpeedUpgrades, [lane]: currentSpeedUpgrade + 1 },
-          stats: { ...prev.stats, ovenUpgradesMade: prev.stats.ovenUpgradesMade + 1, }
-        };
-      }
-      return prev;
-    });
-  }, []);
-
-  const bribeReviewer = useCallback(() => {
-    setGameState(prev => {
-      const bribeCost = COSTS.BRIBE_REVIEWER;
-      if (prev.bank >= bribeCost && prev.lives < GAME_CONFIG.MAX_LIVES) {
-        soundManager.lifeGained();
-        return { ...prev, bank: prev.bank - bribeCost, lives: prev.lives + 1 };
-      }
-      return prev;
-    });
-  }, []);
-
-  const buyPowerUp = useCallback((type: 'beer' | 'ice-cream' | 'honey') => {
-    setGameState(prev => {
-      const powerUpCost = COSTS.BUY_POWERUP;
-      if (prev.bank >= powerUpCost) {
-        const lane = prev.chefLane;
-        const now = Date.now();
-        const newPowerUp: PowerUp = {
-          id: `powerup-bought-${now}`,
-          lane,
-          position: POSITIONS.SPAWN_X,
-          speed: ENTITY_SPEEDS.POWERUP,
-          type: type === 'ice-cream' ? 'ice-cream' : type === 'beer' ? 'beer' : 'honey',
-        };
-        return { ...prev, bank: prev.bank - powerUpCost, powerUps: [...prev.powerUps, newPowerUp], };
-      }
-      return prev;
-    });
-  }, []);
-
-  const closeStore = useCallback(() => {
-    setGameState(prev => ({ ...prev, showStore: false }));
-  }, []);
-
-  // ==========================================
-  // 6. DEBUG & DEV ACTIONS
-  // ==========================================
-  const debugActivatePowerUp = useCallback((type: PowerUpType) => {
-    setGameState(prev => {
-      if (prev.gameOver) return prev;
-      const now = Date.now();
-      let newState = { ...prev, stats: { ...prev.stats, powerUpsUsed: { ...prev.stats.powerUpsUsed, [type]: prev.stats.powerUpsUsed[type] + 1, } } };
-
-      if (type === 'beer') {
-        let livesLost = 0;
-        let lastReason: StarLostReason | undefined;
-
-        newState.customers = newState.customers.map(customer => {
-          // Critic is immune to beer
-          if (customer.critic) {
-            if (customer.woozy) {
-              return {
-                ...customer,
-                woozy: false,
-                woozyState: undefined,
-                frozen: false,
-                hotHoneyAffected: false,
-                textMessage: "I prefer wine",
-                textMessageTime: Date.now(),
-              };
-            }
-            if (!customer.served && !customer.vomit && !customer.disappointed && !customer.leaving) {
-              return { ...customer, textMessage: "I prefer wine", textMessageTime: Date.now() };
-            }
-            return customer;
-          }
-
-          if (customer.woozy) {
-            livesLost += 1;
-            lastReason = 'beer_vomit';
-            return { ...customer, woozy: false, vomit: true, disappointed: true, movingRight: true };
-          }
-
-          if (!customer.served && !customer.vomit && !customer.leaving) {
-            if (customer.badLuckBrian) {
-              livesLost += 1;
-              lastReason = 'brian_hurled';
-              return { ...customer, vomit: true, disappointed: true, movingRight: true, flipped: false, textMessage: "Oh man I hurled", textMessageTime: Date.now(), hotHoneyAffected: false, frozen: false, };
-            }
-            return { ...customer, woozy: true, woozyState: 'normal', movingRight: true, hotHoneyAffected: false, frozen: false };
-          }
-          return customer;
-        });
-
-        newState.lives = Math.max(0, newState.lives - livesLost);
-        if (livesLost > 0) {
-          newState.stats.currentCustomerStreak = 0;
-          if (lastReason) newState.lastStarLostReason = lastReason;
-        }
-        if (newState.lives === 0) newState.gameOver = true;
-      } else if (type === 'star') {
-        newState.availableSlices = GAME_CONFIG.MAX_SLICES;
-        newState.starPowerActive = true;
-        newState.activePowerUps = [...newState.activePowerUps.filter(p => p.type !== 'star'), { type: 'star', endTime: now + POWERUPS.DURATION }];
-      } else if (type === 'doge') {
-        newState.activePowerUps = [...newState.activePowerUps.filter(p => p.type !== 'doge'), { type: 'doge', endTime: now + POWERUPS.DURATION }];
-        newState.powerUpAlert = { type: 'doge', endTime: now + POWERUPS.ALERT_DURATION_DOGE, chefLane: newState.chefLane };
-      } else if (type === 'nyan') {
-        if (!newState.nyanSweep?.active) {
-          newState.nyanSweep = { active: true, xPosition: GAME_CONFIG.CHEF_X_POSITION, laneDirection: 1, startTime: now, lastUpdateTime: now, startingLane: newState.chefLane };
-          soundManager.nyanCatPowerUp();
-          if (!newState.activePowerUps.some(p => p.type === 'doge') || newState.powerUpAlert?.type !== 'doge') {
-            newState.powerUpAlert = { type: 'nyan', endTime: now + POWERUPS.ALERT_DURATION_NYAN, chefLane: newState.chefLane };
-          }
-        }
-      } else {
-        newState.activePowerUps = [...newState.activePowerUps.filter(p => p.type !== type), { type: type, endTime: now + POWERUPS.DURATION }];
-
-        if (type === 'honey') {
-          newState.customers = newState.customers.map(c => {
-            if (c.served || c.disappointed || c.vomit || c.leaving) return c;
-            if (c.badLuckBrian) {
-              return {
-                ...c,
-                shouldBeHotHoneyAffected: false,
-                hotHoneyAffected: false,
-                frozen: false,
-                woozy: false,
-                woozyState: undefined,
-                textMessage: "I can't do spicy.",
-                textMessageTime: Date.now(),
-              };
-            }
-            return { ...c, shouldBeHotHoneyAffected: true, hotHoneyAffected: true, frozen: false, woozy: false, woozyState: undefined };
-          });
-        }
-
-        if (type === 'ice-cream') {
-          newState.customers = newState.customers.map(c => {
-            if (!c.served && !c.disappointed && !c.vomit) {
-              if (c.badLuckBrian) return { ...c, textMessage: "I'm lactose intolerant", textMessageTime: Date.now() };
-              return { ...c, shouldBeFrozenByIceCream: true, frozen: true, hotHoneyAffected: false, woozy: false, woozyState: undefined };
-            }
-            return c;
-          });
-        }
-      }
-      return newState;
-    });
-  }, []);
-
-  // ==========================================
-  // 7. GAME LIFECYCLE (Reset/Pause)
-  // ==========================================
-  const resetGame = useCallback(() => {
-    setGameState({
-      customers: [], pizzaSlices: [], emptyPlates: [], droppedPlates: [], powerUps: [], activePowerUps: [], floatingScores: [],
-      chefLane: 0, score: 0, lives: GAME_CONFIG.STARTING_LIVES, level: 1, gameOver: false, lastStarLostReason: undefined, paused: false, availableSlices: 0,
-      ovens: {
-        0: { cooking: false, startTime: 0, burned: false, cleaningStartTime: 0, sliceCount: 0 },
-        1: { cooking: false, startTime: 0, burned: false, cleaningStartTime: 0, sliceCount: 0 },
-        2: { cooking: false, startTime: 0, burned: false, cleaningStartTime: 0, sliceCount: 0 },
-        3: { cooking: false, startTime: 0, burned: false, cleaningStartTime: 0, sliceCount: 0 }
-      },
-      ovenUpgrades: { 0: 0, 1: 0, 2: 0, 3: 0 },
-      ovenSpeedUpgrades: { 0: 0, 1: 0, 2: 0, 3: 0 },
-      happyCustomers: 0, bank: 0, showStore: false, lastStoreLevelShown: 0, pendingStoreShow: false, fallingPizza: undefined, starPowerActive: false, powerUpAlert: undefined,
-      stats: {
-        slicesBaked: 0, customersServed: 0, longestCustomerStreak: 0, currentCustomerStreak: 0, platesCaught: 0, largestPlateStreak: 0, currentPlateStreak: 0,
-        powerUpsUsed: { honey: 0, 'ice-cream': 0, beer: 0, star: 0, doge: 0, nyan: 0, moltobenny: 0, }, ovenUpgradesMade: 0,
-      },
-      bossBattle: undefined,
-    });
-    setLastCustomerSpawn(0);
-    setLastPowerUpSpawn(0);
-    setOvenSoundStates({ 0: 'idle', 1: 'idle', 2: 'idle', 3: 'idle' });
-  }, []);
-
-  const togglePause = useCallback(() => {
-    setGameState(prev => {
-      const newPaused = !prev.paused;
-      const now = Date.now();
-      const updatedOvens = { ...prev.ovens };
-
-      if (newPaused) {
-        Object.keys(updatedOvens).forEach(laneKey => {
-          const lane = parseInt(laneKey);
-          const oven = updatedOvens[lane];
-          if (oven.cooking && !oven.burned) updatedOvens[lane] = { ...oven, pausedElapsed: now - oven.startTime };
-        });
-      } else {
-        Object.keys(updatedOvens).forEach(laneKey => {
-          const lane = parseInt(laneKey);
-          const oven = updatedOvens[lane];
-          if (oven.cooking && !oven.burned && oven.pausedElapsed !== undefined) {
-            updatedOvens[lane] = { ...oven, startTime: now - oven.pausedElapsed, pausedElapsed: undefined };
-          }
-        });
-      }
-      return { ...prev, paused: newPaused, ovens: updatedOvens };
-    });
-  }, []);
-
-  // ==========================================
-  // 8. MAIN GAME LOOP (UpdateGame)
-  // ==========================================
   const updateGame = useCallback(() => {
     setGameState(prev => {
       if (prev.gameOver) {
@@ -631,7 +367,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       const hasIceCream = newState.activePowerUps.some(p => p.type === 'ice-cream');
       const hasStar = newState.activePowerUps.some(p => p.type === 'star');
       const hasDoge = newState.activePowerUps.some(p => p.type === 'doge');
-
+      
       if (newState.powerUpAlert && now >= newState.powerUpAlert.endTime) {
         if (newState.powerUpAlert.type !== 'doge' || !hasDoge) {
           newState.powerUpAlert = undefined;
@@ -647,15 +383,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       newState.customers = newState.customers.map(customer => {
         const isDeparting = customer.served || customer.disappointed || customer.vomit || customer.leaving;
         if (isDeparting) return customer;
-
-        // Bad Luck Brian is immune to hot honey (and should never carry the flag)
-        if (customer.badLuckBrian) {
-          if (customer.hotHoneyAffected || customer.shouldBeHotHoneyAffected) {
-            return { ...customer, hotHoneyAffected: false, shouldBeHotHoneyAffected: false };
-          }
-          // keep other state as-is
-          return customer;
-        }
 
         if (customer.woozy) return { ...customer, frozen: false, hotHoneyAffected: false };
 
@@ -754,7 +481,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
         const speedModifier = customer.hotHoneyAffected ? 0.5 : 1;
         const newPosition = customer.position - (customer.speed * speedModifier);
-
+        
         if (newPosition <= GAME_CONFIG.CHEF_X_POSITION) {
           soundManager.customerDisappointed();
           soundManager.lifeLost();
@@ -799,7 +526,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             const dogeMultiplier = hasDoge ? 2 : 1;
             const customerStreakMultiplier = getStreakMultiplier(newState.stats.currentCustomerStreak);
             const pointsEarned = Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
-
+            
             newState.score += pointsEarned;
             newState.bank += SCORING.BASE_BANK_REWARD * dogeMultiplier;
             newState.happyCustomers += 1;
@@ -842,56 +569,22 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           if (powerUp.type === 'beer') {
             let livesLost = 0;
             let lastReason: StarLostReason | undefined;
-
             newState.customers = newState.customers.map(customer => {
-              // Critic is immune to beer
-              if (customer.critic) {
-                // If they were already woozy, sober them up without penalty
-                if (customer.woozy) {
-                  return {
-                    ...customer,
-                    woozy: false,
-                    woozyState: undefined,
-                    frozen: false,
-                    hotHoneyAffected: false,
-                    textMessage: "I prefer wine",
-                    textMessageTime: Date.now(),
-                  };
-                }
-                // Otherwise just comment
-                if (!customer.served && !customer.vomit && !customer.disappointed && !customer.leaving) {
-                  return { ...customer, textMessage: "I prefer wine", textMessageTime: Date.now() };
-                }
-                return customer;
-              }
-
               if (customer.woozy) {
-                livesLost += 1;
-                lastReason = 'beer_vomit';
+                livesLost += customer.critic ? 2 : 1;
+                lastReason = customer.critic ? 'beer_critic_vomit' : 'beer_vomit';
                 return { ...customer, woozy: false, vomit: true, disappointed: true, movingRight: true };
               }
-
               if (!customer.served && !customer.vomit && !customer.disappointed) {
                 if (customer.badLuckBrian) {
                   livesLost += 1;
                   lastReason = 'brian_hurled';
-                  return {
-                    ...customer,
-                    vomit: true,
-                    disappointed: true,
-                    movingRight: true,
-                    flipped: false,
-                    textMessage: "Oh man I hurled",
-                    textMessageTime: Date.now(),
-                    hotHoneyAffected: false,
-                    frozen: false
-                  };
+                  return { ...customer, vomit: true, disappointed: true, movingRight: true, flipped: false, textMessage: "Oh man I hurled", textMessageTime: Date.now(), hotHoneyAffected: false, frozen: false };
                 }
                 return { ...customer, woozy: true, woozyState: 'normal', movingRight: true, hotHoneyAffected: false, frozen: false };
               }
               return customer;
             });
-
             newState.lives = Math.max(0, newState.lives - livesLost);
             if (livesLost > 0) {
               soundManager.lifeLost();
@@ -931,34 +624,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             powerUpScores.push({ points: moltoScore, lane: newState.chefLane, position: GAME_CONFIG.CHEF_X_POSITION });
           } else {
             newState.activePowerUps = [...newState.activePowerUps.filter(p => p.type !== powerUp.type), { type: powerUp.type, endTime: now + POWERUPS.DURATION }];
-
             if (powerUp.type === 'honey') {
-              // Hot honey affects everyone except Bad Luck Brian (who complains)
-              newState.customers = newState.customers.map(c => {
-                if (c.served || c.disappointed || c.vomit || c.leaving) return c;
-                if (c.badLuckBrian) {
-                  return {
-                    ...c,
-                    shouldBeHotHoneyAffected: false,
-                    hotHoneyAffected: false,
-                    frozen: false,
-                    woozy: false,
-                    woozyState: undefined,
-                    textMessage: "I can't do spicy.",
-                    textMessageTime: Date.now(),
-                  };
-                }
-                return {
-                  ...c,
-                  shouldBeHotHoneyAffected: true,
-                  hotHoneyAffected: true,
-                  frozen: false,
-                  woozy: false,
-                  woozyState: undefined,
-                };
-              });
+              newState.customers = newState.customers.map(c => (!c.served && !c.disappointed && !c.vomit) ? { ...c, shouldBeHotHoneyAffected: true, hotHoneyAffected: true, frozen: false, woozy: false, woozyState: undefined } : c);
             }
-
             if (powerUp.type === 'ice-cream') {
               newState.customers = newState.customers.map(c => {
                 if (!c.served && !c.disappointed && !c.vomit) {
@@ -1400,9 +1068,207 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     });
   }, [gameState.gameOver, gameState.paused, ovenSoundStates, addFloatingScore]);
 
-  // ==========================================
-  // 9. EFFECTS
-  // ==========================================
+  const cleanOven = useCallback(() => {
+    if (gameState.gameOver || gameState.paused) return;
+
+    setGameState(prev => {
+      const currentOven = prev.ovens[prev.chefLane];
+      const now = Date.now();
+
+      if (currentOven.burned && currentOven.cleaningStartTime === 0) {
+        soundManager.cleaningStart();
+        return {
+          ...prev,
+          ovens: {
+            ...prev.ovens,
+            [prev.chefLane]: { ...currentOven, cleaningStartTime: now }
+          }
+        };
+      }
+      return prev;
+    });
+  }, [gameState.gameOver, gameState.paused, gameState.chefLane]);
+
+  const upgradeOven = useCallback((lane: number) => {
+    setGameState(prev => {
+      const upgradeCost = COSTS.OVEN_UPGRADE;
+      const currentUpgrade = prev.ovenUpgrades[lane] || 0;
+      if (prev.bank >= upgradeCost && currentUpgrade < OVEN_CONFIG.MAX_UPGRADE_LEVEL) {
+        return {
+          ...prev,
+          bank: prev.bank - upgradeCost,
+          ovenUpgrades: { ...prev.ovenUpgrades, [lane]: currentUpgrade + 1 },
+          stats: { ...prev.stats, ovenUpgradesMade: prev.stats.ovenUpgradesMade + 1, }
+        };
+      }
+      return prev;
+    });
+  }, []);
+
+  const upgradeOvenSpeed = useCallback((lane: number) => {
+    setGameState(prev => {
+      const speedUpgradeCost = COSTS.OVEN_SPEED_UPGRADE;
+      const currentSpeedUpgrade = prev.ovenSpeedUpgrades[lane] || 0;
+      if (prev.bank >= speedUpgradeCost && currentSpeedUpgrade < OVEN_CONFIG.MAX_SPEED_LEVEL) {
+        return {
+          ...prev,
+          bank: prev.bank - speedUpgradeCost,
+          ovenSpeedUpgrades: { ...prev.ovenSpeedUpgrades, [lane]: currentSpeedUpgrade + 1 },
+          stats: { ...prev.stats, ovenUpgradesMade: prev.stats.ovenUpgradesMade + 1, }
+        };
+      }
+      return prev;
+    });
+  }, []);
+
+  const closeStore = useCallback(() => {
+    setGameState(prev => ({ ...prev, showStore: false }));
+  }, []);
+
+  const bribeReviewer = useCallback(() => {
+    setGameState(prev => {
+      const bribeCost = COSTS.BRIBE_REVIEWER;
+      if (prev.bank >= bribeCost && prev.lives < GAME_CONFIG.MAX_LIVES) {
+        soundManager.lifeGained();
+        return { ...prev, bank: prev.bank - bribeCost, lives: prev.lives + 1 };
+      }
+      return prev;
+    });
+  }, []);
+
+  const buyPowerUp = useCallback((type: 'beer' | 'ice-cream' | 'honey') => {
+    setGameState(prev => {
+      const powerUpCost = COSTS.BUY_POWERUP;
+      if (prev.bank >= powerUpCost) {
+        const lane = prev.chefLane;
+        const now = Date.now();
+        const newPowerUp: PowerUp = {
+          id: `powerup-bought-${now}`,
+          lane,
+          position: POSITIONS.SPAWN_X,
+          speed: ENTITY_SPEEDS.POWERUP,
+          type: type === 'ice-cream' ? 'ice-cream' : type === 'beer' ? 'beer' : 'honey',
+        };
+        return { ...prev, bank: prev.bank - powerUpCost, powerUps: [...prev.powerUps, newPowerUp], };
+      }
+      return prev;
+    });
+  }, []);
+
+  const debugActivatePowerUp = useCallback((type: PowerUpType) => {
+    setGameState(prev => {
+      if (prev.gameOver) return prev;
+      const now = Date.now();
+      let newState = { ...prev, stats: { ...prev.stats, powerUpsUsed: { ...prev.stats.powerUpsUsed, [type]: prev.stats.powerUpsUsed[type] + 1, } } };
+
+      if (type === 'beer') {
+        let livesLost = 0;
+        let lastReason: StarLostReason | undefined;
+        newState.customers = newState.customers.map(customer => {
+          if (customer.woozy) {
+            livesLost += customer.critic ? 2 : 1;
+            lastReason = customer.critic ? 'beer_critic_vomit' : 'beer_vomit';
+            return { ...customer, woozy: false, vomit: true, disappointed: true, movingRight: true, };
+          }
+          if (!customer.served && !customer.vomit && !customer.leaving) {
+            if (customer.badLuckBrian) {
+              livesLost += 1;
+              lastReason = 'brian_hurled';
+              return { ...customer, vomit: true, disappointed: true, movingRight: true, flipped: false, textMessage: "Oh man I hurled", textMessageTime: Date.now(), hotHoneyAffected: false, frozen: false, };
+            }
+            return { ...customer, woozy: true, woozyState: 'normal', movingRight: true, hotHoneyAffected: false, frozen: false, };
+          }
+          return customer;
+        });
+        newState.lives = Math.max(0, newState.lives - livesLost);
+        if (livesLost > 0) {
+          newState.stats.currentCustomerStreak = 0;
+          if (lastReason) newState.lastStarLostReason = lastReason;
+        }
+        if (newState.lives === 0) newState.gameOver = true;
+      } else if (type === 'star') {
+        newState.availableSlices = GAME_CONFIG.MAX_SLICES;
+        newState.starPowerActive = true;
+        newState.activePowerUps = [...newState.activePowerUps.filter(p => p.type !== 'star'), { type: 'star', endTime: now + POWERUPS.DURATION }];
+      } else if (type === 'doge') {
+        newState.activePowerUps = [...newState.activePowerUps.filter(p => p.type !== 'doge'), { type: 'doge', endTime: now + POWERUPS.DURATION }];
+        newState.powerUpAlert = { type: 'doge', endTime: now + POWERUPS.ALERT_DURATION_DOGE, chefLane: newState.chefLane };
+      } else if (type === 'nyan') {
+        if (!newState.nyanSweep?.active) {
+          newState.nyanSweep = { active: true, xPosition: GAME_CONFIG.CHEF_X_POSITION, laneDirection: 1, startTime: now, lastUpdateTime: now, startingLane: newState.chefLane };
+          soundManager.nyanCatPowerUp();
+          if (!newState.activePowerUps.some(p => p.type === 'doge') || newState.powerUpAlert?.type !== 'doge') {
+            newState.powerUpAlert = { type: 'nyan', endTime: now + POWERUPS.ALERT_DURATION_NYAN, chefLane: newState.chefLane };
+          }
+        }
+      } else {
+        newState.activePowerUps = [...newState.activePowerUps.filter(p => p.type !== type), { type: type, endTime: now + POWERUPS.DURATION }];
+        if (type === 'honey') {
+          newState.customers = newState.customers.map(c => (!c.served && !c.disappointed && !c.vomit) ? { ...c, shouldBeHotHoneyAffected: true, hotHoneyAffected: true, frozen: false, woozy: false, woozyState: undefined } : c);
+        }
+        if (type === 'ice-cream') {
+          newState.customers = newState.customers.map(c => {
+            if (!c.served && !c.disappointed && !c.vomit) {
+              if (c.badLuckBrian) return { ...c, textMessage: "I'm lactose intolerant", textMessageTime: Date.now() };
+              return { ...c, shouldBeFrozenByIceCream: true, frozen: true, hotHoneyAffected: false, woozy: false, woozyState: undefined };
+            }
+            return c;
+          });
+        }
+      }
+      return newState;
+    });
+  }, []);
+
+  const resetGame = useCallback(() => {
+    setGameState({
+      customers: [], pizzaSlices: [], emptyPlates: [], droppedPlates: [], powerUps: [], activePowerUps: [], floatingScores: [],
+      chefLane: 0, score: 0, lives: GAME_CONFIG.STARTING_LIVES, level: 1, gameOver: false, lastStarLostReason: undefined, paused: false, availableSlices: 0,
+      ovens: {
+        0: { cooking: false, startTime: 0, burned: false, cleaningStartTime: 0, sliceCount: 0 },
+        1: { cooking: false, startTime: 0, burned: false, cleaningStartTime: 0, sliceCount: 0 },
+        2: { cooking: false, startTime: 0, burned: false, cleaningStartTime: 0, sliceCount: 0 },
+        3: { cooking: false, startTime: 0, burned: false, cleaningStartTime: 0, sliceCount: 0 }
+      },
+      ovenUpgrades: { 0: 0, 1: 0, 2: 0, 3: 0 },
+      ovenSpeedUpgrades: { 0: 0, 1: 0, 2: 0, 3: 0 },
+      happyCustomers: 0, bank: 0, showStore: false, lastStoreLevelShown: 0, pendingStoreShow: false, fallingPizza: undefined, starPowerActive: false, powerUpAlert: undefined,
+      stats: {
+        slicesBaked: 0, customersServed: 0, longestCustomerStreak: 0, currentCustomerStreak: 0, platesCaught: 0, largestPlateStreak: 0, currentPlateStreak: 0,
+        powerUpsUsed: { honey: 0, 'ice-cream': 0, beer: 0, star: 0, doge: 0, nyan: 0, moltobenny: 0, }, ovenUpgradesMade: 0,
+      },
+      bossBattle: undefined,
+    });
+    setLastCustomerSpawn(0);
+    setLastPowerUpSpawn(0);
+    setOvenSoundStates({ 0: 'idle', 1: 'idle', 2: 'idle', 3: 'idle' });
+  }, []);
+
+  const togglePause = useCallback(() => {
+    setGameState(prev => {
+      const newPaused = !prev.paused;
+      const now = Date.now();
+      const updatedOvens = { ...prev.ovens };
+
+      if (newPaused) {
+        Object.keys(updatedOvens).forEach(laneKey => {
+          const lane = parseInt(laneKey);
+          const oven = updatedOvens[lane];
+          if (oven.cooking && !oven.burned) updatedOvens[lane] = { ...oven, pausedElapsed: now - oven.startTime };
+        });
+      } else {
+        Object.keys(updatedOvens).forEach(laneKey => {
+          const lane = parseInt(laneKey);
+          const oven = updatedOvens[lane];
+          if (oven.cooking && !oven.burned && oven.pausedElapsed !== undefined) {
+            updatedOvens[lane] = { ...oven, startTime: now - oven.pausedElapsed, pausedElapsed: undefined };
+          }
+        });
+      }
+      return { ...prev, paused: newPaused, ovens: updatedOvens };
+    });
+  }, []);
+
   useEffect(() => {
     const prevShowStore = prevShowStoreRef.current;
     const currentShowStore = gameState.showStore;
