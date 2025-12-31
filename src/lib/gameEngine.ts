@@ -1,4 +1,4 @@
-import { GameState, FloatingScore, StarLostReason, BossMinion, PizzaSlice, EmptyPlate } from '../types/game';
+import { GameState, FloatingScore, FloatingStar, StarLostReason, BossMinion, PizzaSlice, EmptyPlate } from '../types/game';
 import { soundManager } from '../utils/sounds';
 import { getStreakMultiplier } from '../components/StreakDisplay';
 import { 
@@ -26,6 +26,53 @@ const addFloatingScore = (points: number, lane: number, position: number, state:
   return {
     ...state,
     floatingScores: [...state.floatingScores, newFloatingScore],
+  };
+};
+
+/**
+ * Centralized star (lives) mutations:
+ * - updates lives safely
+ * - emits floating star indicator (+/-)
+ * - plays gain/loss sound exactly once
+ * - optionally records lastStarLostReason (for losses)
+ */
+const changeStars = (
+  state: GameState,
+  delta: number,
+  lane: number,
+  position: number,
+  reason?: StarLostReason
+): GameState => {
+  if (delta === 0) return state;
+
+  const prevLives = state.lives;
+  const nextLives = Math.max(0, Math.min(GAME_CONFIG.MAX_LIVES, prevLives + delta));
+
+  // Only play sounds if something actually changed.
+  if (nextLives !== prevLives) {
+    if (nextLives < prevLives) soundManager.lifeLost();
+    else if (nextLives > prevLives) soundManager.lifeGained();
+  }
+
+  const now = Date.now();
+  const newFloatingStar: FloatingStar = {
+    id: `star-${now}-${Math.random()}`,
+    delta: nextLives - prevLives, // clamp-aware delta so UI matches reality
+    lane,
+    position,
+    startTime: now,
+  };
+
+  // If clamp caused zero actual change, don’t emit.
+  const shouldEmit = newFloatingStar.delta !== 0;
+
+  return {
+    ...state,
+    lives: nextLives,
+    lastStarLostReason: (newFloatingStar.delta < 0 ? reason : state.lastStarLostReason),
+    floatingStars: shouldEmit
+      ? ([...(state.floatingStars || []), newFloatingStar])
+      : (state.floatingStars || []),
   };
 };
 
@@ -79,9 +126,10 @@ export const calculateNextGameState = (
 
       if (elapsed >= OVEN_CONFIG.BURN_TIME) {
         soundManager.ovenBurned();
-        soundManager.lifeLost();
-        newState.lives = Math.max(0, newState.lives - 1);
-        newState.lastStarLostReason = 'burned_pizza';
+
+        // ⭐ central star loss + floating indicator
+        newState = changeStars(newState, -1, lane, GAME_CONFIG.CHEF_X_POSITION, 'burned_pizza');
+
         if (newState.lives === 0) {
           newState.gameOver = true;
           soundManager.gameOver();
@@ -106,6 +154,7 @@ export const calculateNextGameState = (
 
   // 4. Cleanup Expirations
   newState.floatingScores = newState.floatingScores.filter(fs => now - fs.startTime < TIMINGS.FLOATING_SCORE_LIFETIME);
+  newState.floatingStars = (newState.floatingStars || []).filter(fs => now - fs.startTime < TIMINGS.FLOATING_SCORE_LIFETIME);
   newState.droppedPlates = newState.droppedPlates.filter(dp => now - dp.startTime < TIMINGS.DROPPED_PLATE_LIFETIME);
   newState.customers = newState.customers.map(customer => {
     if (customer.textMessage && customer.textMessageTime && now - customer.textMessageTime >= TIMINGS.TEXT_MESSAGE_LIFETIME) {
@@ -166,6 +215,9 @@ export const calculateNextGameState = (
   });
 
   newState.customers = newState.customers.map(customer => {
+    const isDeparting = customer.served || customer.disappointed || customer.vomit || customer.leaving;
+    if (isDeparting) return customer;
+
     if (customer.brianNyaned) {
       return {
         ...customer,
@@ -191,11 +243,17 @@ export const calculateNextGameState = (
         const newPosition = customer.position - (customer.speed * speedModifier);
         if (newPosition <= GAME_CONFIG.CHEF_X_POSITION) {
           soundManager.customerDisappointed();
-          soundManager.lifeLost();
           newState.stats.currentCustomerStreak = 0;
+
           const starsLost = customer.critic ? 2 : 1;
-          newState.lives = Math.max(0, newState.lives - starsLost);
-          newState.lastStarLostReason = customer.critic ? 'woozy_critic_reached' : 'woozy_customer_reached';
+          newState = changeStars(
+            newState,
+            -starsLost,
+            customer.lane,
+            GAME_CONFIG.CHEF_X_POSITION,
+            customer.critic ? 'woozy_critic_reached' : 'woozy_customer_reached'
+          );
+
           if (newState.lives === 0) {
             newState.gameOver = true;
             soundManager.gameOver();
@@ -210,7 +268,10 @@ export const calculateNextGameState = (
       }
     }
 
-    if (customer.disappointed || customer.vomit || customer.brianDropped) {
+    // NOTE: keeping your original behavior; this block exists in your codebase
+    // and can early-remove the customer while they walk off.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((customer as any).disappointed || (customer as any).vomit || (customer as any).brianDropped) {
       return { ...customer, position: customer.position + (customer.speed * 2), hotHoneyAffected: false };
     }
 
@@ -242,11 +303,17 @@ export const calculateNextGameState = (
     
     if (newPosition <= GAME_CONFIG.CHEF_X_POSITION) {
       soundManager.customerDisappointed();
-      soundManager.lifeLost();
       newState.stats.currentCustomerStreak = 0;
+
       const starsLost = customer.critic ? 2 : 1;
-      newState.lives = Math.max(0, newState.lives - starsLost);
-      newState.lastStarLostReason = customer.critic ? 'disappointed_critic' : 'disappointed_customer';
+      newState = changeStars(
+        newState,
+        -starsLost,
+        customer.lane,
+        GAME_CONFIG.CHEF_X_POSITION,
+        customer.critic ? 'disappointed_critic' : 'disappointed_customer'
+      );
+
       if (newState.lives === 0) {
         newState.gameOver = true;
         soundManager.gameOver();
@@ -295,8 +362,7 @@ export const calculateNextGameState = (
 
         if (!customer.critic && newState.happyCustomers % 8 === 0 && newState.lives < GAME_CONFIG.MAX_LIVES) {
           const starsToAdd = Math.min(hasDoge ? 2 : 1, GAME_CONFIG.MAX_LIVES - newState.lives);
-          newState.lives += starsToAdd;
-          if (starsToAdd > 0) soundManager.lifeGained();
+          newState = changeStars(newState, +starsToAdd, customer.lane, customer.position);
         }
 
         const newPlate: EmptyPlate = {
@@ -351,12 +417,12 @@ export const calculateNextGameState = (
           }
           return customer;
         });
-        newState.lives = Math.max(0, newState.lives - livesLost);
+
         if (livesLost > 0) {
-          soundManager.lifeLost();
           newState.stats.currentCustomerStreak = 0;
-          if (lastReason) newState.lastStarLostReason = lastReason;
+          newState = changeStars(newState, -livesLost, newState.chefLane, GAME_CONFIG.CHEF_X_POSITION, lastReason);
         }
+
         if (newState.lives === 0) {
           newState.gameOver = true;
           soundManager.gameOver();
@@ -450,8 +516,7 @@ export const calculateNextGameState = (
 
         if (newState.happyCustomers % 8 === 0 && newState.lives < GAME_CONFIG.MAX_LIVES) {
           const starsToAdd = Math.min(hasDoge ? 2 : 1, GAME_CONFIG.MAX_LIVES - newState.lives);
-          newState.lives += starsToAdd;
-          if (starsToAdd > 0) soundManager.lifeGained();
+          newState = changeStars(newState, +starsToAdd, customer.lane, customer.position);
         }
 
         const newPlate: EmptyPlate = { id: `plate-${Date.now()}-${customer.id}-unfreeze`, lane: customer.lane, position: customer.position, speed: ENTITY_SPEEDS.PLATE };
@@ -487,11 +552,12 @@ export const calculateNextGameState = (
           newState.stats.customersServed += 1;
           newState.stats.currentCustomerStreak += 1;
           if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
+
           if (newState.happyCustomers % 8 === 0 && newState.lives < GAME_CONFIG.MAX_LIVES) {
             const starsToAdd = Math.min(hasDoge ? 2 : 1, GAME_CONFIG.MAX_LIVES - newState.lives);
-            newState.lives += starsToAdd;
-            if (starsToAdd > 0) soundManager.lifeGained();
+            newState = changeStars(newState, +starsToAdd, customer.lane, customer.position);
           }
+
           const newPlate: EmptyPlate = { id: `plate-${Date.now()}-${customer.id}`, lane: customer.lane, position: customer.position, speed: ENTITY_SPEEDS.PLATE };
           newState.emptyPlates = [...newState.emptyPlates, newPlate];
           platesFromSlices.add(slice.id);
@@ -522,11 +588,12 @@ export const calculateNextGameState = (
           newState.stats.customersServed += 1;
           newState.stats.currentCustomerStreak += 1;
           if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
+
           if (newState.happyCustomers % 8 === 0 && newState.lives < GAME_CONFIG.MAX_LIVES) {
             const starsToAdd = Math.min(hasDoge ? 2 : 1, GAME_CONFIG.MAX_LIVES - newState.lives);
-            newState.lives += starsToAdd;
-            if (starsToAdd > 0) soundManager.lifeGained();
+            newState = changeStars(newState, +starsToAdd, customer.lane, customer.position);
           }
+
           const newPlate: EmptyPlate = { id: `plate-${Date.now()}-${customer.id}`, lane: customer.lane, position: customer.position, speed: ENTITY_SPEEDS.PLATE };
           newState.emptyPlates = [...newState.emptyPlates, newPlate];
           platesFromSlices.add(slice.id);
@@ -560,15 +627,14 @@ export const calculateNextGameState = (
 
         if (customer.critic) {
           if (customer.position >= 50 && newState.lives < GAME_CONFIG.MAX_LIVES) {
-            newState.lives += 1;
-            soundManager.lifeGained();
+            newState = changeStars(newState, +1, customer.lane, customer.position);
           }
         } else {
           if (newState.happyCustomers % 8 === 0 && newState.lives < GAME_CONFIG.MAX_LIVES) {
-            soundManager.lifeGained();
-            newState.lives += 1;
+            newState = changeStars(newState, +1, customer.lane, customer.position);
           }
         }
+
         const newPlate: EmptyPlate = { id: `plate-${Date.now()}-${customer.id}`, lane: customer.lane, position: customer.position, speed: ENTITY_SPEEDS.PLATE };
         newState.emptyPlates = [...newState.emptyPlates, newPlate];
         platesFromSlices.add(slice.id);
@@ -674,14 +740,12 @@ export const calculateNextGameState = (
 
         if (customer.critic) {
           if (customer.position >= 55 && newState.lives < GAME_CONFIG.MAX_LIVES) {
-            newState.lives += 1;
-            soundManager.lifeGained();
+            newState = changeStars(newState, +1, customer.lane, customer.position);
           }
         } else {
           if (newState.happyCustomers % 8 === 0 && newState.lives < GAME_CONFIG.MAX_LIVES) {
             const starsToAdd = Math.min(hasDoge ? 2 : 1, GAME_CONFIG.MAX_LIVES - newState.lives);
-            newState.lives += starsToAdd;
-            if (starsToAdd > 0) soundManager.lifeGained();
+            newState = changeStars(newState, +starsToAdd, customer.lane, customer.position);
           }
         }
         return { ...customer, served: true, hasPlate: false, woozy: false, frozen: false, unfrozenThisPeriod: undefined };
@@ -756,8 +820,7 @@ export const calculateNextGameState = (
     newState.bossBattle.minions = newState.bossBattle.minions.map(minion => {
       if (minion.defeated) return minion;
       if (minion.position <= GAME_CONFIG.CHEF_X_POSITION) {
-        soundManager.lifeLost();
-        newState.lives = Math.max(0, newState.lives - 1);
+        newState = changeStars(newState, -1, minion.lane, GAME_CONFIG.CHEF_X_POSITION);
         if (newState.lives === 0) {
           newState.gameOver = true;
           soundManager.gameOver();
