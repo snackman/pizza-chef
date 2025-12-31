@@ -64,6 +64,17 @@ export interface FloatingScore {
   startTime: number;
 }
 
+/**
+ * Floating star indicator (same pattern as FloatingScore, but for star gain/loss)
+ */
+export interface FloatingStar {
+  id: string;
+  delta: number; // +1 / -1
+  lane: number;
+  position: number;
+  startTime: number;
+}
+
 export interface DroppedPlate {
   id: string;
   lane: number;
@@ -127,6 +138,7 @@ export interface GameState {
   powerUps: PowerUp[];
   activePowerUps: ActivePowerUp[];
   floatingScores: FloatingScore[];
+  floatingStars: FloatingStar[]; // ⭐ NEW
   droppedPlates: DroppedPlate[];
   chefLane: number;
   score: number;
