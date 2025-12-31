@@ -6,7 +6,6 @@ import DroppedPlate from './DroppedPlate';
 import PowerUp from './PowerUp';
 import PizzaSliceStack from './PizzaSliceStack';
 import FloatingScore from './FloatingScore';
-import FloatingStar from './FloatingStar'; // ⭐ NEW
 import Boss from './Boss';
 import { GameState } from '../types/game';
 import pizzaShopBg from '/pizza shop background v2.png';
@@ -20,7 +19,6 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
   const lanes = [0, 1, 2, 3];
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
   const [completedScores, setCompletedScores] = useState<Set<string>>(new Set());
-  const [completedStars, setCompletedStars] = useState<Set<string>>(new Set()); // ⭐ NEW
 
   // ✅ Measure board size (for px-based translate3d positioning)
   const boardRef = useRef<HTMLDivElement | null>(null);
@@ -46,10 +44,6 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
   const handleScoreComplete = useCallback((id: string) => {
     setCompletedScores(prev => new Set(prev).add(id));
   }, []);
-
-  const handleStarComplete = useCallback((id: string) => {
-    setCompletedStars(prev => new Set(prev).add(id));
-  }, []); // ⭐ NEW
 
   React.useEffect(() => {
     const interval = setInterval(forceUpdate, 100);
@@ -266,18 +260,6 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
           lane={floatingScore.lane}
           position={floatingScore.position}
           onComplete={handleScoreComplete}
-        />
-      ))}
-
-      {/* ⭐ Floating star indicators (same behavior as FloatingScore) */}
-      {gameState.floatingStars?.filter(fs => !completedStars.has(fs.id)).map((floatingStar) => (
-        <FloatingStar
-          key={floatingStar.id}
-          id={floatingStar.id}
-          delta={floatingStar.delta}
-          lane={floatingStar.lane}
-          position={floatingStar.position}
-          onComplete={handleStarComplete}
         />
       ))}
 

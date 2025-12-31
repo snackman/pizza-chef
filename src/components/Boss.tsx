@@ -1,7 +1,7 @@
 import React from 'react';
 import { BossBattle } from '../types/game';
 
-const bossImg = '/Sprites/dominos_boss.png';
+const bossImg = '/Sprites/image.png';
 
 interface BossProps {
   bossBattle: BossBattle;
