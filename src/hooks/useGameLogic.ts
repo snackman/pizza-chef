@@ -570,6 +570,15 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             let livesLost = 0;
             let lastReason: StarLostReason | undefined;
             newState.customers = newState.customers.map(customer => {
+              // ✅ Critic is immune to beer
+              if (customer.critic && !customer.served && !customer.vomit && !customer.disappointed) {
+                return {
+                  ...customer,
+                  textMessage: "I prefer wine",
+                  textMessageTime: Date.now(),
+                };
+              }
+
               if (customer.woozy) {
                 livesLost += customer.critic ? 2 : 1;
                 lastReason = customer.critic ? 'beer_critic_vomit' : 'beer_vomit';
@@ -1165,6 +1174,15 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         let livesLost = 0;
         let lastReason: StarLostReason | undefined;
         newState.customers = newState.customers.map(customer => {
+          // ✅ Critic is immune to beer (debug path)
+          if (customer.critic && !customer.served && !customer.vomit && !customer.leaving) {
+            return {
+              ...customer,
+              textMessage: "I prefer wine",
+              textMessageTime: Date.now(),
+            };
+          }
+
           if (customer.woozy) {
             livesLost += customer.critic ? 2 : 1;
             lastReason = customer.critic ? 'beer_critic_vomit' : 'beer_vomit';
