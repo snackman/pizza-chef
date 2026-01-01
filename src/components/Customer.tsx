@@ -5,12 +5,12 @@ import { sprite } from "../lib/assets";
 const droolfaceImg = sprite("droolface.png");
 const yumfaceImg = sprite("yumface.png");
 const frozenfaceImg = sprite("frozenface.png");
-const spicyfaceImg = sprite("spicy-face.png");
+const spicyfaceImg = sprite("spicyface.png");
 const woozyfaceImg = sprite("woozyface.png");
 const criticImg = sprite("critic.png");
-const badLuckBrianImg = sprite("bad-luck-brian.png");
-const badLuckBrianPukeImg = sprite("bad-luck-brian-puke.png");
-const rainbowBrian = sprite("rainbow-brian.png");
+const badLuckBrianImg = sprite("badluckbrian.png");
+const badLuckBrianPukeImg = sprite("badluckbrianpuke.png");
+const rainbowBrian = sprite("rainbowBrian.png");
 
 interface CustomerProps {
   customer: CustomerType;
