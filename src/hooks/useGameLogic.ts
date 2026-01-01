@@ -877,27 +877,48 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       });
       platesToAddScores.forEach(({ points, lane, position }) => newState = addFloatingScore(points, lane, position, newState));
 
-      // Nyan Cat Sweep
+      // Nyan Cat Sweep)
       if (newState.nyanSweep?.active) {
         const MAX_X = 90;
-        const UPDATE_INTERVAL = 50;
-        if (now - newState.nyanSweep.lastUpdateTime >= UPDATE_INTERVAL) {
-          const INITIAL_X = GAME_CONFIG.CHEF_X_POSITION;
-          const increment = ((MAX_X - INITIAL_X) / 80) * 1.5;
-          const newXPosition = newState.nyanSweep.xPosition + increment;
-          let newLane = newState.chefLane + newState.nyanSweep.laneDirection * 0.5;
-          let newLaneDirection = newState.nyanSweep.laneDirection;
-          if (newLane > GAME_CONFIG.LANE_BOTTOM) {
-            newLane = 2.5;
-            newLaneDirection = -1;
-          } else if (newLane < GAME_CONFIG.LANE_TOP) {
-            newLane = 0.5;
-            newLaneDirection = 1;
-          }
-          newState.chefLane = newLane;
-          newState.nyanSweep = { ...newState.nyanSweep, xPosition: newXPosition, laneDirection: newLaneDirection, lastUpdateTime: now };
+        
+        // Calculate time passed since last frame (Delta Time)
+        const dt = now - newState.nyanSweep.lastUpdateTime;
+        
+        // MOVEMENT MATH:
+        // Original logic took ~2.6 seconds to cross.
+        // Distance = (MAX_X - INITIAL_X)
+        // Speed = Distance / 2600ms
+        const INITIAL_X = GAME_CONFIG.CHEF_X_POSITION;
+        const totalDistance = MAX_X - INITIAL_X;
+        const duration = 2600; // Duration in ms (Lower = Faster Nyan)
+        const increment = (totalDistance / duration) * dt;
+
+        const newXPosition = newState.nyanSweep.xPosition + increment;
+
+        // LANE WOBBLE MATH:
+        // Original was 0.5 lane change per 50ms = 0.01 per ms
+        const laneChangeSpeed = 0.01; 
+        let newLane = newState.chefLane + (newState.nyanSweep.laneDirection * laneChangeSpeed * dt);
+        let newLaneDirection = newState.nyanSweep.laneDirection;
+
+        // Bounce off top/bottom lanes
+        if (newLane > GAME_CONFIG.LANE_BOTTOM) {
+          newLane = GAME_CONFIG.LANE_BOTTOM;
+          newLaneDirection = -1;
+        } else if (newLane < GAME_CONFIG.LANE_TOP) {
+          newLane = GAME_CONFIG.LANE_TOP;
+          newLaneDirection = 1;
         }
 
+        newState.chefLane = newLane;
+        newState.nyanSweep = { 
+          ...newState.nyanSweep, 
+          xPosition: newXPosition, 
+          laneDirection: newLaneDirection, 
+          lastUpdateTime: now 
+        };
+
+        // --- COLLISION LOGIC (Kept exactly as is) ---
         const nyanScores: Array<{ points: number; lane: number; position: number }> = [];
         newState.customers = newState.customers.map(customer => {
           if (customer.served || customer.disappointed || customer.vomit) return customer;
