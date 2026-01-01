@@ -152,7 +152,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
         loadImage(sprite("doge.png")),
         loadImage(sprite("nyan-cat.png")),
         loadImage(sprite("star.png")),
-        loadImage(sprite("moltobenny.png")),
+        loadImage(sprite("molto-benny.png")),
 
       ]);
 
