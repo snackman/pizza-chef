@@ -113,8 +113,6 @@ export const POSITIONS = {
   TURN_AROUND_POINT: 90, // For woozy customers
 };
 
-// ... keep all your existing exports above ...
-
 export const INITIAL_GAME_STATE = {
   customers: [],
   pizzaSlices: [],
