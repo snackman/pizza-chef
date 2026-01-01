@@ -9,7 +9,9 @@ import FloatingScore from './FloatingScore';
 import Boss from './Boss';
 import { GameState } from '../types/game';
 import pizzaShopBg from '/pizza shop background v2.png';
-import chefImg from '/sprites/chefemoji.png';
+import { sprite } from '../lib/assets';
+
+const chefImg = sprite("chef.png");
 
 interface GameBoardProps {
   gameState: GameState;
