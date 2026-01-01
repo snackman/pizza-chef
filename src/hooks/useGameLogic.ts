@@ -333,7 +333,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       // Update Customers (Effects & Movement)
       newState.customers = newState.customers.map(customer => {
-        const isDeparting = customer.served || customer.disappointed || customer.vomit || (customer.leaving && !customer.brianNyaned);
+        const isDeparting = customer.served || customer.disappointed || customer.vomit || customer.leaving;
         if (isDeparting) return customer;
 
         // Bad Luck Brian is immune to hot honey (and should never carry the flag)
@@ -472,6 +472,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
             if (customer.badLuckBrian) {
               soundManager.plateDropped();
+              newState.stats.currentCustomerStreak = 0;
               newState.stats.currentPlateStreak = 0;
               const droppedPlate = {
                 id: `dropped-${Date.now()}-${customer.id}`,
@@ -661,7 +662,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       newState.powerUps = newState.powerUps.filter(powerUp => !caughtPowerUpIds.has(powerUp.id))
         .map(powerUp => ({ ...powerUp, position: powerUp.position - powerUp.speed }))
-        .filter(powerUp => powerUp.position > 0);
+        .filter(powerUp => powerUp.position > 10);
       powerUpScores.forEach(({ points, lane, position }) => newState = addFloatingScore(points, lane, position, newState));
 
       newState.pizzaSlices = newState.pizzaSlices.map(slice => ({ ...slice, position: slice.position + slice.speed }));
@@ -681,6 +682,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             consumed = true;
             if (customer.badLuckBrian) {
               soundManager.plateDropped();
+              newState.stats.currentCustomerStreak = 0;
               newState.stats.currentPlateStreak = 0;
               platesFromSlices.add(slice.id);
               const droppedPlate = { id: `dropped-${Date.now()}-${customer.id}`, lane: customer.lane, position: customer.position, startTime: Date.now(), hasSlice: true };
@@ -717,6 +719,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             consumed = true;
             if (customer.badLuckBrian) {
               soundManager.plateDropped();
+              newState.stats.currentCustomerStreak = 0;
               newState.stats.currentPlateStreak = 0;
               platesFromSlices.add(slice.id);
               const droppedPlate = { id: `dropped-${Date.now()}-${customer.id}`, lane: customer.lane, position: customer.position, startTime: Date.now(), hasSlice: true };
@@ -788,6 +791,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             consumed = true;
             if (customer.badLuckBrian) {
               soundManager.plateDropped();
+              newState.stats.currentCustomerStreak = 0;
               newState.stats.currentPlateStreak = 0;
               platesFromSlices.add(slice.id);
               const droppedPlate = { id: `dropped-${Date.now()}-${customer.id}`, lane: customer.lane, position: customer.position, startTime: Date.now(), hasSlice: true };
@@ -877,31 +881,26 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       });
       platesToAddScores.forEach(({ points, lane, position }) => newState = addFloatingScore(points, lane, position, newState));
 
-      // Nyan Cat Sweep)
+      // Nyan Cat Sweep (SMOOTH & ACCURATE VERSION)
       if (newState.nyanSweep?.active) {
         const MAX_X = 90;
+        const dt = Math.min(now - newState.nyanSweep.lastUpdateTime, 100); // Cap dt to prevent massive jumps
         
-        // Calculate time passed since last frame (Delta Time)
-        const dt = now - newState.nyanSweep.lastUpdateTime;
-        
-        // MOVEMENT MATH:
-        // Original logic took ~2.6 seconds to cross.
-        // Distance = (MAX_X - INITIAL_X)
-        // Speed = Distance / 2600ms
+        // 1. Calculate Movement
         const INITIAL_X = GAME_CONFIG.CHEF_X_POSITION;
         const totalDistance = MAX_X - INITIAL_X;
-        const duration = 2600; // Duration in ms (Lower = Faster Nyan)
-        const increment = (totalDistance / duration) * dt;
+        const duration = 2600; 
+        const moveIncrement = (totalDistance / duration) * dt;
+        
+        const oldX = newState.nyanSweep.xPosition;
+        const newXPosition = oldX + moveIncrement;
 
-        const newXPosition = newState.nyanSweep.xPosition + increment;
-
-        // LANE WOBBLE MATH:
-        // Original was 0.5 lane change per 50ms = 0.01 per ms
+        // 2. Calculate Lane Sway
         const laneChangeSpeed = 0.01; 
         let newLane = newState.chefLane + (newState.nyanSweep.laneDirection * laneChangeSpeed * dt);
         let newLaneDirection = newState.nyanSweep.laneDirection;
 
-        // Bounce off top/bottom lanes
+        // Bounce lanes
         if (newLane > GAME_CONFIG.LANE_BOTTOM) {
           newLane = GAME_CONFIG.LANE_BOTTOM;
           newLaneDirection = -1;
@@ -910,20 +909,24 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           newLaneDirection = 1;
         }
 
-        newState.chefLane = newLane;
-        newState.nyanSweep = { 
-          ...newState.nyanSweep, 
-          xPosition: newXPosition, 
-          laneDirection: newLaneDirection, 
-          lastUpdateTime: now 
-        };
-
-        // --- COLLISION LOGIC (Kept exactly as is) ---
+        // 3. COLLISION LOGIC (The Fix)
         const nyanScores: Array<{ points: number; lane: number; position: number }> = [];
+        
         newState.customers = newState.customers.map(customer => {
           if (customer.served || customer.disappointed || customer.vomit) return customer;
 
-          if (customer.lane === newState.chefLane && Math.abs(customer.position - newState.nyanSweep!.xPosition) < 10) {
+          // A. Lane Check: Use proximity (< 0.8) instead of exact match (===)
+          // This allows the cat to hit customers even if it's slightly between lanes (e.g. lane 1.5 hits lane 1 and 2)
+          const isLaneHit = Math.abs(customer.lane - newLane) < 0.8;
+
+          // B. Position Check: "Swept" collision
+          // Check if customer is anywhere between where we started (oldX) and where we ended (newX)
+          // Add a small buffer (+10) to keep the hitbox generous
+          const sweepStart = oldX - 10; 
+          const sweepEnd = newXPosition + 10;
+          const isPositionHit = customer.position >= sweepStart && customer.position <= sweepEnd;
+
+          if (isLaneHit && isPositionHit) {
             if (customer.badLuckBrian) {
               soundManager.customerServed();
               return { ...customer, brianNyaned: true, leaving: true, hasPlate: false, flipped: false, movingRight: true, woozy: false, frozen: false, unfrozenThisPeriod: undefined };
@@ -933,6 +936,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             const baseScore = customer.critic ? SCORING.CUSTOMER_CRITIC : SCORING.CUSTOMER_NORMAL;
             const dogeMultiplier = hasDoge ? 2 : 1;
             const pointsEarned = Math.floor(baseScore * dogeMultiplier * getStreakMultiplier(newState.stats.currentCustomerStreak));
+            
             newState.score += pointsEarned;
             newState.bank += SCORING.BASE_BANK_REWARD * dogeMultiplier;
             nyanScores.push({ points: pointsEarned, lane: customer.lane, position: customer.position });
@@ -958,12 +962,18 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           return customer;
         });
 
+        // 4. Minion Collision (Also updated for consistency)
         if (newState.bossBattle?.active && !newState.bossBattle.bossDefeated) {
-          const nyanX = newState.nyanSweep.xPosition;
-          const chefLaneFloat = newState.chefLane;
           newState.bossBattle.minions = newState.bossBattle.minions.map(minion => {
             if (minion.defeated) return minion;
-            if (Math.abs(minion.lane - chefLaneFloat) < 0.6 && Math.abs(minion.position - nyanX) < 10) {
+            
+            // Apply same Swept/Proximity logic to minions
+            const isLaneHit = Math.abs(minion.lane - newLane) < 0.8;
+            const sweepStart = oldX - 10; 
+            const sweepEnd = newXPosition + 10;
+            const isPositionHit = minion.position >= sweepStart && minion.position <= sweepEnd;
+
+            if (isLaneHit && isPositionHit) {
               soundManager.customerServed();
               const pointsEarned = SCORING.MINION_DEFEAT;
               newState.score += pointsEarned;
@@ -973,7 +983,17 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             return minion;
           });
         }
+
+        // 5. Apply State Updates
         nyanScores.forEach(({ points, lane, position }) => newState = addFloatingScore(points, lane, position, newState));
+        
+        newState.chefLane = newLane;
+        newState.nyanSweep = { 
+          ...newState.nyanSweep, 
+          xPosition: newXPosition, 
+          laneDirection: newLaneDirection, 
+          lastUpdateTime: now 
+        };
 
         if (newState.nyanSweep.xPosition >= MAX_X) {
           newState.chefLane = Math.round(newState.chefLane);
@@ -996,14 +1016,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           else newState.showStore = true;
         }
 
-        // 3. UPDATED: MULTIPLE BOSS SPAWN LOGIC
-        // Check if there is a boss level we have passed that we haven't beaten yet
-        const nextBossLevel = BOSS_CONFIG.TRIGGER_LEVELS.find(
-          lvl => targetLevel >= lvl && !newState.defeatedBossLevels.includes(lvl)
-        );
-
-        if (nextBossLevel && !newState.bossBattle?.active) {
-          const healthMultiplier = BOSS_CONFIG.TRIGGER_LEVELS.indexOf(nextBossLevel) + 1;
+        if (targetLevel === BOSS_CONFIG.TRIGGER_LEVEL && !newState.bossBattle?.active && !newState.bossBattle?.bossDefeated) {
           const initialMinions: BossMinion[] = [];
           for (let i = 0; i < BOSS_CONFIG.MINIONS_PER_WAVE; i++) {
             initialMinions.push({
@@ -1015,13 +1028,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             });
           }
           newState.bossBattle = {
-            active: true,
-            bossHealth: BOSS_CONFIG.HEALTH * healthMultiplier,
-            currentWave: 1,
-            minions: initialMinions,
-            bossVulnerable: true,
-            bossDefeated: false,
-            bossPosition: BOSS_CONFIG.BOSS_POSITION,
+            active: true, bossHealth: BOSS_CONFIG.HEALTH, currentWave: 1, minions: initialMinions, bossVulnerable: true, bossDefeated: false, bossPosition: BOSS_CONFIG.BOSS_POSITION,
           };
         }
       }
@@ -1082,11 +1089,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 newState.bossBattle!.bossDefeated = true;
                 newState.bossBattle!.active = false;
                 newState.bossBattle!.minions = [];
-
-                // 4. UPDATED: Record which boss was defeated
-                const justBeatenLevel = Math.max(...BOSS_CONFIG.TRIGGER_LEVELS.filter(l => l <= newState.level));
-                newState.defeatedBossLevels = [...newState.defeatedBossLevels, justBeatenLevel];
-
                 newState.score += SCORING.BOSS_DEFEAT;
                 bossScores.push({ points: SCORING.BOSS_DEFEAT, lane: 1, position: newState.bossBattle!.bossPosition });
               }
