@@ -150,4 +150,5 @@ export interface GameState {
   nyanSweep?: { active: boolean; xPosition: number; laneDirection: 1 | -1; startTime: number; lastUpdateTime: number; startingLane: number };
   stats: GameStats;
   bossBattle?: BossBattle;
+  defeatedBossLevels: number[];
 }
