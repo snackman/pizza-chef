@@ -106,9 +106,9 @@ export const TIMINGS = {
 };
 
 export const POSITIONS = {
-  SPAWN_X: 95,
-  POWERUP_SPAWN_X: 90,
-  OFF_SCREEN_RIGHT: 95,
+  SPAWN_X: 98,
+  POWERUP_SPAWN_X: 98,
+  OFF_SCREEN_RIGHT: 98,
   OFF_SCREEN_LEFT: -10,
   TURN_AROUND_POINT: 90, // For woozy customers
 };
