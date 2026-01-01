@@ -333,7 +333,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       // Update Customers (Effects & Movement)
       newState.customers = newState.customers.map(customer => {
-        const isDeparting = customer.served || customer.disappointed || customer.vomit || customer.leaving;
+        const isDeparting = customer.served || customer.disappointed || customer.vomit || (customer.leaving && !customer.brianNyaned);
         if (isDeparting) return customer;
 
         // Bad Luck Brian is immune to hot honey (and should never carry the flag)
@@ -662,7 +662,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       newState.powerUps = newState.powerUps.filter(powerUp => !caughtPowerUpIds.has(powerUp.id))
         .map(powerUp => ({ ...powerUp, position: powerUp.position - powerUp.speed }))
-        .filter(powerUp => powerUp.position > 0);
+        .filter(powerUp => powerUp.position > 10);
       powerUpScores.forEach(({ points, lane, position }) => newState = addFloatingScore(points, lane, position, newState));
 
       newState.pizzaSlices = newState.pizzaSlices.map(slice => ({ ...slice, position: slice.position + slice.speed }));
