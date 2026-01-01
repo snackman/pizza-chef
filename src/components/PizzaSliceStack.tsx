@@ -1,5 +1,5 @@
 import React from 'react';
-import { sprite } from '../lib/assets';
+https://i.imgur.com/xdnZuJm.png
 
 interface PizzaSliceStackProps {
   sliceCount: number;
@@ -7,18 +7,12 @@ interface PizzaSliceStackProps {
 }
 
 const PizzaSliceStack: React.FC<PizzaSliceStackProps> = ({ sliceCount }) => {
-  if (sliceCount === 0) return (
-    <img
-      src={sprite("pizzapan.png")}
-      className="w-full h-full object-contain"
-      alt="empty pan"
-    />
-    );
+  if (sliceCount === 0) return null;
 
   const clampedCount = Math.min(Math.max(sliceCount, 1), 8);
-
-  // Cloudflare-hosted sprite
-  const imageUrl = sprite(`${clampedCount}slicepizzapan.png`);
+  let imageUrl;
+  if (clampedCount === 1) {imageUrl = "https://i.imgur.com/xdnZuJm.png"}
+  else {imageUrl = `/sprites/${clampedCount}slicepizzapan.png`};
 
   return (
     <div className="relative w-full h-full">
