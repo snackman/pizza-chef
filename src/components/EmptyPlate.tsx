@@ -51,7 +51,7 @@ const EmptyPlate: React.FC<EmptyPlateProps> = ({ plate }) => {
     >
       {/* Empty plate image */}
       <img
-        src="https://i.imgur.com/vUT4nnz.png"
+        src={sprite("paperplate.png")}
         alt="empty plate"
         className="absolute inset-0 w-[80%] h-[80%] object-contain"
         style={{ zIndex: 1 }}
