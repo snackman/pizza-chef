@@ -24,5 +24,4 @@ const PizzaSliceStack: React.FC<PizzaSliceStackProps> = ({ sliceCount }) => {
     </div>
   );
 };
-
 export default PizzaSliceStack;
