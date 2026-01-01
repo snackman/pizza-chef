@@ -1,5 +1,5 @@
 import React from 'react';
-import pizzaPanImg from '/Sprites/pizzapan.png';
+import pizzaPanImg from '/sprites/pizzapan.png';
 
 interface MobileGameControlsProps {
   gameOver: boolean;
