@@ -682,7 +682,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             consumed = true;
             if (customer.badLuckBrian) {
               soundManager.plateDropped();
-              newState.stats.currentCustomerStreak = 0;
               newState.stats.currentPlateStreak = 0;
               platesFromSlices.add(slice.id);
               const droppedPlate = { id: `dropped-${Date.now()}-${customer.id}`, lane: customer.lane, position: customer.position, startTime: Date.now(), hasSlice: true };
