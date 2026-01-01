@@ -139,19 +139,18 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
         star,
         moltobenny,
       ] = await Promise.all([
-        loadImage(sprite("chefemoji.png")),
-        loadImage(ui("pizzadao-logo-white.png")),
-      
-        loadImage(sprite("droolface.png")),
-        loadImage(sprite("paperplate.png")),
-        loadImage(sprite("fullpizza.png")),
-        loadImage(sprite("hothoney.png")),
-        loadImage(sprite("sundae.png")),
-        loadImage(sprite("beer.png")),
-        loadImage(sprite("doge.png")),
-        loadImage(sprite("nyancat.png")),
-        loadImage(sprite("star-power-up.png")),
-        loadImage(sprite("moltobenny.png")),
+        loadImage('https://i.imgur.com/EPCSa79.png'),
+        loadImage('/PizzaDAO-Logo-White (2).png'),
+        loadImage('/sprites/droolface.png'),
+        loadImage('/sprites/paperplate.png'),
+        loadImage('/sprites/fullpizza.png'),
+        loadImage('/sprites/hothoney.png'),
+        loadImage('/sprites/sundae.png'),
+        loadImage('/sprites/beer.png'),
+        loadImage('/sprites/doge.png'),
+        loadImage('/sprites/nyancat.png'),
+        loadImage('https://i.imgur.com/hw0jkrq.png'),
+        loadImage('https://i.imgur.com/5goVcAS.png'),
       ]);
 
       imagesRef.current = {
