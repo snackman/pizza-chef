@@ -85,7 +85,7 @@ export const COSTS = {
 };
 
 export const BOSS_CONFIG = {
-  TRIGGER_LEVELS: [10],
+  TRIGGER_LEVELS: [50],
   HEALTH: 24,
   WAVES: 3,
   MINIONS_PER_WAVE: 4,
