@@ -662,7 +662,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       newState.powerUps = newState.powerUps.filter(powerUp => !caughtPowerUpIds.has(powerUp.id))
         .map(powerUp => ({ ...powerUp, position: powerUp.position - powerUp.speed }))
-        .filter(powerUp => powerUp.position > 10);
+        .filter(powerUp => powerUp.position > 0);
       powerUpScores.forEach(({ points, lane, position }) => newState = addFloatingScore(points, lane, position, newState));
 
       newState.pizzaSlices = newState.pizzaSlices.map(slice => ({ ...slice, position: slice.position + slice.speed }));
