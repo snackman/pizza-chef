@@ -166,4 +166,5 @@ export const INITIAL_GAME_STATE = {
     ovenUpgradesMade: 0,
   },
   bossBattle: undefined,
+  defeatedBossLevels:[],
 };
