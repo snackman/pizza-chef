@@ -1,4 +1,6 @@
 import React from 'react';
+
+
 import chefImg from '/sprites/chefemoji.png';
 
 interface SplashScreenProps {
