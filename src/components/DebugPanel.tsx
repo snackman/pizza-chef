@@ -22,12 +22,12 @@ const DebugPanel: React.FC<DebugPanelProps> = ({
     label: string;
     icon: string;
   }[] = [
-    { type: 'honey', label: 'Hot Honey', icon: '/Sprites/hothoney.png' },
-    { type: 'ice-cream', label: 'Ice Cream', icon: '/Sprites/sundae.png' },
-    { type: 'beer', label: 'Beer', icon: '/Sprites/beer.png' },
-    { type: 'star', label: 'Star Power', icon: '/Sprites/starpower.png' },
-    { type: 'doge', label: 'Doge', icon: '/Sprites/doge.png' },
-    { type: 'nyan', label: 'Nyan Cat', icon: '/Sprites/nyancat.png' },
+    { type: 'honey', label: 'Hot Honey', icon: '/sprites/hothoney.png' },
+    { type: 'ice-cream', label: 'Ice Cream', icon: '/sprites/sundae.png' },
+    { type: 'beer', label: 'Beer', icon: '/sprites/beer.png' },
+    { type: 'star', label: 'Star Power', icon: '/sprites/starpower.png' },
+    { type: 'doge', label: 'Doge', icon: '/sprites/doge.png' },
+    { type: 'nyan', label: 'Nyan Cat', icon: '/sprites/nyancat.png' },
   ];
 
   return (
