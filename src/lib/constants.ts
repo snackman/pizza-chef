@@ -144,6 +144,8 @@ export const INITIAL_GAME_STATE = {
   fallingPizza: undefined,
   starPowerActive: false,
   powerUpAlert: undefined,
+  nyanSweep: undefined,
+  lastStarLostReason: undefined,
   stats: {
     slicesBaked: 0,
     customersServed: 0,
