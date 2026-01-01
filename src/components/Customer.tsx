@@ -5,7 +5,7 @@ const droolfaceImg = sprite("droolface.png");
 const yumfaceImg = sprite("yumface.png");
 const frozenfaceImg = sprite("frozenface.png");
 const spicyfaceImg = sprite("spicyface.png");
-import woozyfaceImg from '/sprites/woozyface.png';
+const woozyfaceImg = sprite("woozyface.png");
 const criticImg = "https://i.imgur.com/ZygBTOI.png";
 const badLuckBrianImg = "https://i.imgur.com/cs0LDgJ.png";
 const badLuckBrianPukeImg = "https://i.imgur.com/yRXQDIT.png";
