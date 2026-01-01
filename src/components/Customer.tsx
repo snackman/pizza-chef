@@ -7,9 +7,9 @@ const frozenfaceImg = sprite("frozenface.png");
 const spicyfaceImg = sprite("spicyface.png");
 const woozyfaceImg = sprite("woozyface.png");
 const criticImg = sprite("critic.png");
-const badLuckBrianImg = sprite("badluckbrian.png");'
-const badLuckBrianPukeImg = sprite("badluckbrianpuke.png");'
-const rainbowBrian = sprite("rainbowBrian.png")
+const badLuckBrianImg = sprite("badluckbrian.png");
+const badLuckBrianPukeImg = sprite("badluckbrianpuke.png");
+const rainbowBrian = sprite("rainbowBrian.png");
 
 interface CustomerProps {
   customer: CustomerType;
