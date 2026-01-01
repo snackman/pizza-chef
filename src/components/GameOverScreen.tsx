@@ -144,7 +144,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
         loadImage(ui("pizzadao-logo-white.png")),
         
         loadImage(sprite("drool-face.png")),
-        loadImage(sprite("paper-plate.png")),
+        loadImage(sprite("paperplate.png")),
         loadImage(sprite("fullpizza.png")),
         loadImage(sprite("hot-honey.png")),
         loadImage(sprite("sundae.png")),
