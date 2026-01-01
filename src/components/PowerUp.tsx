@@ -1,12 +1,19 @@
 import React from 'react';
 import { PowerUp as PowerUpType } from '../types/game';
-import beerImg from '/sprites/beer.png';
-import honeyImg from '/sprites/hothoney.png';
-import sundaeImg from '/sprites/sundae.png';
+import { sprite } from '../lib/assets';
 
 interface PowerUpProps {
   powerUp: PowerUpType;
 }
+
+// Declare all sprite URLs once
+const beerImg = sprite("beer.png");
+const honeyImg = sprite("hothoney.png");
+const sundaeImg = sprite("sundae.png");
+const dogeImg = sprite("doge.png");
+const nyanImg = sprite("nyan.png");
+const moltoBennyImg = sprite("moltobenny.png");
+const starImg = sprite("star.png");
 
 const PowerUp: React.FC<PowerUpProps> = ({ powerUp }) => {
   const leftPosition = powerUp.position;
@@ -20,13 +27,13 @@ const PowerUp: React.FC<PowerUpProps> = ({ powerUp }) => {
       case 'beer':
         return beerImg;
       case 'doge':
-        return 'https://i.imgur.com/TqnVUzO.png';
+        return dogeImg;
       case 'nyan':
-        return 'https://i.imgur.com/OLD9UC8.png';
+        return nyanImg;
       case 'moltobenny':
-        return 'https://i.imgur.com/5goVcAS.png';
+        return moltoBennyImg;
       case 'star':
-        return 'https://i.imgur.com/hw0jkrq.png';
+        return starImg;
       default:
         return null;
     }
