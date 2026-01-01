@@ -2,9 +2,11 @@ import React from 'react';
 import { GameState } from '../types/game';
 import { Store, DollarSign, X } from 'lucide-react';
 import PizzaSliceStack from './PizzaSliceStack';
-import beerImg from '/sprites/beer.png';
-import honeyImg from '/sprites/hothoney.png';
-import sundaeImg from '/sprites/sundae.png';
+import { sprite } from "../lib/assets";
+
+const beerImg = sprites("beer.png");
+const honeyImg = sprites("hothoney.png");
+const sundaeImg = sprites("sundae.png");
 
 interface ItemStoreProps {
   gameState: GameState;
