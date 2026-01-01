@@ -12,7 +12,7 @@ const PizzaSliceStack: React.FC<PizzaSliceStackProps> = ({ sliceCount }) => {
   const clampedCount = Math.min(Math.max(sliceCount, 1), 8);
   let imageUrl;
   if (clampedCount === 1) {imageUrl = "https://i.imgur.com/xdnZuJm.png"}
-  else {imageUrl = `/Sprites/${clampedCount}slicepizzapan.png`};
+  else {imageUrl = `/sprites/${clampedCount}slicepizzapan.png`};
 
   return (
     <div className="relative w-full h-full">
