@@ -13,61 +13,13 @@ import {
   BOSS_CONFIG,
   POWERUPS,
   TIMINGS,
-  POSITIONS
+  POSITIONS,
+  INITIAL_GAME_STATE
 } from '../lib/constants';
 
 export const useGameLogic = (gameStarted: boolean = true) => {
-  const [gameState, setGameState] = useState<GameState>({
-    customers: [],
-    pizzaSlices: [],
-    emptyPlates: [],
-    powerUps: [],
-    activePowerUps: [],
-    floatingScores: [],
-    droppedPlates: [],
-    chefLane: 0,
-    score: 0,
-    lives: GAME_CONFIG.STARTING_LIVES,
-    level: 1,
-    gameOver: false,
-    paused: false,
-    availableSlices: 0,
-    ovens: {
-      0: { cooking: false, startTime: 0, burned: false, cleaningStartTime: 0, sliceCount: 0 },
-      1: { cooking: false, startTime: 0, burned: false, cleaningStartTime: 0, sliceCount: 0 },
-      2: { cooking: false, startTime: 0, burned: false, cleaningStartTime: 0, sliceCount: 0 },
-      3: { cooking: false, startTime: 0, burned: false, cleaningStartTime: 0, sliceCount: 0 }
-    },
-    ovenUpgrades: { 0: 0, 1: 0, 2: 0, 3: 0 },
-    ovenSpeedUpgrades: { 0: 0, 1: 0, 2: 0, 3: 0 },
-    happyCustomers: 0,
-    bank: 0,
-    showStore: false,
-    lastStoreLevelShown: 0,
-    pendingStoreShow: false,
-    fallingPizza: undefined,
-    starPowerActive: false,
-    powerUpAlert: undefined,
-    stats: {
-      slicesBaked: 0,
-      customersServed: 0,
-      longestCustomerStreak: 0,
-      currentCustomerStreak: 0,
-      platesCaught: 0,
-      largestPlateStreak: 0,
-      currentPlateStreak: 0,
-      powerUpsUsed: {
-        honey: 0,
-        'ice-cream': 0,
-        beer: 0,
-        star: 0,
-        doge: 0,
-        nyan: 0,
-        moltobenny: 0,
-      },
-      ovenUpgradesMade: 0,
-    },
-  });
+  // 1. UPDATED: Using the constant for initialization
+  const [gameState, setGameState] = useState<GameState>({ ...INITIAL_GAME_STATE });
 
   const [lastCustomerSpawn, setLastCustomerSpawn] = useState(0);
   const [lastPowerUpSpawn, setLastPowerUpSpawn] = useState(0);
@@ -1328,24 +1280,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
   }, []);
 
   const resetGame = useCallback(() => {
-    setGameState({
-      customers: [], pizzaSlices: [], emptyPlates: [], droppedPlates: [], powerUps: [], activePowerUps: [], floatingScores: [],
-      chefLane: 0, score: 0, lives: GAME_CONFIG.STARTING_LIVES, level: 1, gameOver: false, lastStarLostReason: undefined, paused: false, availableSlices: 0,
-      ovens: {
-        0: { cooking: false, startTime: 0, burned: false, cleaningStartTime: 0, sliceCount: 0 },
-        1: { cooking: false, startTime: 0, burned: false, cleaningStartTime: 0, sliceCount: 0 },
-        2: { cooking: false, startTime: 0, burned: false, cleaningStartTime: 0, sliceCount: 0 },
-        3: { cooking: false, startTime: 0, burned: false, cleaningStartTime: 0, sliceCount: 0 }
-      },
-      ovenUpgrades: { 0: 0, 1: 0, 2: 0, 3: 0 },
-      ovenSpeedUpgrades: { 0: 0, 1: 0, 2: 0, 3: 0 },
-      happyCustomers: 0, bank: 0, showStore: false, lastStoreLevelShown: 0, pendingStoreShow: false, fallingPizza: undefined, starPowerActive: false, powerUpAlert: undefined,
-      stats: {
-        slicesBaked: 0, customersServed: 0, longestCustomerStreak: 0, currentCustomerStreak: 0, platesCaught: 0, largestPlateStreak: 0, currentPlateStreak: 0,
-        powerUpsUsed: { honey: 0, 'ice-cream': 0, beer: 0, star: 0, doge: 0, nyan: 0, moltobenny: 0, }, ovenUpgradesMade: 0,
-      },
-      bossBattle: undefined,
-    });
+    // 2. UPDATED: Using the constant for reset
+    setGameState({ ...INITIAL_GAME_STATE });
     setLastCustomerSpawn(0);
     setLastPowerUpSpawn(0);
     setOvenSoundStates({ 0: 'idle', 1: 'idle', 2: 'idle', 3: 'idle' });
