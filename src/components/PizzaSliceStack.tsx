@@ -1,5 +1,5 @@
 import React from 'react';
-https://i.imgur.com/xdnZuJm.png;
+https://i.imgur.com/xdnZuJm.png
 
 interface PizzaSliceStackProps {
   sliceCount: number;
