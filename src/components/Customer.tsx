@@ -6,10 +6,10 @@ const yumfaceImg = sprite("yumface.png");
 const frozenfaceImg = sprite("frozenface.png");
 const spicyfaceImg = sprite("spicyface.png");
 const woozyfaceImg = sprite("woozyface.png");
-const criticImg = "https://i.imgur.com/ZygBTOI.png";
-const badLuckBrianImg = "https://i.imgur.com/cs0LDgJ.png";
-const badLuckBrianPukeImg = "https://i.imgur.com/yRXQDIT.png";
-import rainbowBrian from '/sprites/rainbowBrian.png';
+const criticImg = sprite("critic.png");
+const badLuckBrianImg = sprite("badluckbrian.png");'
+const badLuckBrianPukeImg = sprite("badluckbrianpuke.png");'
+const rainbowBrian = sprite("rainbowBrian.png")
 
 interface CustomerProps {
   customer: CustomerType;
