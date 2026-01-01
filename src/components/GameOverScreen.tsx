@@ -140,7 +140,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
         moltobenny,
       ] = await Promise.all([
         loadImage(sprite("chefemoji.png")),
-        loadImage(ui("PizzaDAO-Logo-White (2).png")),
+        loadImage(ui("pizzadao-logo-white.png")),
       
         loadImage(sprite("droolface.png")),
         loadImage(sprite("paperplate.png")),
@@ -150,7 +150,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
         loadImage(sprite("beer.png")),
         loadImage(sprite("doge.png")),
         loadImage(sprite("nyancat.png")),
-        loadImage(sprite("star.png")),
+        loadImage(sprite("star-power-up.png")),
         loadImage(sprite("moltobenny.png")),
       ]);
 
