@@ -1,8 +1,8 @@
 import React from 'react';
 import { PowerUp as PowerUpType } from '../types/game';
-import beerImg from '/Sprites/beer.png';
-import honeyImg from '/Sprites/hothoney.png';
-import sundaeImg from '/Sprites/sundae.png';
+import beerImg from '/sprites/beer.png';
+import honeyImg from '/sprites/hothoney.png';
+import sundaeImg from '/sprites/sundae.png';
 
 interface PowerUpProps {
   powerUp: PowerUpType;
