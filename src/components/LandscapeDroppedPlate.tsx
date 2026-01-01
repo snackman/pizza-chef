@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { DroppedPlate as DroppedPlateType } from '../types/game';
-import slice1PlateImg from '/Ssrites/1slicepizzapan.png';
+import slice1PlateImg from '/sprites/1slicepizzapan.png';
 
 interface LandscapeDroppedPlateProps {
   droppedPlate: DroppedPlateType;
