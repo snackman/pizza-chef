@@ -11,9 +11,9 @@ const beerImg = sprite("beer.png");
 const honeyImg = sprite("hothoney.png");
 const sundaeImg = sprite("sundae.png");
 const dogeImg = sprite("doge.png");
-const nyanImg = sprite("nyan.png");
+const nyanImg = sprite("nyancat.png");
 const moltoBennyImg = sprite("moltobenny.png");
-const starImg = sprite("star.png");
+const starImg = sprite("star-power-up.png");
 
 const PowerUp: React.FC<PowerUpProps> = ({ powerUp }) => {
   const leftPosition = powerUp.position;
