@@ -1,14 +1,16 @@
-import React from 'react';
-import { Customer as CustomerType } from '../types/game';
-import droolfaceImg from '/sprites/droolface.png';
-import yumfaceImg from '/sprites/yumface.png';
-import frozenfaceImg from '/sprites/frozenface.png';
-const spicyfaceImg = "https://i.imgur.com/MDS5EVg.png";
-import woozyfaceImg from '/sprites/woozyface.png';
-const criticImg = "https://i.imgur.com/ZygBTOI.png";
-const badLuckBrianImg = "https://i.imgur.com/cs0LDgJ.png";
-const badLuckBrianPukeImg = "https://i.imgur.com/yRXQDIT.png";
-import rainbowBrian from '/sprites/rainbowBrian.png';
+import React from "react";
+import { Customer as CustomerType } from "../types/game";
+import { sprite } from "../lib/assets";
+
+const droolfaceImg = sprite("droolface.png");
+const yumfaceImg = sprite("yumface.png");
+const frozenfaceImg = sprite("frozenface.png");
+const spicyfaceImg = sprite("spicy-face.png");
+const woozyfaceImg = sprite("woozyface.png");
+const criticImg = sprite("critic.png");
+const badLuckBrianImg = sprite("bad-luck-brian.png");
+const badLuckBrianPukeImg = sprite("bad-luck-brian-puke.png");
+const rainbowBrian = sprite("rainbow-brian.png");
 
 interface CustomerProps {
   customer: CustomerType;
