@@ -1,5 +1,6 @@
 import React from 'react';
 import { PowerUpType } from '../types/game';
+import { sprite } from "../lib/assets";
 
 const dogeAlert = sprite("doge-power-up-alert");
 
