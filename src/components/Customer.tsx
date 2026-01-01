@@ -1,7 +1,6 @@
 import React from 'react';
 import { Customer as CustomerType } from '../types/game';
-import { sprite } from "@/lib/assets";
-const droolfaceImg = sprite("droolface.png");
+import droolfaceImg from '/sprites/droolface.png';
 import yumfaceImg from '/sprites/yumface.png';
 import frozenfaceImg from '/sprites/frozenface.png';
 const spicyfaceImg = "https://i.imgur.com/MDS5EVg.png";
