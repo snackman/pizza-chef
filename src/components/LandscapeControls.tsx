@@ -1,7 +1,7 @@
 import React from 'react';
 import { sprite } from '../lib/assets';
 
-const pizzaPanImg from sprites("pizzapan.png");
+const pizzaPanImg = sprites("pizzapan.png");
 
 interface LandscapeControlsProps {
   gameOver: boolean;
