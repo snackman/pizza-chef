@@ -3,7 +3,7 @@ import { Send, Trophy, Download, Share2, Check, Copy as CopyIcon, ArrowLeft, Rot
 import { submitScore, createGameSession, GameSession, uploadScorecardImage, updateGameSessionImage } from '../services/highScores';
 import { GameStats, StarLostReason } from '../types/game';
 import HighScores from './HighScores';
-import { sprite } from '../lib/assets';
+import { sprite, ui } from '../lib/assets';
 
 interface GameOverScreenProps {
   stats: GameStats;
