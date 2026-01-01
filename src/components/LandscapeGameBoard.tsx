@@ -9,7 +9,7 @@ import FloatingScore from './FloatingScore';
 import Boss from './Boss';
 import { GameState } from '../types/game';
 import landscapeBg from '../assets/landscape version pizza chef.png';
-import chefImg from '/Sprites/chefemoji.png';
+import chefImg from '/sprites/chefemoji.png';
 
 interface LandscapeGameBoardProps {
   gameState: GameState;
