@@ -1,7 +1,10 @@
 import React from 'react';
 import { Pizza, X, RotateCcw, Volume2, VolumeX, Trophy, Play } from 'lucide-react';
 import { soundManager } from '../utils/sounds';
-import smokingChefImg from '/sprites/smokingchef.png';
+import { sprite } from '../lib/assets';
+
+const chefImg = sprite("chef.png");
+const smokingChefImg = sprite("chef-smoking.png");
 
 interface InstructionsModalProps {
   onClose: () => void;
