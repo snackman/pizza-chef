@@ -3,6 +3,7 @@ import { Send, Trophy, Download, Share2, Check, Copy as CopyIcon, ArrowLeft, Rot
 import { submitScore, createGameSession, GameSession, uploadScorecardImage, updateGameSessionImage } from '../services/highScores';
 import { GameStats, StarLostReason } from '../types/game';
 import HighScores from './HighScores';
+import { sprite } from '../lib/assets';
 
 interface GameOverScreenProps {
   stats: GameStats;
@@ -139,18 +140,20 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
         star,
         moltobenny,
       ] = await Promise.all([
-        loadImage('https://i.imgur.com/EPCSa79.png'),
-        loadImage('/PizzaDAO-Logo-White (2).png'),
-        loadImage('/sprites/droolface.png'),
-        loadImage('/sprites/paperplate.png'),
-        loadImage('/sprites/fullpizza.png'),
-        loadImage('/sprites/hothoney.png'),
-        loadImage('/sprites/sundae.png'),
-        loadImage('/sprites/beer.png'),
-        loadImage('/sprites/doge.png'),
-        loadImage('/sprites/nyancat.png'),
-        loadImage('https://i.imgur.com/hw0jkrq.png'),
-        loadImage('https://i.imgur.com/5goVcAS.png'),
+        loadImage(sprite("chef.png")),
+        loadImage(ui("pizzadao-logo-white.png")),
+        
+        loadImage(sprite("drool-face.png")),
+        loadImage(sprite("paper-plate.png")),
+        loadImage(sprite("fullpizza.png")),
+        loadImage(sprite("hot-honey.png")),
+        loadImage(sprite("sundae.png")),
+        loadImage(sprite("beer.png")),
+        loadImage(sprite("doge.png")),
+        loadImage(sprite("nyan-cat.png")),
+        loadImage(sprite("star.png")),
+        loadImage(sprite("moltobenny.png")),
+
       ]);
 
       imagesRef.current = {
