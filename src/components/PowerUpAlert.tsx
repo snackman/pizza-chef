@@ -1,8 +1,5 @@
 import React from 'react';
 import { PowerUpType } from '../types/game';
-import { sprite } from "../lib/assets";
-
-const dogeAlert = sprite("doge-power-up-alert.png");
 
 interface PowerUpAlertProps {
   powerUpType: PowerUpType;
@@ -14,7 +11,7 @@ const PowerUpAlert: React.FC<PowerUpAlertProps> = ({ powerUpType }) => {
     switch (powerUpType) {
       case 'doge':
         return {
-          image: dogeAlert,
+          image: 'https://i.imgur.com/n0FtlUg.png',
           scale: 6,
         };
       default:

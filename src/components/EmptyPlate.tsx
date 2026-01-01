@@ -1,8 +1,5 @@
 import React from 'react';
 import { EmptyPlate as EmptyPlateType } from '../types/game';
-import { sprite } from "../lib/assets";
-
-const paperPlate = sprite("paperplate.png");
 
 interface EmptyPlateProps {
   plate: EmptyPlateType;
@@ -53,7 +50,7 @@ const EmptyPlate: React.FC<EmptyPlateProps> = ({ plate }) => {
     >
       {/* Empty plate image */}
       <img
-        src={paperPlate}
+        src="https://i.imgur.com/vUT4nnz.png"
         alt="empty plate"
         className="absolute inset-0 w-[80%] h-[80%] object-contain"
         style={{ zIndex: 1 }}

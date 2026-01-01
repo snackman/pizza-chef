@@ -9,10 +9,7 @@ import FloatingScore from './FloatingScore';
 import Boss from './Boss';
 import { GameState } from '../types/game';
 import pizzaShopBg from '/pizza shop background v2.png';
-
-const chefImg = sprite("chefemoji.png")
-const sadChef = sprite("sad-chef.png")
-const nyanChef = sprite("nyan-chef.png")
+import chefImg from '/sprites/chefemoji.png';
 
 interface GameBoardProps {
   gameState: GameState;
@@ -169,7 +166,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
           }}
         >
           <img
-            src={gameState.gameOver ? sadChef : chefImg}
+            src={gameState.gameOver ? "https://i.imgur.com/PwRdw0u.png" : "https://i.imgur.com/EPCSa79.png"}
             alt={gameState.gameOver ? "game over" : "chef"}
             className="w-full h-full object-contain"
             style={{ transform: 'none' }}
@@ -203,7 +200,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
           }}
         >
           <img
-            src={nyanChef}
+            src="https://i.imgur.com/fGPU4Pu.png"
             alt="nyan chef"
             className="w-full h-full object-contain"
             style={{ transform: 'scale(1.5)' }}

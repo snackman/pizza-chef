@@ -1,8 +1,5 @@
 import React from 'react';
 import { PizzaSlice as PizzaSliceType } from '../types/game';
-import { sprite } from "../lib/assets";
-
-const paperPlate = sprite("paperplate.png");
 
 interface PizzaSliceProps {
   slice: PizzaSliceType;
@@ -51,7 +48,7 @@ const PizzaSlice: React.FC<PizzaSliceProps> = ({ slice }) => {
     >
       {/* White plate image underneath */}
       <img
-        src= {paperPlate}
+        src="https://i.imgur.com/XFdXriH.png"
         alt="slice1plate"
         className="absolute inset-0 w-[80%] h-[80%] object-contain"
         style={{ zIndex: 1 }}
