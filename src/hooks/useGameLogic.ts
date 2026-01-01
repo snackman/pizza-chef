@@ -975,7 +975,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           else newState.showStore = true;
         }
 
-        if (targetLevel === BOSS_CONFIG.TRIGGER_LEVEL && !newState.bossBattle?.active && !newState.bossBattle?.bossDefeated) {
+        // 3. UPDATED: MULTIPLE BOSS SPAWN LOGIC
+        // Check if there is a boss level we have passed that we haven't beaten yet
+        const nextBossLevel = BOSS_CONFIG.TRIGGER_LEVELS.find(
+          lvl => targetLevel >= lvl && !newState.defeatedBossLevels.includes(lvl)
+        );
+
+        if (nextBossLevel && !newState.bossBattle?.active) {
+          const healthMultiplier = BOSS_CONFIG.TRIGGER_LEVELS.indexOf(nextBossLevel) + 1;
           const initialMinions: BossMinion[] = [];
           for (let i = 0; i < BOSS_CONFIG.MINIONS_PER_WAVE; i++) {
             initialMinions.push({
@@ -987,7 +994,13 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             });
           }
           newState.bossBattle = {
-            active: true, bossHealth: BOSS_CONFIG.HEALTH, currentWave: 1, minions: initialMinions, bossVulnerable: true, bossDefeated: false, bossPosition: BOSS_CONFIG.BOSS_POSITION,
+            active: true,
+            bossHealth: BOSS_CONFIG.HEALTH * healthMultiplier,
+            currentWave: 1,
+            minions: initialMinions,
+            bossVulnerable: true,
+            bossDefeated: false,
+            bossPosition: BOSS_CONFIG.BOSS_POSITION,
           };
         }
       }
@@ -1048,6 +1061,11 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 newState.bossBattle!.bossDefeated = true;
                 newState.bossBattle!.active = false;
                 newState.bossBattle!.minions = [];
+
+                // 4. UPDATED: Record which boss was defeated
+                const justBeatenLevel = Math.max(...BOSS_CONFIG.TRIGGER_LEVELS.filter(l => l <= newState.level));
+                newState.defeatedBossLevels = [...newState.defeatedBossLevels, justBeatenLevel];
+
                 newState.score += SCORING.BOSS_DEFEAT;
                 bossScores.push({ points: SCORING.BOSS_DEFEAT, lane: 1, position: newState.bossBattle!.bossPosition });
               }
