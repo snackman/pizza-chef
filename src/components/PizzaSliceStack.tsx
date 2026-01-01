@@ -12,7 +12,7 @@ const PizzaSliceStack: React.FC<PizzaSliceStackProps> = ({ sliceCount }) => {
       src={sprite("pizzapan.png")}
       className="w-full h-full object-contain"
       alt="empty pan"
-    /> null;
+    />;
 
   const clampedCount = Math.min(Math.max(sliceCount, 1), 8);
 
