@@ -1,7 +1,7 @@
 import React from 'react';
+import { sprite } from '../lib/assets';
 
-
-import chefImg from '/sprites/chefemoji.png';
+const chefImg = sprite("chef.png");
 
 interface SplashScreenProps {
   onStart: () => void;
