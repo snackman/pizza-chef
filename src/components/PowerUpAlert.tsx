@@ -1,6 +1,8 @@
 import React from 'react';
 import { PowerUpType } from '../types/game';
 
+const dogeAlert = sprite("doge-power-up-alert");
+
 interface PowerUpAlertProps {
   powerUpType: PowerUpType;
   chefLane: number;
@@ -11,7 +13,7 @@ const PowerUpAlert: React.FC<PowerUpAlertProps> = ({ powerUpType }) => {
     switch (powerUpType) {
       case 'doge':
         return {
-          image: 'https://i.imgur.com/n0FtlUg.png',
+          image: dogeAlert,
           scale: 6,
         };
       default:
