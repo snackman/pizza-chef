@@ -1,7 +1,7 @@
 import React from 'react';
 import { sprite } from '../lib/assets';
 
-const pizzaPanImg = sprites("pizzapan.png");
+const pizzaPanImg = sprite("pizzapan.png");
 
 interface MobileGameControlsProps {
   gameOver: boolean;
