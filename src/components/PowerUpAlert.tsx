@@ -2,7 +2,7 @@ import React from 'react';
 import { PowerUpType } from '../types/game';
 import { sprite } from "../lib/assets";
 
-const dogeAlert = sprite("doge-power-up-alert");
+const dogeAlert = sprite("doge-power-up-alert.png");
 
 interface PowerUpAlertProps {
   powerUpType: PowerUpType;
