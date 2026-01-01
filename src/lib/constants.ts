@@ -112,3 +112,58 @@ export const POSITIONS = {
   OFF_SCREEN_LEFT: -10,
   TURN_AROUND_POINT: 90, // For woozy customers
 };
+
+// ... keep all your existing exports above ...
+
+export const INITIAL_GAME_STATE = {
+  customers: [],
+  pizzaSlices: [],
+  emptyPlates: [],
+  powerUps: [],
+  activePowerUps: [],
+  floatingScores: [],
+  droppedPlates: [],
+  chefLane: 0,
+  score: 0,
+  lives: GAME_CONFIG.STARTING_LIVES, // References the config defined at the top
+  level: 1,
+  gameOver: false,
+  paused: false,
+  availableSlices: 0,
+  ovens: {
+    0: { cooking: false, startTime: 0, burned: false, cleaningStartTime: 0, sliceCount: 0 },
+    1: { cooking: false, startTime: 0, burned: false, cleaningStartTime: 0, sliceCount: 0 },
+    2: { cooking: false, startTime: 0, burned: false, cleaningStartTime: 0, sliceCount: 0 },
+    3: { cooking: false, startTime: 0, burned: false, cleaningStartTime: 0, sliceCount: 0 }
+  },
+  ovenUpgrades: { 0: 0, 1: 0, 2: 0, 3: 0 },
+  ovenSpeedUpgrades: { 0: 0, 1: 0, 2: 0, 3: 0 },
+  happyCustomers: 0,
+  bank: 0,
+  showStore: false,
+  lastStoreLevelShown: 0,
+  pendingStoreShow: false,
+  fallingPizza: undefined,
+  starPowerActive: false,
+  powerUpAlert: undefined,
+  stats: {
+    slicesBaked: 0,
+    customersServed: 0,
+    longestCustomerStreak: 0,
+    currentCustomerStreak: 0,
+    platesCaught: 0,
+    largestPlateStreak: 0,
+    currentPlateStreak: 0,
+    powerUpsUsed: {
+      honey: 0,
+      'ice-cream': 0,
+      beer: 0,
+      star: 0,
+      doge: 0,
+      nyan: 0,
+      moltobenny: 0,
+    },
+    ovenUpgradesMade: 0,
+  },
+  bossBattle: undefined,
+};
