@@ -1,5 +1,6 @@
 import React from 'react';
 import { EmptyPlate as EmptyPlateType } from '../types/game';
+import { sprite } from '../lib/assets';
 
 interface EmptyPlateProps {
   plate: EmptyPlateType;
