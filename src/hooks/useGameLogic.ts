@@ -1,3 +1,4 @@
+// src/hooks/useGameLogic.ts
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   GameState,
@@ -40,6 +41,15 @@ import {
   updateCustomerPositions,
   processCustomerHit
 } from '../logic/customerSystem';
+
+// --- Store System (actions only) ---
+import {
+  upgradeOven as upgradeOvenStore,
+  upgradeOvenSpeed as upgradeOvenSpeedStore,
+  closeStore as closeStoreStore,
+  bribeReviewer as bribeReviewerStore,
+  buyPowerUp as buyPowerUpStore
+} from '../logic/storeSystem';
 
 export const useGameLogic = (gameStarted: boolean = true) => {
   const [gameState, setGameState] = useState<GameState>({ ...INITIAL_GAME_STATE });
@@ -846,72 +856,32 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     });
   }, [gameState.gameOver, gameState.paused, ovenSoundStates, addFloatingScore, triggerGameOver]);
 
-  // --- Store / Upgrades / Debug ---
+  // --- Store / Upgrades / Debug (now via storeSystem.ts) ---
 
   const upgradeOven = useCallback((lane: number) => {
-    setGameState(prev => {
-      const upgradeCost = COSTS.OVEN_UPGRADE;
-      const currentUpgrade = prev.ovenUpgrades[lane] || 0;
-      if (prev.bank >= upgradeCost && currentUpgrade < OVEN_CONFIG.MAX_UPGRADE_LEVEL) {
-        return {
-          ...prev,
-          bank: prev.bank - upgradeCost,
-          ovenUpgrades: { ...prev.ovenUpgrades, [lane]: currentUpgrade + 1 },
-          stats: { ...prev.stats, ovenUpgradesMade: prev.stats.ovenUpgradesMade + 1, }
-        };
-      }
-      return prev;
-    });
+    setGameState(prev => upgradeOvenStore(prev, lane));
   }, []);
 
   const upgradeOvenSpeed = useCallback((lane: number) => {
-    setGameState(prev => {
-      const speedUpgradeCost = COSTS.OVEN_SPEED_UPGRADE;
-      const currentSpeedUpgrade = prev.ovenSpeedUpgrades[lane] || 0;
-      if (prev.bank >= speedUpgradeCost && currentSpeedUpgrade < OVEN_CONFIG.MAX_SPEED_LEVEL) {
-        return {
-          ...prev,
-          bank: prev.bank - speedUpgradeCost,
-          ovenSpeedUpgrades: { ...prev.ovenSpeedUpgrades, [lane]: currentSpeedUpgrade + 1 },
-          stats: { ...prev.stats, ovenUpgradesMade: prev.stats.ovenUpgradesMade + 1, }
-        };
-      }
-      return prev;
-    });
+    setGameState(prev => upgradeOvenSpeedStore(prev, lane));
   }, []);
 
   const closeStore = useCallback(() => {
-    setGameState(prev => ({ ...prev, showStore: false }));
+    setGameState(prev => closeStoreStore(prev));
   }, []);
 
   const bribeReviewer = useCallback(() => {
     setGameState(prev => {
-      const bribeCost = COSTS.BRIBE_REVIEWER;
-      if (prev.bank >= bribeCost && prev.lives < GAME_CONFIG.MAX_LIVES) {
+      const result = bribeReviewerStore(prev);
+      if (result.events.some(e => e.type === 'LIFE_GAINED')) {
         soundManager.lifeGained();
-        return { ...prev, bank: prev.bank - bribeCost, lives: prev.lives + 1 };
       }
-      return prev;
+      return result.nextState;
     });
   }, []);
 
   const buyPowerUp = useCallback((type: 'beer' | 'ice-cream' | 'honey') => {
-    setGameState(prev => {
-      const powerUpCost = COSTS.BUY_POWERUP;
-      if (prev.bank >= powerUpCost) {
-        const lane = prev.chefLane;
-        const now = Date.now();
-        const newPowerUp: PowerUp = {
-          id: `powerup-bought-${now}`,
-          lane,
-          position: POSITIONS.SPAWN_X,
-          speed: ENTITY_SPEEDS.POWERUP,
-          type: type === 'ice-cream' ? 'ice-cream' : type === 'beer' ? 'beer' : 'honey',
-        };
-        return { ...prev, bank: prev.bank - powerUpCost, powerUps: [...prev.powerUps, newPowerUp], };
-      }
-      return prev;
-    });
+    setGameState(prev => buyPowerUpStore(prev, type, Date.now()));
   }, []);
 
   const debugActivatePowerUp = useCallback((type: PowerUpType) => {
