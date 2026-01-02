@@ -1158,4 +1158,4 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     gameState, servePizza, moveChef, useOven, cleanOven, resetGame, togglePause, upgradeOven, upgradeOvenSpeed,
     closeStore, bribeReviewer, buyPowerUp, debugActivatePowerUp,
   };
-};
+}
