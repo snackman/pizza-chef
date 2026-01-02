@@ -9,18 +9,10 @@ const sundaeImg = sprite("sundae.png");
 
 interface PowerUpProps {
   powerUp: PowerUpType;
-  boardWidth: number;
-  boardHeight: number;
 }
 
-const PowerUp: React.FC<PowerUpProps> = ({ powerUp, boardWidth, boardHeight }) => {
-  // Original coordinate system (percent of board)
-  const xPct = powerUp.position;
-  const yPct = powerUp.lane * 25 + 6;
-
-  // Convert % of board → px
-  const xPx = (xPct / 100) * boardWidth;
-  const yPx = (yPct / 100) * boardHeight;
+const PowerUp: React.FC<PowerUpProps> = ({ powerUp }) => {
+  const leftPosition = powerUp.position;
 
   const getImage = () => {
     switch (powerUp.type) {
@@ -45,18 +37,14 @@ const PowerUp: React.FC<PowerUpProps> = ({ powerUp, boardWidth, boardHeight }) =
 
   const image = getImage();
 
-  // Avoid doing weird transforms before we know board size
-  const ready = boardWidth > 0 && boardHeight > 0;
+  const topPercent = powerUp.lane * 25 + 6;
 
   return (
     <div
-      className="absolute w-[8%] aspect-square flex items-center justify-center"
+      className="absolute w-[8%] aspect-square transition-all duration-100 flex items-center justify-center"
       style={{
-        left: 0,
-        top: 0,
-        transform: ready ? `translate3d(${xPx}px, ${yPx}px, 0)` : undefined,
-        willChange: 'transform',
-        transition: 'transform 100ms linear',
+        left: `${leftPosition}%`,
+        top: `${topPercent}%`,
       }}
     >
       {image && (
