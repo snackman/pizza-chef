@@ -69,6 +69,7 @@ const Customer: React.FC<CustomerProps> = ({ customer, boardWidth, boardHeight }
       >
         {display.type === 'image' ? (
           <img
+            key={display.value}
             src={display.value}
             alt={display.alt}
             className="w-full h-full object-contain"
