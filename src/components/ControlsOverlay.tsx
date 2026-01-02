@@ -32,9 +32,6 @@ const ControlsOverlay: React.FC<ControlsOverlayProps> = ({ onClose }) => {
           alt="Game Controls"
           className="w-full h-auto rounded-lg shadow-2xl"
         />
-        {/* Visual indicator for close area (optional, can be removed) */}
-        <div className="absolute top-0 right-0 w-[20%] h-[20%] opacity-0 hover:opacity-20 transition-opacity bg-white rounded-bl-lg" />
-      </div>
     </div>
   );
 };
