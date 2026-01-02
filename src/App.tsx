@@ -15,6 +15,9 @@ import StreakDisplay from './components/StreakDisplay';
 import DebugPanel from './components/DebugPanel';
 import ControlsOverlay from './components/ControlsOverlay';
 import { useGameLogic } from './hooks/useGameLogic';
+import { bg } from './lib/assets';
+
+const counterImg = bg("counter.png");
 
 function App() {
   const [showGameOver, setShowGameOver] = useState(false);
@@ -335,6 +338,21 @@ function App() {
             <DebugPanel onActivatePowerUp={debugActivatePowerUp} />
           )}
         </div>
+
+        {/* Marble counter texture background on mobile */}
+        {isMobile && (
+          <div
+            className="fixed bottom-0 left-0 right-0 z-30"
+            style={{
+              height: 'calc(100vh - 100vw * 3/5 - 60px)',
+              minHeight: '45vh',
+              backgroundImage: `url(${counterImg})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+            }}
+          />
+        )}
 
         {gameState.gameOver && showGameOver && (
           <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-40 p-2">
