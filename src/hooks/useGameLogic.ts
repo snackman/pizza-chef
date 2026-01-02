@@ -872,7 +872,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
   const bribeReviewer = useCallback(() => {
     setGameState(prev => {
-      const result = bribeReviewerStore(prev);
+      const result = bribeReviewerStore(prev);(!customer.served && !customer.vomit && !customer.disappointed
       if (result.events.some(e => e.type === 'LIFE_GAINED')) {
         soundManager.lifeGained();
       }
