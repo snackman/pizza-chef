@@ -44,7 +44,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onStart }) => {
           <img
             src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg"
             alt="GitHub"
-            className="w-8 h-8 mx-auto"
+            className="w-8 h-8 mx-auto filter invert"
           />
         </a>
       </div>
