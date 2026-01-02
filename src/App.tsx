@@ -368,7 +368,7 @@ function App() {
           {/* Marble counter texture background on mobile - anchored to bottom of gameboard */}
           {isMobile && (
             <div
-              className="fixed left-0 right-0 bottom-0 z-30"
+              className="fixed left-0 right-0 bottom-0 z-25"
               style={{
                 top: `${marbleTop}px`,
                 backgroundImage: `url(${counterImg})`,
