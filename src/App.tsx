@@ -313,7 +313,7 @@ function App() {
     <div className="fixed inset-0 bg-gradient-to-br from-orange-200 via-yellow-100 to-red-200 flex items-center justify-center overflow-hidden">
       <div className="relative w-full h-full flex flex-col">
         <div className={`flex-1 flex flex-col items-center ${isMobile ? 'justify-start' : 'justify-center p-2 sm:p-4 gap-0'} ${isMobile ? 'relative' : ''}`}>
-          <div className={`w-ful ${isMobile ? '' : 'max-w-6xl'}`}>
+          <div className={`w-full ${isMobile ? '' : 'max-w-6xl'}`}>
             <ScoreBoard gameState={gameState} onShowInstructions={() => setShowInstructions(true)} />
           </div>
 
