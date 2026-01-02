@@ -9,7 +9,7 @@ interface ScoreBoardProps {
 
 const ScoreBoard: React.FC<ScoreBoardProps> = ({ gameState, onShowInstructions }) => {
   return (
-    <div className="bg-gradient-to-r from-red-600 to-red-700 text-white p-3 sm:p-4 rounded-lg shadow-lg">
+    <div className="bg-gradient-to-r from-red-600 to-red-700 text-white p-3 sm:p-4 sm:rounded-lg shadow-lg">
       <div className="flex items-center justify-center sm:justify-between">
         <div className="flex items-center space-x-3 sm:space-x-6 text-sm sm:text-base">
           <div className="flex items-center space-x-2">
