@@ -525,7 +525,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 lastReason = 'beer_vomit';
                 return { ...customer, woozy: false, vomit: true, disappointed: true, movingRight: true };
               }
-              if (!customer.served && !customer.vomit && !customer.disappointed &&!customer.leaving) {
+              if (!customer.served && !customer.vomit && !customer.disappointed &&!customer.leaving) {}
                 if (customer.badLuckBrian) {
                   livesLost += 1;
                   lastReason = 'brian_hurled';
@@ -872,7 +872,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
   const bribeReviewer = useCallback(() => {
     setGameState(prev => {
-      const result = bribeReviewerStore(prev);(!customer.served && !customer.vomit && !customer.disappointed
+      const result = bribeReviewerStore(prev);
       if (result.events.some(e => e.type === 'LIFE_GAINED')) {
         soundManager.lifeGained();
       }
