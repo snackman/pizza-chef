@@ -337,16 +337,44 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       });
       newState.powerUps = newState.powerUps.filter(p => !caughtPowerUpIds.has(p.id)).map(p => ({ ...p, position: p.position - p.speed })).filter(p => p.position > 0);
 
-      // 7. PLATE CATCHING
-      newState.emptyPlates = newState.emptyPlates.map(plate => ({ ...plate, position: plate.position - plate.speed })).filter(plate => {
-        if (plate.position <= 10 && plate.lane === newState.chefLane && !newState.nyanSweep?.active) {
+// --- 7. PLATE CATCHING LOGIC ---
+      const platesToScore: Array<{ points: number; lane: number; position: number }> = [];
+      const platesToKeep: EmptyPlate[] = [];
+
+      newState.emptyPlates.forEach(plate => {
+        const nextPosition = plate.position - plate.speed;
+        
+        // Catch Condition
+        if (nextPosition <= 10 && plate.lane === newState.chefLane && !newState.nyanSweep?.active) {
           soundManager.plateCaught();
           const pointsEarned = Math.floor(SCORING.PLATE_CAUGHT * dogeMultiplier * getStreakMultiplier(newState.stats.currentPlateStreak));
-          newState.score += pointsEarned; newState.stats.platesCaught += 1; newState.stats.currentPlateStreak += 1;
-          newState = addFloatingScore(pointsEarned, plate.lane, plate.position, newState);
-          return false;
-        } else if (plate.position <= 0) { soundManager.plateDropped(); newState.stats.currentPlateStreak = 0; return false; }
-        return true;
+          
+          // Store data to update state AFTER the loop
+          platesToScore.push({ points: pointsEarned, lane: plate.lane, position: nextPosition });
+          
+          newState.score += pointsEarned;
+          newState.stats.platesCaught += 1;
+          newState.stats.currentPlateStreak += 1;
+          if (newState.stats.currentPlateStreak > newState.stats.largestPlateStreak) {
+            newState.stats.largestPlateStreak = newState.stats.currentPlateStreak;
+          }
+        } 
+        // Drop Condition
+        else if (nextPosition <= 0) {
+          soundManager.plateDropped();
+          newState.stats.currentPlateStreak = 0;
+        } 
+        // Keep Moving
+        else {
+          platesToKeep.push({ ...plate, position: nextPosition });
+        }
+      });
+
+      newState.emptyPlates = platesToKeep;
+      
+      // Apply floating scores for each caught plate
+      platesToScore.forEach(pts => {
+        newState = addFloatingScore(pts.points, pts.lane, pts.position, newState);
       });
 
       // 8. NYAN SWEEP & 9. BOSS LOGIC (Keeping existing logic for brevity as per instructions)
