@@ -525,7 +525,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 lastReason = 'beer_vomit';
                 return { ...customer, woozy: false, vomit: true, disappointed: true, movingRight: true };
               }
-              if (!customer.served && !customer.vomit && !customer.disappointed) {
+              if (!customer.served && !customer.vomit && !customer.disappointed && !customer.leaving) {
                 if (customer.badLuckBrian) {
                   livesLost += 1;
                   lastReason = 'brian_hurled';
