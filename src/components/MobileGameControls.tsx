@@ -80,7 +80,8 @@ const MobileGameControls: React.FC<MobileGameControlsProps> = ({
   const currentOven = ovens[safeLane];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 h-[45vh] pointer-events-none z-40" />
+    <div className="fixed bottom-0 left-0 right-0 h-[45vh] pointer-events-none z-40">
+
       <div className="absolute inset-0 flex items-center justify-between px-4 pt-8 pointer-events-auto">
 
         {/* Chef Movement Control */}
