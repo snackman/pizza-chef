@@ -319,7 +319,7 @@ function App() {
 
           <div
             ref={gameBoardRef}
-            className={`relative w-full ${isMobile ? '' : 'max-w-6xl'} aspect-[5/3]`}
+            className={`relative w-full ${isMobile ? '' : 'max-w-6xl'} aspect-[5/3] z-30`}
             onClick={handleGameBoardClick}
           >
             <GameBoard gameState={gameState} />
