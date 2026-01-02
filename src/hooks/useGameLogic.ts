@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react'; 
 import { GameState, Customer, PizzaSlice, EmptyPlate, PowerUp, PowerUpType, FloatingScore, DroppedPlate, StarLostReason, BossMinion } from '../types/game';
 import { soundManager } from '../utils/sounds';
 import { getStreakMultiplier } from '../components/StreakDisplay';
@@ -35,11 +35,11 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
   const [lastCustomerSpawn, setLastCustomerSpawn] = useState(0);
   const [lastPowerUpSpawn, setLastPowerUpSpawn] = useState(0);
-   
+  
   const [ovenSoundStates, setOvenSoundStates] = useState<{ [key: number]: OvenSoundState }>({
     0: 'idle', 1: 'idle', 2: 'idle', 3: 'idle'
   });
-   
+  
   const prevShowStoreRef = useRef(false);
 
   // --- Helpers (Score, Spawning) ---
@@ -202,7 +202,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       let newState = { ...prev, stats: { ...prev.stats, powerUpsUsed: { ...prev.stats.powerUpsUsed } } };
       const now = Date.now();
-       
+      
       const hasDoge = newState.activePowerUps.some(p => p.type === 'doge');
       const hasStar = newState.activePowerUps.some(p => p.type === 'star');
       const dogeMultiplier = hasDoge ? 2 : 1;
@@ -274,7 +274,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       // 3. COLLISION LOOP (Slices vs Customers)
       newState.pizzaSlices = newState.pizzaSlices.map(slice => ({ ...slice, position: slice.position + slice.speed }));
-       
+      
       const remainingSlices: PizzaSlice[] = [];
       const destroyedPowerUpIds = new Set<string>();
       const platesFromSlices = new Set<string>();
@@ -293,14 +293,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
           if (isHit) {
             consumed = true;
-             
+            
             // --- CALL THE NEW HIT LOGIC ---
             const hitResult = processCustomerHit(customer, now);
-             
+            
             // A. Add new entities
             if (hitResult.newEntities.droppedPlate) newState.droppedPlates = [...newState.droppedPlates, hitResult.newEntities.droppedPlate];
             if (hitResult.newEntities.emptyPlate) newState.emptyPlates = [...newState.emptyPlates, hitResult.newEntities.emptyPlate];
-             
+            
             // B. Process Side Effects (Scoring/Sound)
             hitResult.events.forEach(event => {
               if (event === 'BRIAN_DROPPED_PLATE') {
@@ -319,7 +319,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 newState.stats.customersServed += 1;
                 newState.stats.currentCustomerStreak += 1;
                 if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
-                 
+                
                 // Check Life Gain
                 if (newState.happyCustomers % 8 === 0 && newState.lives < GAME_CONFIG.MAX_LIVES) {
                   const starsToAdd = Math.min(dogeMultiplier, GAME_CONFIG.MAX_LIVES - newState.lives);
@@ -344,7 +344,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 newState.stats.customersServed += 1;
                 newState.stats.currentCustomerStreak += 1;
                 if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
-                 
+                
                 // Critic Bonus Life or Happy Customer Life
                 if (customer.critic && event === 'SERVED_CRITIC') {
                    if (customer.position >= 50 && newState.lives < GAME_CONFIG.MAX_LIVES) {
@@ -892,7 +892,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       if (prev.gameOver) return prev;
       const now = Date.now();
       let newState = { ...prev, stats: { ...prev.stats, powerUpsUsed: { ...prev.stats.powerUpsUsed, [type]: prev.stats.powerUpsUsed[type] + 1, } } };
-       
+      
       const dogeMultiplier = prev.activePowerUps.some(p => p.type === 'doge') ? 2 : 1;
 
       if (type === 'beer') {
