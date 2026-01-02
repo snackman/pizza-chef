@@ -245,8 +245,14 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
       ))}
 
       {gameState.powerUps.map((powerUp) => (
-        <PowerUp key={powerUp.id} powerUp={powerUp} />
+        <PowerUp
+          key={powerUp.id}
+          powerUp={powerUp}
+          boardWidth={boardSize.width}
+          boardHeight={boardSize.height}
+        />
       ))}
+
 
       {/* Boss Battle */}
       {gameState.bossBattle && (

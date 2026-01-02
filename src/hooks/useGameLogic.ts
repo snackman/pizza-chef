@@ -1,5 +1,16 @@
-import { useState, useEffect, useCallback, useRef } from 'react'; 
-import { GameState, Customer, PizzaSlice, EmptyPlate, PowerUp, PowerUpType, FloatingScore, DroppedPlate, StarLostReason, BossMinion } from '../types/game';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import {
+  GameState,
+  Customer,
+  PizzaSlice,
+  EmptyPlate,
+  PowerUp,
+  PowerUpType,
+  FloatingScore,
+  DroppedPlate,
+  StarLostReason,
+  BossMinion
+} from '../types/game';
 import { soundManager } from '../utils/sounds';
 import { getStreakMultiplier } from '../components/StreakDisplay';
 import {
@@ -18,16 +29,16 @@ import {
 } from '../lib/constants';
 
 // --- Logic Imports ---
-import { 
-  processOvenTick, 
-  tryInteractWithOven, 
-  calculateOvenPauseState, 
-  OvenSoundState 
+import {
+  processOvenTick,
+  tryInteractWithOven,
+  calculateOvenPauseState,
+  OvenSoundState
 } from '../logic/ovenSystem';
 
-import { 
-  updateCustomerPositions, 
-  processCustomerHit 
+import {
+  updateCustomerPositions,
+  processCustomerHit
 } from '../logic/customerSystem';
 
 export const useGameLogic = (gameStarted: boolean = true) => {
@@ -35,11 +46,11 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
   const [lastCustomerSpawn, setLastCustomerSpawn] = useState(0);
   const [lastPowerUpSpawn, setLastPowerUpSpawn] = useState(0);
-  
+
   const [ovenSoundStates, setOvenSoundStates] = useState<{ [key: number]: OvenSoundState }>({
     0: 'idle', 1: 'idle', 2: 'idle', 3: 'idle'
   });
-  
+
   const prevShowStoreRef = useRef(false);
 
   // --- Helpers (Score, Spawning) ---
@@ -55,13 +66,44 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     };
   }, []);
 
+  /**
+   * Consolidated "game over" cleanup:
+   * - triggers game over sound once
+   * - pauses ovens (and sets paused=true)
+   * - resets oven sound states
+   * - drops remaining pizza slices as falling pizza + clears available slices
+   */
+  const triggerGameOver = useCallback((state: GameState, now: number): GameState => {
+    if (state.gameOver) return state;
+
+    // Stop oven loop + freeze oven timers
+    setOvenSoundStates({ 0: 'idle', 1: 'idle', 2: 'idle', 3: 'idle' });
+    const pausedOvens = calculateOvenPauseState(state.ovens, true, now);
+
+    soundManager.gameOver();
+
+    const shouldDropPizza = state.availableSlices > 0;
+
+    return {
+      ...state,
+      gameOver: true,
+      paused: true,
+      ovens: pausedOvens,
+      fallingPizza: shouldDropPizza ? { lane: state.chefLane, y: 0 } : state.fallingPizza,
+      availableSlices: 0,
+    };
+  }, []);
+
   const spawnPowerUp = useCallback(() => {
     const now = Date.now();
     if (now - lastPowerUpSpawn < SPAWN_RATES.POWERUP_MIN_INTERVAL) return;
 
     const lane = Math.floor(Math.random() * GAME_CONFIG.LANE_COUNT);
     const rand = Math.random();
-    const randomType = rand < PROBABILITIES.POWERUP_STAR_CHANCE ? 'star' : POWERUPS.TYPES[Math.floor(Math.random() * POWERUPS.TYPES.length)];
+    const randomType =
+      rand < PROBABILITIES.POWERUP_STAR_CHANCE
+        ? 'star'
+        : POWERUPS.TYPES[Math.floor(Math.random() * POWERUPS.TYPES.length)];
 
     setGameState(prev => ({
       ...prev,
@@ -194,7 +236,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       if (prev.gameOver) {
         if (prev.fallingPizza) {
           const newY = prev.fallingPizza.y + ENTITY_SPEEDS.FALLING_PIZZA;
-          return newY > 400 ? { ...prev, fallingPizza: undefined } : { ...prev, fallingPizza: { ...prev.fallingPizza, y: newY } };
+          return newY > 400
+            ? { ...prev, fallingPizza: undefined }
+            : { ...prev, fallingPizza: { ...prev.fallingPizza, y: newY } };
         }
         return prev;
       }
@@ -202,16 +246,16 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       let newState = { ...prev, stats: { ...prev.stats, powerUpsUsed: { ...prev.stats.powerUpsUsed } } };
       const now = Date.now();
-      
+
       const hasDoge = newState.activePowerUps.some(p => p.type === 'doge');
       const hasStar = newState.activePowerUps.some(p => p.type === 'star');
       const dogeMultiplier = hasDoge ? 2 : 1;
 
       // 1. PROCESS OVENS (Logic from ovenSystem)
       const ovenTickResult = processOvenTick(
-        newState.ovens, 
-        ovenSoundStates, 
-        newState.ovenSpeedUpgrades, 
+        newState.ovens,
+        ovenSoundStates,
+        newState.ovenSpeedUpgrades,
         now
       );
       newState.ovens = ovenTickResult.nextOvens;
@@ -219,23 +263,18 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         setOvenSoundStates(ovenTickResult.nextSoundStates);
       }
       ovenTickResult.events.forEach(event => {
-        switch(event.type) {
+        switch (event.type) {
           case 'SOUND_READY': soundManager.ovenReady(); break;
           case 'SOUND_WARNING': soundManager.ovenWarning(); break;
           case 'SOUND_BURNING': soundManager.ovenBurning(); break;
           case 'CLEANING_COMPLETE': soundManager.cleaningComplete(); break;
-          case 'BURNED_ALIVE': 
+          case 'BURNED_ALIVE':
             soundManager.ovenBurned();
             soundManager.lifeLost();
             newState.lives = Math.max(0, newState.lives - 1);
             newState.lastStarLostReason = 'burned_pizza';
             if (newState.lives === 0) {
-              newState.gameOver = true;
-              soundManager.gameOver();
-              if (newState.availableSlices > 0) {
-                newState.fallingPizza = { lane: newState.chefLane, y: 0 };
-                newState.availableSlices = 0;
-              }
+              newState = triggerGameOver(newState, now);
             }
             break;
         }
@@ -251,8 +290,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       customerUpdate.events.forEach(event => {
         if (event === 'LIFE_LOST') {
-          soundManager.customerDisappointed(); 
-          soundManager.lifeLost(); 
+          soundManager.customerDisappointed();
+          soundManager.lifeLost();
         }
         if (event === 'STAR_LOST_CRITIC') {
           newState.lives = Math.max(0, newState.lives - 2);
@@ -263,18 +302,13 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           newState.lastStarLostReason = 'disappointed_customer';
         }
         if (event === 'GAME_OVER' && newState.lives === 0) {
-          newState.gameOver = true;
-          soundManager.gameOver();
-          if (newState.availableSlices > 0) {
-            newState.fallingPizza = { lane: newState.chefLane, y: 0 };
-            newState.availableSlices = 0;
-          }
+          newState = triggerGameOver(newState, now);
         }
       });
 
       // 3. COLLISION LOOP (Slices vs Customers)
       newState.pizzaSlices = newState.pizzaSlices.map(slice => ({ ...slice, position: slice.position + slice.speed }));
-      
+
       const remainingSlices: PizzaSlice[] = [];
       const destroyedPowerUpIds = new Set<string>();
       const platesFromSlices = new Set<string>();
@@ -293,14 +327,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
           if (isHit) {
             consumed = true;
-            
+
             // --- CALL THE NEW HIT LOGIC ---
             const hitResult = processCustomerHit(customer, now);
-            
+
             // A. Add new entities
             if (hitResult.newEntities.droppedPlate) newState.droppedPlates = [...newState.droppedPlates, hitResult.newEntities.droppedPlate];
             if (hitResult.newEntities.emptyPlate) newState.emptyPlates = [...newState.emptyPlates, hitResult.newEntities.emptyPlate];
-            
+
             // B. Process Side Effects (Scoring/Sound)
             hitResult.events.forEach(event => {
               if (event === 'BRIAN_DROPPED_PLATE') {
@@ -319,7 +353,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 newState.stats.customersServed += 1;
                 newState.stats.currentCustomerStreak += 1;
                 if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
-                
+
                 // Check Life Gain
                 if (newState.happyCustomers % 8 === 0 && newState.lives < GAME_CONFIG.MAX_LIVES) {
                   const starsToAdd = Math.min(dogeMultiplier, GAME_CONFIG.MAX_LIVES - newState.lives);
@@ -344,19 +378,19 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 newState.stats.customersServed += 1;
                 newState.stats.currentCustomerStreak += 1;
                 if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
-                
+
                 // Critic Bonus Life or Happy Customer Life
                 if (customer.critic && event === 'SERVED_CRITIC') {
-                   if (customer.position >= 50 && newState.lives < GAME_CONFIG.MAX_LIVES) {
-                     newState.lives += 1;
-                     soundManager.lifeGained();
-                   }
+                  if (customer.position >= 50 && newState.lives < GAME_CONFIG.MAX_LIVES) {
+                    newState.lives += 1;
+                    soundManager.lifeGained();
+                  }
                 } else {
-                   if (newState.happyCustomers % 8 === 0 && newState.lives < GAME_CONFIG.MAX_LIVES) {
-                     const starsToAdd = Math.min(dogeMultiplier, GAME_CONFIG.MAX_LIVES - newState.lives);
-                     newState.lives += starsToAdd;
-                     if (starsToAdd > 0) soundManager.lifeGained();
-                   }
+                  if (newState.happyCustomers % 8 === 0 && newState.lives < GAME_CONFIG.MAX_LIVES) {
+                    const starsToAdd = Math.min(dogeMultiplier, GAME_CONFIG.MAX_LIVES - newState.lives);
+                    newState.lives += starsToAdd;
+                    if (starsToAdd > 0) soundManager.lifeGained();
+                  }
                 }
               }
             });
@@ -395,7 +429,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       newState.powerUps = newState.powerUps.filter(p => !destroyedPowerUpIds.has(p.id));
 
       if (sliceWentOffScreen) newState.stats.currentPlateStreak = 0;
-      customerScores.forEach(({ points, lane, position }) => newState = addFloatingScore(points, lane, position, newState));
+      customerScores.forEach(({ points, lane, position }) => { newState = addFloatingScore(points, lane, position, newState); });
 
       // --- 4. CLEANUP EXPIRATIONS ---
       newState.floatingScores = newState.floatingScores.filter(fs => now - fs.startTime < TIMINGS.FLOATING_SCORE_LIFETIME);
@@ -453,7 +487,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           return customer;
         });
       }
-      starPowerScores.forEach(({ points, lane, position }) => newState = addFloatingScore(points, lane, position, newState));
+      starPowerScores.forEach(({ points, lane, position }) => { newState = addFloatingScore(points, lane, position, newState); });
 
       // --- 6. CHEF POWERUP COLLISIONS ---
       const caughtPowerUpIds = new Set<string>();
@@ -498,12 +532,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               if (lastReason) newState.lastStarLostReason = lastReason;
             }
             if (newState.lives === 0) {
-              newState.gameOver = true;
-              soundManager.gameOver();
-              if (newState.availableSlices > 0) {
-                newState.fallingPizza = { lane: newState.chefLane, y: 0 };
-                newState.availableSlices = 0;
-              }
+              newState = triggerGameOver(newState, now);
             }
           } else if (powerUp.type === 'star') {
             newState.availableSlices = GAME_CONFIG.MAX_SLICES;
@@ -547,32 +576,35 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           }
         }
       });
-      newState.powerUps = newState.powerUps.filter(powerUp => !caughtPowerUpIds.has(powerUp.id))
+      newState.powerUps = newState.powerUps
+        .filter(powerUp => !caughtPowerUpIds.has(powerUp.id))
         .map(powerUp => ({ ...powerUp, position: powerUp.position - powerUp.speed }))
         .filter(powerUp => powerUp.position > 0);
-      powerUpScores.forEach(({ points, lane, position }) => newState = addFloatingScore(points, lane, position, newState));
+      powerUpScores.forEach(({ points, lane, position }) => { newState = addFloatingScore(points, lane, position, newState); });
 
       // --- 7. PLATE CATCHING LOGIC ---
       const platesToAddScores: Array<{ points: number; lane: number; position: number }> = [];
-      newState.emptyPlates = newState.emptyPlates.map(plate => ({ ...plate, position: plate.position - plate.speed })).filter(plate => {
-        if (plate.position <= 10 && plate.lane === newState.chefLane && !newState.nyanSweep?.active) {
-          soundManager.plateCaught();
-          const baseScore = SCORING.PLATE_CAUGHT;
-          const pointsEarned = Math.floor(baseScore * dogeMultiplier * getStreakMultiplier(newState.stats.currentPlateStreak));
-          newState.score += pointsEarned;
-          platesToAddScores.push({ points: pointsEarned, lane: plate.lane, position: plate.position });
-          newState.stats.platesCaught += 1;
-          newState.stats.currentPlateStreak += 1;
-          if (newState.stats.currentPlateStreak > newState.stats.largestPlateStreak) newState.stats.largestPlateStreak = newState.stats.currentPlateStreak;
-          return false;
-        } else if (plate.position <= 0) {
-          soundManager.plateDropped();
-          newState.stats.currentPlateStreak = 0;
-          return false;
-        }
-        return true;
-      });
-      platesToAddScores.forEach(({ points, lane, position }) => newState = addFloatingScore(points, lane, position, newState));
+      newState.emptyPlates = newState.emptyPlates
+        .map(plate => ({ ...plate, position: plate.position - plate.speed }))
+        .filter(plate => {
+          if (plate.position <= 10 && plate.lane === newState.chefLane && !newState.nyanSweep?.active) {
+            soundManager.plateCaught();
+            const baseScore = SCORING.PLATE_CAUGHT;
+            const pointsEarned = Math.floor(baseScore * dogeMultiplier * getStreakMultiplier(newState.stats.currentPlateStreak));
+            newState.score += pointsEarned;
+            platesToAddScores.push({ points: pointsEarned, lane: plate.lane, position: plate.position });
+            newState.stats.platesCaught += 1;
+            newState.stats.currentPlateStreak += 1;
+            if (newState.stats.currentPlateStreak > newState.stats.largestPlateStreak) newState.stats.largestPlateStreak = newState.stats.currentPlateStreak;
+            return false;
+          } else if (plate.position <= 0) {
+            soundManager.plateDropped();
+            newState.stats.currentPlateStreak = 0;
+            return false;
+          }
+          return true;
+        });
+      platesToAddScores.forEach(({ points, lane, position }) => { newState = addFloatingScore(points, lane, position, newState); });
 
       // --- 8. NYAN CAT SWEEP LOGIC ---
       if (newState.nyanSweep?.active) {
@@ -580,11 +612,11 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         const dt = Math.min(now - newState.nyanSweep.lastUpdateTime, 100);
         const INITIAL_X = GAME_CONFIG.CHEF_X_POSITION;
         const totalDistance = MAX_X - INITIAL_X;
-        const duration = 2600; 
+        const duration = 2600;
         const moveIncrement = (totalDistance / duration) * dt;
         const oldX = newState.nyanSweep.xPosition;
         const newXPosition = oldX + moveIncrement;
-        const laneChangeSpeed = 0.01; 
+        const laneChangeSpeed = 0.01;
         let newLane = newState.chefLane + (newState.nyanSweep.laneDirection * laneChangeSpeed * dt);
         let newLaneDirection = newState.nyanSweep.laneDirection;
 
@@ -600,7 +632,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         newState.customers = newState.customers.map(customer => {
           if (customer.served || customer.disappointed || customer.vomit) return customer;
           const isLaneHit = Math.abs(customer.lane - newLane) < 0.8;
-          const sweepStart = oldX - 10; 
+          const sweepStart = oldX - 10;
           const sweepEnd = newXPosition + 10;
           const isPositionHit = customer.position >= sweepStart && customer.position <= sweepEnd;
 
@@ -641,7 +673,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           newState.bossBattle.minions = newState.bossBattle.minions.map(minion => {
             if (minion.defeated) return minion;
             const isLaneHit = Math.abs(minion.lane - newLane) < 0.8;
-            const sweepStart = oldX - 10; 
+            const sweepStart = oldX - 10;
             const sweepEnd = newXPosition + 10;
             const isPositionHit = minion.position >= sweepStart && minion.position <= sweepEnd;
 
@@ -655,7 +687,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             return minion;
           });
         }
-        nyanScores.forEach(({ points, lane, position }) => newState = addFloatingScore(points, lane, position, newState));
+        nyanScores.forEach(({ points, lane, position }) => { newState = addFloatingScore(points, lane, position, newState); });
 
         newState.chefLane = newLane;
         newState.nyanSweep = { ...newState.nyanSweep, xPosition: newXPosition, laneDirection: newLaneDirection, lastUpdateTime: now };
@@ -673,7 +705,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       // --- 9. LEVEL & BOSS LOGIC (PATCHED) ---
       const targetLevel = Math.floor(newState.score / GAME_CONFIG.LEVEL_THRESHOLD) + 1;
-      
+
       if (targetLevel > newState.level) {
         const oldLevel = newState.level;
         newState.level = targetLevel;
@@ -685,14 +717,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           else newState.showStore = true;
         }
 
-        const crossedBossLevel = BOSS_CONFIG.TRIGGER_LEVELS.find(triggerLvl => 
+        const crossedBossLevel = BOSS_CONFIG.TRIGGER_LEVELS.find(triggerLvl =>
           oldLevel < triggerLvl && targetLevel >= triggerLvl
         );
 
-        if (crossedBossLevel !== undefined && 
-            !newState.defeatedBossLevels.includes(crossedBossLevel) && 
-            !newState.bossBattle?.active) {
-            
+        if (crossedBossLevel !== undefined &&
+          !newState.defeatedBossLevels.includes(crossedBossLevel) &&
+          !newState.bossBattle?.active) {
+
           const initialMinions: BossMinion[] = [];
           for (let i = 0; i < BOSS_CONFIG.MINIONS_PER_WAVE; i++) {
             initialMinions.push({
@@ -703,14 +735,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               defeated: false,
             });
           }
-          
+
           newState.bossBattle = {
-            active: true, 
-            bossHealth: BOSS_CONFIG.HEALTH, 
-            currentWave: 1, 
-            minions: initialMinions, 
-            bossVulnerable: true, 
-            bossDefeated: false, 
+            active: true,
+            bossHealth: BOSS_CONFIG.HEALTH,
+            currentWave: 1,
+            minions: initialMinions,
+            bossVulnerable: true,
+            bossDefeated: false,
             bossPosition: BOSS_CONFIG.BOSS_POSITION,
           };
         }
@@ -729,12 +761,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             soundManager.lifeLost();
             newState.lives = Math.max(0, newState.lives - 1);
             if (newState.lives === 0) {
-              newState.gameOver = true;
-              soundManager.gameOver();
-              if (newState.availableSlices > 0) {
-                newState.fallingPizza = { lane: newState.chefLane, y: 0 };
-                newState.availableSlices = 0;
-              }
+              newState = triggerGameOver(newState, now);
             }
             return { ...minion, defeated: true };
           }
@@ -768,7 +795,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               const pointsEarned = SCORING.BOSS_HIT;
               newState.score += pointsEarned;
               bossScores.push({ points: pointsEarned, lane: slice.lane, position: slice.position });
-              
+
               if (newState.bossBattle!.bossHealth <= 0) {
                 newState.bossBattle!.bossDefeated = true;
                 newState.bossBattle!.active = false;
@@ -781,7 +808,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                   .slice()
                   .reverse()
                   .find(lvl => newState.level >= lvl);
-                  
+
                 if (currentBossLevel && !newState.defeatedBossLevels.includes(currentBossLevel)) {
                   newState.defeatedBossLevels = [...newState.defeatedBossLevels, currentBossLevel];
                 }
@@ -790,7 +817,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           });
         }
         newState.pizzaSlices = newState.pizzaSlices.filter(slice => !consumedSliceIds.has(slice.id));
-        bossScores.forEach(({ points, lane, position }) => newState = addFloatingScore(points, lane, position, newState));
+        bossScores.forEach(({ points, lane, position }) => { newState = addFloatingScore(points, lane, position, newState); });
 
         const activeMinions = newState.bossBattle.minions.filter(m => !m.defeated);
         if (activeMinions.length === 0) {
@@ -817,7 +844,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       return newState;
     });
-  }, [gameState.gameOver, gameState.paused, ovenSoundStates, addFloatingScore]);
+  }, [gameState.gameOver, gameState.paused, ovenSoundStates, addFloatingScore, triggerGameOver]);
 
   // --- Store / Upgrades / Debug ---
 
@@ -891,8 +918,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     setGameState(prev => {
       if (prev.gameOver) return prev;
       const now = Date.now();
-      let newState = { ...prev, stats: { ...prev.stats, powerUpsUsed: { ...prev.stats.powerUpsUsed, [type]: prev.stats.powerUpsUsed[type] + 1, } } };
-      
+      let newState = {
+        ...prev,
+        stats: {
+          ...prev.stats,
+          powerUpsUsed: { ...prev.stats.powerUpsUsed, [type]: prev.stats.powerUpsUsed[type] + 1, }
+        }
+      };
+
       const dogeMultiplier = prev.activePowerUps.some(p => p.type === 'doge') ? 2 : 1;
 
       if (type === 'beer') {
@@ -924,7 +957,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           newState.stats.currentCustomerStreak = 0;
           if (lastReason) newState.lastStarLostReason = lastReason;
         }
-        if (newState.lives === 0) newState.gameOver = true;
+        if (newState.lives === 0) {
+          newState = triggerGameOver(newState as GameState, now);
+        }
       } else if (type === 'star') {
         newState.availableSlices = GAME_CONFIG.MAX_SLICES;
         newState.starPowerActive = true;
@@ -959,9 +994,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           });
         }
       }
-      return newState;
+      return newState as GameState;
     });
-  }, []);
+  }, [triggerGameOver]);
 
   const resetGame = useCallback(() => {
     setGameState({ ...INITIAL_GAME_STATE });
