@@ -35,11 +35,11 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
   const [lastCustomerSpawn, setLastCustomerSpawn] = useState(0);
   const [lastPowerUpSpawn, setLastPowerUpSpawn] = useState(0);
-  
+   
   const [ovenSoundStates, setOvenSoundStates] = useState<{ [key: number]: OvenSoundState }>({
     0: 'idle', 1: 'idle', 2: 'idle', 3: 'idle'
   });
-  
+   
   const prevShowStoreRef = useRef(false);
 
   // --- Helpers (Score, Spawning) ---
@@ -202,7 +202,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       let newState = { ...prev, stats: { ...prev.stats, powerUpsUsed: { ...prev.stats.powerUpsUsed } } };
       const now = Date.now();
-      
+       
       const hasDoge = newState.activePowerUps.some(p => p.type === 'doge');
       const hasStar = newState.activePowerUps.some(p => p.type === 'star');
       const dogeMultiplier = hasDoge ? 2 : 1;
@@ -274,7 +274,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       // 3. COLLISION LOOP (Slices vs Customers)
       newState.pizzaSlices = newState.pizzaSlices.map(slice => ({ ...slice, position: slice.position + slice.speed }));
-      
+       
       const remainingSlices: PizzaSlice[] = [];
       const destroyedPowerUpIds = new Set<string>();
       const platesFromSlices = new Set<string>();
@@ -293,14 +293,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
           if (isHit) {
             consumed = true;
-            
+             
             // --- CALL THE NEW HIT LOGIC ---
             const hitResult = processCustomerHit(customer, now);
-            
+             
             // A. Add new entities
             if (hitResult.newEntities.droppedPlate) newState.droppedPlates = [...newState.droppedPlates, hitResult.newEntities.droppedPlate];
             if (hitResult.newEntities.emptyPlate) newState.emptyPlates = [...newState.emptyPlates, hitResult.newEntities.emptyPlate];
-            
+             
             // B. Process Side Effects (Scoring/Sound)
             hitResult.events.forEach(event => {
               if (event === 'BRIAN_DROPPED_PLATE') {
@@ -319,7 +319,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 newState.stats.customersServed += 1;
                 newState.stats.currentCustomerStreak += 1;
                 if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
-                
+                 
                 // Check Life Gain
                 if (newState.happyCustomers % 8 === 0 && newState.lives < GAME_CONFIG.MAX_LIVES) {
                   const starsToAdd = Math.min(dogeMultiplier, GAME_CONFIG.MAX_LIVES - newState.lives);
@@ -344,7 +344,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 newState.stats.customersServed += 1;
                 newState.stats.currentCustomerStreak += 1;
                 if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
-                
+                 
                 // Critic Bonus Life or Happy Customer Life
                 if (customer.critic && event === 'SERVED_CRITIC') {
                    if (customer.position >= 50 && newState.lives < GAME_CONFIG.MAX_LIVES) {
@@ -671,10 +671,13 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         }
       }
 
-      // --- 9. LEVEL & BOSS LOGIC ---
+      // --- 9. LEVEL & BOSS LOGIC (PATCHED) ---
       const targetLevel = Math.floor(newState.score / GAME_CONFIG.LEVEL_THRESHOLD) + 1;
+      
       if (targetLevel > newState.level) {
+        const oldLevel = newState.level;
         newState.level = targetLevel;
+
         const highestStoreLevel = Math.floor(targetLevel / GAME_CONFIG.STORE_LEVEL_INTERVAL) * GAME_CONFIG.STORE_LEVEL_INTERVAL;
         if (highestStoreLevel >= 10 && highestStoreLevel > newState.lastStoreLevelShown) {
           newState.lastStoreLevelShown = highestStoreLevel;
@@ -682,7 +685,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           else newState.showStore = true;
         }
 
-        if (targetLevel === BOSS_CONFIG.TRIGGER_LEVEL && !newState.bossBattle?.active && !newState.bossBattle?.bossDefeated) {
+        const crossedBossLevel = BOSS_CONFIG.TRIGGER_LEVELS.find(triggerLvl => 
+          oldLevel < triggerLvl && targetLevel >= triggerLvl
+        );
+
+        if (crossedBossLevel !== undefined && 
+            !newState.defeatedBossLevels.includes(crossedBossLevel) && 
+            !newState.bossBattle?.active) {
+            
           const initialMinions: BossMinion[] = [];
           for (let i = 0; i < BOSS_CONFIG.MINIONS_PER_WAVE; i++) {
             initialMinions.push({
@@ -693,8 +703,15 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               defeated: false,
             });
           }
+          
           newState.bossBattle = {
-            active: true, bossHealth: BOSS_CONFIG.HEALTH, currentWave: 1, minions: initialMinions, bossVulnerable: true, bossDefeated: false, bossPosition: BOSS_CONFIG.BOSS_POSITION,
+            active: true, 
+            bossHealth: BOSS_CONFIG.HEALTH, 
+            currentWave: 1, 
+            minions: initialMinions, 
+            bossVulnerable: true, 
+            bossDefeated: false, 
+            bossPosition: BOSS_CONFIG.BOSS_POSITION,
           };
         }
       }
@@ -751,12 +768,23 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               const pointsEarned = SCORING.BOSS_HIT;
               newState.score += pointsEarned;
               bossScores.push({ points: pointsEarned, lane: slice.lane, position: slice.position });
+              
               if (newState.bossBattle!.bossHealth <= 0) {
                 newState.bossBattle!.bossDefeated = true;
                 newState.bossBattle!.active = false;
                 newState.bossBattle!.minions = [];
                 newState.score += SCORING.BOSS_DEFEAT;
                 bossScores.push({ points: SCORING.BOSS_DEFEAT, lane: 1, position: newState.bossBattle!.bossPosition });
+
+                // --- BOSS DEFEAT TRACKING (PATCHED) ---
+                const currentBossLevel = BOSS_CONFIG.TRIGGER_LEVELS
+                  .slice()
+                  .reverse()
+                  .find(lvl => newState.level >= lvl);
+                  
+                if (currentBossLevel && !newState.defeatedBossLevels.includes(currentBossLevel)) {
+                  newState.defeatedBossLevels = [...newState.defeatedBossLevels, currentBossLevel];
+                }
               }
             }
           });
@@ -864,7 +892,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       if (prev.gameOver) return prev;
       const now = Date.now();
       let newState = { ...prev, stats: { ...prev.stats, powerUpsUsed: { ...prev.stats.powerUpsUsed, [type]: prev.stats.powerUpsUsed[type] + 1, } } };
-      
+       
       const dogeMultiplier = prev.activePowerUps.some(p => p.type === 'doge') ? 2 : 1;
 
       if (type === 'beer') {
