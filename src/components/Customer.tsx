@@ -22,12 +22,24 @@ interface CustomerProps {
 
 const Customer: React.FC<CustomerProps> = ({ customer, boardWidth, boardHeight }) => {
   // Original coordinate system (percent of board)
+  // Sprite sits at roughly +6% into the lane
   const xPct = customer.position;
   const yPct = customer.lane * 25 + 6;
 
   // Convert % of board → px
   const xPx = (xPct / 100) * boardWidth;
   const yPx = (yPct / 100) * boardHeight;
+
+  // --- New Logic for Text Position ---
+  const isBottomLane = customer.lane === 3;
+
+  // If bottom lane: Anchor text at +5% (Just above the sprite head at 6%)
+  // If other lanes: Anchor text at +18% (Below the sprite)
+  const textYOffset = isBottomLane ? 5 : 18;
+  
+  const textYPx = ready 
+    ? ((customer.lane * 25 + textYOffset) / 100) * boardHeight 
+    : 0;
 
   const getDisplay = () => {
     // 🌈 Rainbow Brian (nyan hit) — override everything else
@@ -90,18 +102,15 @@ const Customer: React.FC<CustomerProps> = ({ customer, boardWidth, boardHeight }
 
       {customer.textMessage && (
         <div
-          // Added z-50 to ensure text appears on top of other customers
           className="z-50 absolute px-2 py-1 bg-white text-black rounded border-2 border-black text-xs font-bold whitespace-nowrap"
           style={{
             left: 0,
             top: 0,
-            // Logic updated: If Lane 3 (bottom lane), offset is 0 (above head). 
-            // Otherwise offset is 18 (below head).
             transform: ready
-              ? `translate3d(${xPx}px, ${
-                  ((customer.lane * 25 + (customer.lane === 3 ? 0 : 18)) / 100) *
-                  boardHeight
-                }px, 0) translateX(-50%)`
+              ? `translate3d(${xPx}px, ${textYPx}px, 0) translateX(-50%) ${
+                  // THE FIX: If bottom lane, shift UP by 100% of the text bubble's height
+                  isBottomLane ? 'translateY(-100%)' : ''
+                }`
               : 'translateX(-50%)',
             willChange: 'transform',
             transition: 'transform 100ms linear',
