@@ -1,6 +1,6 @@
 // src/logic/storeSystem.ts
 import { GameState, PowerUp } from '../types/game';
-import { GAME_CONFIG, COSTS, ENTITY_SPEEDS, POSITIONS, OVEN_CONFIG } from '../lib/constants';
+import { COSTS, ENTITY_SPEEDS, POSITIONS, GAME_CONFIG, OVEN_CONFIG } from '../lib/constants';
 
 export type StoreEvent = { type: 'LIFE_GAINED' };
 
@@ -65,6 +65,7 @@ export const buyPowerUp = (
   if (prev.bank < powerUpCost) return prev;
 
   const lane = prev.chefLane;
+
   const newPowerUp: PowerUp = {
     id: `powerup-bought-${now}`,
     lane,
