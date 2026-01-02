@@ -33,21 +33,21 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onStart }) => {
         >
           Start Game
         </button>
-
-        {/* GitHub link */}
-        <a
-          href="https://github.com/snackman/pizza-chef"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block mt-6 opacity-80 hover:opacity-100 transition"
-        >
-          <img
-            src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg"
-            alt="GitHub"
-            className="w-8 h-8 mx-auto filter invert"
-          />
-        </a>
       </div>
+
+      {/* GitHub link — bottom right */}
+      <a
+        href="https://github.com/snackman/pizza-chef"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="absolute bottom-4 right-4"
+      >
+        <img
+          src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg"
+          alt="GitHub"
+          className="w-8 h-8 filter invert"
+        />
+      </a>
     </div>
   );
 };
