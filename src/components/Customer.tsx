@@ -1,3 +1,4 @@
+// src/components/Customer.tsx
 import React from 'react';
 import { Customer as CustomerType } from '../types/game';
 import { sprite } from '../lib/assets';
@@ -29,26 +30,25 @@ const Customer: React.FC<CustomerProps> = ({ customer, boardWidth, boardHeight }
   const yPx = (yPct / 100) * boardHeight;
 
   const getDisplay = () => {
-  // 🌈 Rainbow Brian (nyan hit) — override everything else
-  if (customer.brianNyaned) {
-    return { type: 'image', value: rainbowBrian, alt: 'rainbow-brian' };
-  }
+    // 🌈 Rainbow Brian (nyan hit) — override everything else
+    if (customer.brianNyaned) {
+      return { type: 'image', value: rainbowBrian, alt: 'rainbow-brian' };
+    }
 
-  if (customer.frozen) return { type: 'image', value: frozenfaceImg, alt: 'frozen' };
-  if (customer.vomit && customer.badLuckBrian) return { type: 'image', value: badLuckBrianPukeImg, alt: 'brian-puke' };
-  if (customer.vomit) return { type: 'emoji', value: '🤮' };
-  if (customer.woozy) {
-    if (customer.woozyState === 'drooling') return { type: 'image', value: droolfaceImg, alt: 'drooling' };
-    return { type: 'image', value: woozyfaceImg, alt: 'woozy' };
-  }
-  if (customer.served) return { type: 'image', value: yumfaceImg, alt: 'yum' };
-  if (customer.disappointed) return { type: 'emoji', value: customer.disappointedEmoji || '😢' };
-  if (customer.hotHoneyAffected) return { type: 'image', value: spicyfaceImg, alt: 'spicy' };
-  if (customer.badLuckBrian) return { type: 'image', value: badLuckBrianImg, alt: 'badluckbrian' };
-  if (customer.critic) return { type: 'image', value: criticImg, alt: 'critic' };
-  return { type: 'image', value: droolfaceImg, alt: 'drool' };
-};
-
+    if (customer.frozen) return { type: 'image', value: frozenfaceImg, alt: 'frozen' };
+    if (customer.vomit && customer.badLuckBrian) return { type: 'image', value: badLuckBrianPukeImg, alt: 'brian-puke' };
+    if (customer.vomit) return { type: 'emoji', value: '🤮' };
+    if (customer.woozy) {
+      if (customer.woozyState === 'drooling') return { type: 'image', value: droolfaceImg, alt: 'drooling' };
+      return { type: 'image', value: woozyfaceImg, alt: 'woozy' };
+    }
+    if (customer.served) return { type: 'image', value: yumfaceImg, alt: 'yum' };
+    if (customer.disappointed) return { type: 'emoji', value: customer.disappointedEmoji || '😢' };
+    if (customer.hotHoneyAffected) return { type: 'image', value: spicyfaceImg, alt: 'spicy' };
+    if (customer.badLuckBrian) return { type: 'image', value: badLuckBrianImg, alt: 'badluckbrian' };
+    if (customer.critic) return { type: 'image', value: criticImg, alt: 'critic' };
+    return { type: 'image', value: droolfaceImg, alt: 'drool' };
+  };
 
   const display = getDisplay();
 
@@ -90,12 +90,18 @@ const Customer: React.FC<CustomerProps> = ({ customer, boardWidth, boardHeight }
 
       {customer.textMessage && (
         <div
-          className="absolute px-2 py-1 bg-white text-black rounded border-2 border-black text-xs font-bold whitespace-nowrap"
+          // Added z-50 to ensure text appears on top of other customers
+          className="z-50 absolute px-2 py-1 bg-white text-black rounded border-2 border-black text-xs font-bold whitespace-nowrap"
           style={{
             left: 0,
             top: 0,
+            // Logic updated: If Lane 3 (bottom lane), offset is 0 (above head). 
+            // Otherwise offset is 18 (below head).
             transform: ready
-              ? `translate3d(${xPx}px, ${((customer.lane * 25 + 18) / 100) * boardHeight}px, 0) translateX(-50%)`
+              ? `translate3d(${xPx}px, ${
+                  ((customer.lane * 25 + (customer.lane === 3 ? 0 : 18)) / 100) *
+                  boardHeight
+                }px, 0) translateX(-50%)`
               : 'translateX(-50%)',
             willChange: 'transform',
             transition: 'transform 100ms linear',
