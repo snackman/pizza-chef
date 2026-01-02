@@ -13,6 +13,7 @@ import ItemStore from './components/ItemStore';
 import PowerUpAlert from './components/PowerUpAlert';
 import StreakDisplay from './components/StreakDisplay';
 import DebugPanel from './components/DebugPanel';
+import ControlsOverlay from './components/ControlsOverlay';
 import { useGameLogic } from './hooks/useGameLogic';
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
   const [showHighScores, setShowHighScores] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [showControlsOverlay, setShowControlsOverlay] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -36,6 +38,22 @@ function App() {
   const handleStartGame = () => {
     setShowSplash(false);
     setGameStarted(true);
+    setShowControlsOverlay(true);
+  };
+
+  // Pause game when controls overlay is shown and game has started
+  useEffect(() => {
+    if (showControlsOverlay && gameStarted && !gameState.paused && !gameState.gameOver) {
+      togglePause();
+    }
+  }, [showControlsOverlay, gameStarted, gameState.paused, gameState.gameOver, togglePause]);
+
+  const handleCloseControlsOverlay = () => {
+    setShowControlsOverlay(false);
+    // Unpause the game
+    if (gameState.paused && !gameState.gameOver) {
+      togglePause();
+    }
   };
   useEffect(() => {
     const checkOrientation = () => {
@@ -183,7 +201,11 @@ function App() {
             </div>
           )}
 
-          {gameState.paused && !gameState.gameOver && !gameState.showStore && (
+          {showControlsOverlay && (
+            <ControlsOverlay onClose={handleCloseControlsOverlay} />
+          )}
+
+          {gameState.paused && !gameState.gameOver && !gameState.showStore && !showControlsOverlay && (
             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
               <div className="text-center bg-white p-4 sm:p-6 rounded-xl shadow-xl mx-4">
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Paused</h2>
@@ -276,7 +298,11 @@ function App() {
               <StreakDisplay stats={gameState.stats} />
             )}
 
-              {gameState.paused && !gameState.gameOver && !gameState.showStore && (
+              {showControlsOverlay && (
+              <ControlsOverlay onClose={handleCloseControlsOverlay} />
+            )}
+
+            {gameState.paused && !gameState.gameOver && !gameState.showStore && !showControlsOverlay && (
               <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
                 <div className="text-center bg-white p-4 sm:p-6 rounded-xl shadow-xl mx-4">
                   <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Paused</h2>
