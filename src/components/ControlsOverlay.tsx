@@ -15,7 +15,7 @@ const ControlsOverlay: React.FC<ControlsOverlayProps> = ({ onClose }) => {
     const relativeX = x / rect.width;
     const relativeY = y / rect.height;
 
-    // Check if click is in upper right corner (top 20%, right 20%)
+    // Check if click is in upper right corner (top 15%, right 15%)
     if (relativeX >= 0.85 && relativeY <= 0.15) {
       onClose();
     }
