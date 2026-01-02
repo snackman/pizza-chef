@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import GameBoard from './components/GameBoard';
 import ScoreBoard from './components/ScoreBoard';
 import LandscapeGameBoard from './components/LandscapeGameBoard';
@@ -28,6 +28,8 @@ function App() {
   const [gameStarted, setGameStarted] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [marbleTop, setMarbleTop] = useState(0);
+  const gameBoardRef = useRef<HTMLDivElement>(null);
   const SHOW_DEBUG = false;
 
   const { gameState, servePizza, moveChef, useOven, cleanOven, resetGame, togglePause, upgradeOven, upgradeOvenSpeed, closeStore, bribeReviewer, buyPowerUp, debugActivatePowerUp } = useGameLogic(gameStarted);
@@ -75,6 +77,34 @@ function App() {
       window.removeEventListener('orientationchange', checkOrientation);
     };
   }, []);
+
+  // Calculate marble background position based on gameboard bottom
+  useEffect(() => {
+    if (!isMobile || !gameBoardRef.current) return;
+
+    const updateMarblePosition = () => {
+      if (gameBoardRef.current) {
+        const rect = gameBoardRef.current.getBoundingClientRect();
+        setMarbleTop(rect.bottom);
+      }
+    };
+
+    updateMarblePosition();
+    window.addEventListener('resize', updateMarblePosition);
+    window.addEventListener('orientationchange', updateMarblePosition);
+
+    // Use ResizeObserver to watch for gameboard size changes
+    const resizeObserver = new ResizeObserver(updateMarblePosition);
+    if (gameBoardRef.current) {
+      resizeObserver.observe(gameBoardRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('resize', updateMarblePosition);
+      window.removeEventListener('orientationchange', updateMarblePosition);
+      resizeObserver.disconnect();
+    };
+  }, [isMobile, gameState]);
 
   useEffect(() => {
     if (showInstructions && !gameState.paused && gameStarted && !gameState.gameOver) {
@@ -282,12 +312,13 @@ function App() {
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-orange-200 via-yellow-100 to-red-200 flex items-center justify-center overflow-hidden">
       <div className="relative w-full h-full flex flex-col">
-        <div className={`flex-1 flex flex-col items-center ${isMobile ? 'justify-start' : 'justify-center p-2 sm:p-4 gap-0'}`}>
+        <div className={`flex-1 flex flex-col items-center ${isMobile ? 'justify-start' : 'justify-center p-2 sm:p-4 gap-0'} ${isMobile ? 'relative' : ''}`}>
           <div className={`w-full ${isMobile ? '' : 'max-w-6xl'}`}>
             <ScoreBoard gameState={gameState} onShowInstructions={() => setShowInstructions(true)} />
           </div>
 
           <div
+            ref={gameBoardRef}
             className={`relative w-full ${isMobile ? '' : 'max-w-6xl'} aspect-[5/3]`}
             onClick={handleGameBoardClick}
           >
@@ -334,24 +365,24 @@ function App() {
             )}
           </div>
 
+          {/* Marble counter texture background on mobile - anchored to bottom of gameboard */}
+          {isMobile && (
+            <div
+              className="fixed left-0 right-0 bottom-0 z-30"
+              style={{
+                top: `${marbleTop}px`,
+                backgroundImage: `url(${counterImg})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+              }}
+            />
+          )}
+
           {SHOW_DEBUG && gameStarted && !gameState.gameOver && !gameState.showStore && (
             <DebugPanel onActivatePowerUp={debugActivatePowerUp} />
           )}
         </div>
-
-        {/* Marble counter texture background on mobile */}
-        {isMobile && (
-          <div
-            className="fixed left-0 right-0 bottom-0 z-30"
-            style={{
-              top: 'calc(60px + 100vw * 3/5)',
-              backgroundImage: `url(${counterImg})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-            }}
-          />
-        )}
 
         {gameState.gameOver && showGameOver && (
           <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-40 p-2">
