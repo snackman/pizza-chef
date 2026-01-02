@@ -342,10 +342,9 @@ function App() {
         {/* Marble counter texture background on mobile */}
         {isMobile && (
           <div
-            className="fixed bottom-0 left-0 right-0 z-30"
+            className="fixed left-0 right-0 bottom-0 z-30"
             style={{
-              height: 'calc(100vh - 100vw * 3/5 - 60px)',
-              minHeight: '45vh',
+              top: 'calc(60px + 100vw * 3/5)',
               backgroundImage: `url(${counterImg})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
