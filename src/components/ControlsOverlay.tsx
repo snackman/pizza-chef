@@ -1,12 +1,12 @@
 import React from 'react';
-import { sprite } from '../lib/assets';
+import { ui } from '../lib/assets';
 
 interface ControlsOverlayProps {
   onClose: () => void;
 }
 
 const ControlsOverlay: React.FC<ControlsOverlayProps> = ({ onClose }) => {
-  const controls = sprite("controls.png");
+  const controls = ui("controls.png");
 
   const handleImageClick = (event: React.MouseEvent<HTMLDivElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
