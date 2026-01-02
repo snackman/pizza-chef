@@ -671,56 +671,51 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         }
       }
 
-      // --- 9. LEVEL & BOSS LOGIC (OPTIMIZED) ---
-      // We check if score has actually increased compared to the previous state.
-      // This prevents the heavy Math.floor and boss trigger logic from running 60 times a second unnecessarily.
-      if (newState.score > prev.score) {
-        const targetLevel = Math.floor(newState.score / GAME_CONFIG.LEVEL_THRESHOLD) + 1;
-        
-        if (targetLevel > newState.level) {
-          const oldLevel = newState.level;
-          newState.level = targetLevel;
+      // --- 9. LEVEL & BOSS LOGIC (PATCHED) ---
+      const targetLevel = Math.floor(newState.score / GAME_CONFIG.LEVEL_THRESHOLD) + 1;
+      
+      if (targetLevel > newState.level) {
+        const oldLevel = newState.level;
+        newState.level = targetLevel;
 
-          const highestStoreLevel = Math.floor(targetLevel / GAME_CONFIG.STORE_LEVEL_INTERVAL) * GAME_CONFIG.STORE_LEVEL_INTERVAL;
-          if (highestStoreLevel >= 10 && highestStoreLevel > newState.lastStoreLevelShown) {
-            newState.lastStoreLevelShown = highestStoreLevel;
-            if (newState.nyanSweep?.active) newState.pendingStoreShow = true;
-            else newState.showStore = true;
-          }
+        const highestStoreLevel = Math.floor(targetLevel / GAME_CONFIG.STORE_LEVEL_INTERVAL) * GAME_CONFIG.STORE_LEVEL_INTERVAL;
+        if (highestStoreLevel >= 10 && highestStoreLevel > newState.lastStoreLevelShown) {
+          newState.lastStoreLevelShown = highestStoreLevel;
+          if (newState.nyanSweep?.active) newState.pendingStoreShow = true;
+          else newState.showStore = true;
+        }
 
-          const crossedBossLevel = BOSS_CONFIG.TRIGGER_LEVELS.find(triggerLvl => 
-            oldLevel < triggerLvl && targetLevel >= triggerLvl
-          );
+        const crossedBossLevel = BOSS_CONFIG.TRIGGER_LEVELS.find(triggerLvl => 
+          oldLevel < triggerLvl && targetLevel >= triggerLvl
+        );
 
-          if (crossedBossLevel !== undefined && 
-              !newState.defeatedBossLevels.includes(crossedBossLevel) && 
-              !newState.bossBattle?.active) {
-              
-            const initialMinions: BossMinion[] = [];
-            for (let i = 0; i < BOSS_CONFIG.MINIONS_PER_WAVE; i++) {
-              initialMinions.push({
-                id: `minion-${now}-1-${i}`,
-                lane: i % 4,
-                position: POSITIONS.SPAWN_X + (Math.floor(i / 4) * 15),
-                speed: ENTITY_SPEEDS.MINION,
-                defeated: false,
-              });
-            }
-            
-            newState.bossBattle = {
-              active: true, 
-              bossHealth: BOSS_CONFIG.HEALTH, 
-              currentWave: 1, 
-              minions: initialMinions, 
-              bossVulnerable: true, 
-              bossDefeated: false, 
-              bossPosition: BOSS_CONFIG.BOSS_POSITION,
-            };
-          }
-        }
-      }
+        if (crossedBossLevel !== undefined && 
+            !newState.defeatedBossLevels.includes(crossedBossLevel) && 
+            !newState.bossBattle?.active) {
+            
+          const initialMinions: BossMinion[] = [];
+          for (let i = 0; i < BOSS_CONFIG.MINIONS_PER_WAVE; i++) {
+            initialMinions.push({
+              id: `minion-${now}-1-${i}`,
+              lane: i % 4,
+              position: POSITIONS.SPAWN_X + (Math.floor(i / 4) * 15),
+              speed: ENTITY_SPEEDS.MINION,
+              defeated: false,
+            });
+          }
+          
+          newState.bossBattle = {
+            active: true, 
+            bossHealth: BOSS_CONFIG.HEALTH, 
+            currentWave: 1, 
+            minions: initialMinions, 
+            bossVulnerable: true, 
+            bossDefeated: false, 
+            bossPosition: BOSS_CONFIG.BOSS_POSITION,
+          };
+        }
+      }
 
-      // --- Boss Battle Execution (Must run every tick) ---
       if (newState.bossBattle?.active && !newState.bossBattle.bossDefeated) {
         const bossScores: Array<{ points: number; lane: number; position: number }> = [];
         newState.bossBattle.minions = newState.bossBattle.minions.map(minion => {
