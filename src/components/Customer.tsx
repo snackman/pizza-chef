@@ -21,8 +21,10 @@ interface CustomerProps {
 }
 
 const Customer: React.FC<CustomerProps> = ({ customer, boardWidth, boardHeight }) => {
-  // Original coordinate system (percent of board)
-  // Sprite sits at roughly +6% into the lane
+  // 1. Define 'ready' first to avoid ReferenceErrors
+  const ready = boardWidth > 0 && boardHeight > 0;
+
+  // 2. Original coordinate system (percent of board)
   const xPct = customer.position;
   const yPct = customer.lane * 25 + 6;
 
@@ -30,16 +32,12 @@ const Customer: React.FC<CustomerProps> = ({ customer, boardWidth, boardHeight }
   const xPx = (xPct / 100) * boardWidth;
   const yPx = (yPct / 100) * boardHeight;
 
-  // --- New Logic for Text Position ---
+  // 3. Text Message Position Logic
   const isBottomLane = customer.lane === 3;
-
-  // If bottom lane: Anchor text at +5% (Just above the sprite head at 6%)
-  // If other lanes: Anchor text at +18% (Below the sprite)
+  // If bottom lane: Anchor text at +5% (Above head)
+  // If other lanes: Anchor text at +18% (Below feet)
   const textYOffset = isBottomLane ? 5 : 18;
-  
-  const textYPx = ready 
-    ? ((customer.lane * 25 + textYOffset) / 100) * boardHeight 
-    : 0;
+  const textYPx = ((customer.lane * 25 + textYOffset) / 100) * boardHeight;
 
   const getDisplay = () => {
     // 🌈 Rainbow Brian (nyan hit) — override everything else
@@ -63,9 +61,6 @@ const Customer: React.FC<CustomerProps> = ({ customer, boardWidth, boardHeight }
   };
 
   const display = getDisplay();
-
-  // Avoid doing weird transforms before we know board size
-  const ready = boardWidth > 0 && boardHeight > 0;
 
   return (
     <>
@@ -108,7 +103,7 @@ const Customer: React.FC<CustomerProps> = ({ customer, boardWidth, boardHeight }
             top: 0,
             transform: ready
               ? `translate3d(${xPx}px, ${textYPx}px, 0) translateX(-50%) ${
-                  // THE FIX: If bottom lane, shift UP by 100% of the text bubble's height
+                  // If bottom lane, shift UP by 100% of the text bubble's height
                   isBottomLane ? 'translateY(-100%)' : ''
                 }`
               : 'translateX(-50%)',
