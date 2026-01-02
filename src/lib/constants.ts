@@ -66,7 +66,7 @@ export const SCORING = {
   
   // Boss
   MINION_DEFEAT: 100,
-  BOSS_HIT: 500,
+  BOSS_HIT: 100,
   BOSS_DEFEAT: 5000,
   
   // Special
@@ -85,7 +85,7 @@ export const COSTS = {
 };
 
 export const BOSS_CONFIG = {
-  TRIGGER_LEVELS: [30],
+  TRIGGER_LEVELS: [30,50],
   HEALTH: 24,
   WAVES: 3,
   MINIONS_PER_WAVE: 4,
