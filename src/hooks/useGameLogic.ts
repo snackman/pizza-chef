@@ -41,6 +41,22 @@ import {
   updateCustomerPositions,
   processCustomerHit
 } from '../logic/customerSystem';
+// update and spawn
+const updateGameRef = useRef(updateGame);
+const spawnCustomerRef = useRef(spawnCustomer);
+const spawnPowerUpRef = useRef(spawnPowerUp);
+
+useEffect(() => {
+  updateGameRef.current = updateGame;
+}, [updateGame]);
+
+useEffect(() => {
+  spawnCustomerRef.current = spawnCustomer;
+}, [spawnCustomer]);
+
+useEffect(() => {
+  spawnPowerUpRef.current = spawnPowerUp;
+}, [spawnPowerUp]);
 
 // --- Store System (actions only) ---
 import {
@@ -1008,21 +1024,38 @@ export const useGameLogic = (gameStarted: boolean = true) => {
   }, [gameState.showStore]);
 
   useEffect(() => {
-    if (!gameStarted) return;
-    const gameLoop = setInterval(() => {
-      updateGame();
-      setGameState(current => {
-        if (!current.paused && !current.gameOver) {
-          const levelSpawnRate = SPAWN_RATES.CUSTOMER_BASE_RATE + (current.level - 1) * SPAWN_RATES.CUSTOMER_LEVEL_INCREMENT;
-          const effectiveSpawnRate = current.bossBattle?.active ? levelSpawnRate * 0.5 : levelSpawnRate;
-          if (Math.random() < effectiveSpawnRate * 0.01) spawnCustomer();
-          if (Math.random() < SPAWN_RATES.POWERUP_CHANCE) spawnPowerUp();
+  if (!gameStarted) return;
+
+  const gameLoop = window.setInterval(() => {
+    // always call latest tick
+    updateGameRef.current();
+
+    // spawn decisions based on latest state (safe: functional set)
+    setGameState(current => {
+      if (!current.paused && !current.gameOver) {
+        const levelSpawnRate =
+          SPAWN_RATES.CUSTOMER_BASE_RATE +
+          (current.level - 1) * SPAWN_RATES.CUSTOMER_LEVEL_INCREMENT;
+
+        const effectiveSpawnRate = current.bossBattle?.active
+          ? levelSpawnRate * 0.5
+          : levelSpawnRate;
+
+        if (Math.random() < effectiveSpawnRate * 0.01) {
+          spawnCustomerRef.current();
         }
-        return current;
-      });
-    }, GAME_CONFIG.GAME_LOOP_INTERVAL);
-    return () => clearInterval(gameLoop);
-  }, [gameStarted, updateGame, spawnCustomer, spawnPowerUp]);
+
+        if (Math.random() < SPAWN_RATES.POWERUP_CHANCE) {
+          spawnPowerUpRef.current();
+        }
+      }
+      return current;
+    });
+  }, GAME_CONFIG.GAME_LOOP_INTERVAL);
+
+  return () => window.clearInterval(gameLoop);
+}, [gameStarted]);
+
 
   return {
     gameState, servePizza, moveChef, useOven, cleanOven, resetGame, togglePause, upgradeOven, upgradeOvenSpeed,
