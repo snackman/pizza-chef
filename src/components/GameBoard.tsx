@@ -99,9 +99,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
   return (
     <div
       ref={boardRef}
-      // ✅ UPDATED: Mobile uses border-x-0 (no side borders) and rounded-none (flush edges)
-      // Desktop (md:) keeps the border-4 and rounded-lg look
-      className="relative w-full aspect-[5/3] border-amber-600 overflow-hidden border-y-4 border-x-0 rounded-none md:border-4 md:rounded-lg"
+      className="relative w-full aspect-[5/3] border-4 border-amber-600 rounded-lg overflow-hidden"
       style={{
         backgroundImage: `url(${pizzaShopBg})`,
         backgroundSize: 'cover',
