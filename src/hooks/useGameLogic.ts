@@ -286,7 +286,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
         newState.customers = newState.customers.map(customer => {
           // Skip if already consumed or departing
-          if (consumed || customer.disappointed || customer.vomit || customer.leaving) return customer;
+          if (consumed || customer.served || customer.disappointed || customer.vomit || customer.leaving) return customer;
 
           // Simple Collision Check
           const isHit = customer.lane === slice.lane && Math.abs(customer.position - slice.position) < 5;
