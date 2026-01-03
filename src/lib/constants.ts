@@ -25,7 +25,7 @@ export const OVEN_CONFIG = {
   CLEANING_TIME: 3000,
   
   // Upgrade Timings (based on speedUpgrade level 0-3)
-  COOK_TIMES: [3000, 2000, 1000, 500],
+  COOK_TIMES: [3000, 2500, 2000, 1500],
   MAX_UPGRADE_LEVEL: 7,
   MAX_SPEED_LEVEL: 3,
 };
