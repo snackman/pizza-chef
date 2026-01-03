@@ -33,7 +33,7 @@ export const OVEN_CONFIG = {
 export const ENTITY_SPEEDS = {
   PIZZA: 3,
   PLATE: 2,
-  POWERUP: 1,
+  POWERUP: 0.8,
   CUSTOMER_BASE: 0.4,
   MINION: 0.15,
   FALLING_PIZZA: 5,
