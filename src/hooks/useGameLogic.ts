@@ -1015,18 +1015,36 @@ export const useGameLogic = (gameStarted: boolean = true) => {
   // --- 2. THE CONSOLIDATED TICK FUNCTION ---
   // This combines physics (updateGame) and spawning into one logic block
   // that can be referenced via the ref.
-  const tick = useCallback(() => {
-    // A. Run Main Physics Loop
-    updateGame();
+  // --- 2. THE CONSOLIDATED TICK FUNCTION ---
+const tick = useCallback(() => {
+  // A) Run main physics loop (already uses functional setGameState inside updateGame)
+  updateGame();
 
-    // B. Run Spawning Logic (checks probability then calls spawners)
-    if (!gameState.paused && !gameState.gameOver) {
-      const levelSpawnRate = SPAWN_RATES.CUSTOMER_BASE_RATE + (gameState.level - 1) * SPAWN_RATES.CUSTOMER_LEVEL_INCREMENT;
-      const effectiveSpawnRate = gameState.bossBattle?.active ? levelSpawnRate * 0.5 : levelSpawnRate;
-      if (Math.random() < effectiveSpawnRate * 0.01) spawnCustomer();
-      if (Math.random() < SPAWN_RATES.POWERUP_CHANCE) spawnPowerUp();
+  // B) Run spawning logic using the *latest* state via functional setGameState
+  setGameState(current => {
+    if (!current.paused && !current.gameOver) {
+      const levelSpawnRate =
+        SPAWN_RATES.CUSTOMER_BASE_RATE +
+        (current.level - 1) * SPAWN_RATES.CUSTOMER_LEVEL_INCREMENT;
+
+      const effectiveSpawnRate = current.bossBattle?.active
+        ? levelSpawnRate * 0.5
+        : levelSpawnRate;
+
+      if (Math.random() < effectiveSpawnRate * 0.01) {
+        spawnCustomer();
+      }
+
+      if (Math.random() < SPAWN_RATES.POWERUP_CHANCE) {
+        spawnPowerUp();
+      }
     }
-  }, [updateGame, gameState.paused, gameState.gameOver, gameState.level, gameState.bossBattle, spawnCustomer, spawnPowerUp]);
+
+    // IMPORTANT: return current unchanged
+    return current;
+  });
+}, [updateGame, spawnCustomer, spawnPowerUp]);
+
 
   // --- 3. KEEP REF UPDATED ---
   useEffect(() => {
