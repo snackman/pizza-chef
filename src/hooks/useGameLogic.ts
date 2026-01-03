@@ -58,8 +58,11 @@ const DEFAULT_OVEN_SOUND_STATES: { [key: number]: OvenSoundState } = {
 export const useGameLogic = (gameStarted: boolean = true) => {
   const [gameState, setGameState] = useState<GameState>({ ...INITIAL_GAME_STATE });
 
-  const [lastCustomerSpawn, setLastCustomerSpawn] = useState(0);
-  const [lastPowerUpSpawn, setLastPowerUpSpawn] = useState(0);
+  /**
+   * ✅ PERFORMANCE: spawn timers are refs (no re-render + no stale closure)
+   */
+  const lastCustomerSpawnRef = useRef(0);
+  const lastPowerUpSpawnRef = useRef(0);
 
   /**
    * ✅ PERFORMANCE: ovenSoundStates is no longer React state.
@@ -119,7 +122,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
   const spawnPowerUp = useCallback(() => {
     const now = Date.now();
-    if (now - lastPowerUpSpawn < SPAWN_RATES.POWERUP_MIN_INTERVAL) return;
+    if (now - lastPowerUpSpawnRef.current < SPAWN_RATES.POWERUP_MIN_INTERVAL) return;
 
     const lane = Math.floor(Math.random() * GAME_CONFIG.LANE_COUNT);
     const rand = Math.random();
@@ -138,8 +141,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         type: randomType,
       }],
     }));
-    setLastPowerUpSpawn(now);
-  }, [lastPowerUpSpawn]);
+
+    lastPowerUpSpawnRef.current = now;
+  }, []);
 
   const spawnCustomer = useCallback(() => {
     const now = Date.now();
@@ -147,7 +151,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       SPAWN_RATES.CUSTOMER_MIN_INTERVAL_BASE -
       (gameState.level * SPAWN_RATES.CUSTOMER_MIN_INTERVAL_DECREMENT);
 
-    if (now - lastCustomerSpawn < spawnDelay) return;
+    if (now - lastCustomerSpawnRef.current < spawnDelay) return;
     if (gameState.paused) return;
 
     const lane = Math.floor(Math.random() * GAME_CONFIG.LANE_COUNT);
@@ -173,8 +177,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         flipped: isBadLuckBrian,
       }],
     }));
-    setLastCustomerSpawn(now);
-  }, [lastCustomerSpawn, gameState.level, gameState.paused]);
+
+    lastCustomerSpawnRef.current = now;
+  }, [gameState.level, gameState.paused]);
 
   const spawnBossWave = useCallback((waveNumber: number): BossMinion[] => {
     const minions: BossMinion[] = [];
@@ -979,8 +984,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
   const resetGame = useCallback(() => {
     setGameState({ ...INITIAL_GAME_STATE });
-    setLastCustomerSpawn(0);
-    setLastPowerUpSpawn(0);
+    lastCustomerSpawnRef.current = 0;
+    lastPowerUpSpawnRef.current = 0;
     // ✅ reset ref (no render)
     ovenSoundStatesRef.current = { ...DEFAULT_OVEN_SOUND_STATES };
   }, []);
@@ -1041,18 +1046,20 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         ? levelSpawnRate * 0.5
         : levelSpawnRate;
 
-      if (now - lastCustomerSpawn >= spawnDelay && Math.random() < effectiveSpawnRate * 0.01) {
+      let next = current;
+
+      if (now - lastCustomerSpawnRef.current >= spawnDelay && Math.random() < effectiveSpawnRate * 0.01) {
         const lane = Math.floor(Math.random() * GAME_CONFIG.LANE_COUNT);
         const disappointedEmojis = ['😢', '😭', '😠', '🤬'];
         const isCritic = Math.random() < PROBABILITIES.CRITIC_CHANCE;
         const isBadLuckBrian = !isCritic && Math.random() < PROBABILITIES.BAD_LUCK_BRIAN_CHANCE;
 
-        setLastCustomerSpawn(now);
+        lastCustomerSpawnRef.current = now;
 
-        return {
-          ...current,
+        next = {
+          ...next,
           customers: [
-            ...current.customers,
+            ...next.customers,
             {
               id: `customer-${now}-${lane}`,
               lane,
@@ -1073,7 +1080,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       }
 
       // PowerUp spawn (gate by min interval)
-      if (now - lastPowerUpSpawn >= SPAWN_RATES.POWERUP_MIN_INTERVAL && Math.random() < SPAWN_RATES.POWERUP_CHANCE) {
+      if (now - lastPowerUpSpawnRef.current >= SPAWN_RATES.POWERUP_MIN_INTERVAL && Math.random() < SPAWN_RATES.POWERUP_CHANCE) {
         const lane = Math.floor(Math.random() * GAME_CONFIG.LANE_COUNT);
         const rand = Math.random();
         const randomType =
@@ -1081,12 +1088,12 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             ? 'star'
             : POWERUPS.TYPES[Math.floor(Math.random() * POWERUPS.TYPES.length)];
 
-        setLastPowerUpSpawn(now);
+        lastPowerUpSpawnRef.current = now;
 
-        return {
-          ...current,
+        next = {
+          ...next,
           powerUps: [
-            ...current.powerUps,
+            ...next.powerUps,
             {
               id: `powerup-${now}-${lane}`,
               lane,
@@ -1098,9 +1105,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         };
       }
 
-      return current;
+      return next;
     });
-  }, [updateGame, lastCustomerSpawn, lastPowerUpSpawn]);
+  }, [updateGame]);
 
   // --- 3. KEEP REF UPDATED ---
   useEffect(() => {
