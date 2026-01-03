@@ -267,7 +267,7 @@ function App() {
                   score={gameState.score}
                   level={gameState.level}
                   lastStarLostReason={gameState.lastStarLostReason}
-                  onSubmitted={() => {}}
+                  onSubmitted={() => { }}
                   onPlayAgain={() => {
                     resetGame();
                     setShowGameOver(false);
@@ -295,7 +295,7 @@ function App() {
           )}
 
           {gameState.showStore && (
-            <div className="absolute inset-0 bg-black bg-opacity-75 flex items-start justify-center z-30 pt-2">
+            <div className="absolute inset-0 bg-black bg-opacity-75 flex items-start justify-center z-[60] pt-2">
               <ItemStore
                 gameState={gameState}
                 onUpgradeOven={upgradeOven}
@@ -354,9 +354,8 @@ function App() {
     <div className="fixed inset-0 bg-gradient-to-br from-orange-200 via-yellow-100 to-red-200 flex items-center justify-center overflow-hidden">
       <div className="relative w-full h-full flex flex-col">
         <div
-          className={`flex-1 flex flex-col items-center ${
-            isMobile ? 'justify-start' : 'justify-center p-2 sm:p-4 gap-0'
-          } ${isMobile ? 'relative' : ''}`}
+          className={`flex-1 flex flex-col items-center ${isMobile ? 'justify-start' : 'justify-center p-2 sm:p-4 gap-0'
+            } ${isMobile ? 'relative' : ''}`}
         >
           <div className={`w-full ${isMobile ? '' : 'max-w-6xl'}`}>
             <ScoreBoard gameState={gameState} onShowInstructions={() => setShowInstructions(true)} />
@@ -393,7 +392,7 @@ function App() {
             )}
 
             {gameState.showStore && (
-              <div className="absolute inset-0 bg-black bg-opacity-75 flex items-start justify-center rounded-lg z-30 pt-2">
+              <div className="absolute inset-0 bg-black bg-opacity-75 flex items-start justify-center rounded-lg z-[60] pt-2">
                 <ItemStore
                   gameState={gameState}
                   onUpgradeOven={upgradeOven}
@@ -433,7 +432,7 @@ function App() {
                 score={gameState.score}
                 level={gameState.level}
                 lastStarLostReason={gameState.lastStarLostReason}
-                onSubmitted={() => {}}
+                onSubmitted={() => { }}
                 onPlayAgain={() => {
                   resetGame();
                   setShowGameOver(false);
