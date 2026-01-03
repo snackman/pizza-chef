@@ -1134,7 +1134,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     upgradeOven,
     upgradeOvenSpeed,
     closeStore,
-    bribeReviewer
+    bribeReviewer,
     buyPowerUp,
     debugActivatePowerUp,
   };
