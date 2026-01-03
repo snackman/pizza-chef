@@ -54,6 +54,8 @@ const PowerUp: React.FC<PowerUpProps> = ({ powerUp, boardWidth, boardHeight }) =
       style={{
         left: 0,
         top: 0,
+        // Added zIndex here to ensure it floats above oven UI
+        zIndex: 50,
         transform: ready ? `translate3d(${xPx}px, ${yPx}px, 0)` : undefined,
         willChange: 'transform',
         transition: 'transform 100ms linear',
