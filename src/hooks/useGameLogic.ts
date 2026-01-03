@@ -10,7 +10,7 @@ import {
   FloatingScore,
   DroppedPlate,
   StarLostReason,
-  BossMinion
+  BossMinion,
 } from '../types/game';
 import { soundManager } from '../utils/sounds';
 import { getStreakMultiplier } from '../components/StreakDisplay';
@@ -26,7 +26,7 @@ import {
   TIMINGS,
   POSITIONS,
   INITIAL_GAME_STATE,
-  OVEN_CONFIG
+  OVEN_CONFIG,
 } from '../lib/constants';
 
 // --- Logic Imports ---
@@ -34,13 +34,10 @@ import {
   processOvenTick,
   tryInteractWithOven,
   calculateOvenPauseState,
-  OvenSoundState
+  OvenSoundState,
 } from '../logic/ovenSystem';
 
-import {
-  updateCustomerPositions,
-  processCustomerHit
-} from '../logic/customerSystem';
+import { updateCustomerPositions, processCustomerHit } from '../logic/customerSystem';
 
 // --- Store System (actions only) ---
 import {
@@ -48,28 +45,24 @@ import {
   upgradeOvenSpeed as upgradeOvenSpeedStore,
   closeStore as closeStoreStore,
   bribeReviewer as bribeReviewerStore,
-  buyPowerUp as buyPowerUpStore
+  buyPowerUp as buyPowerUpStore,
 } from '../logic/storeSystem';
 
 const DEFAULT_OVEN_SOUND_STATES: { [key: number]: OvenSoundState } = {
-  0: 'idle', 1: 'idle', 2: 'idle', 3: 'idle'
+  0: 'idle',
+  1: 'idle',
+  2: 'idle',
+  3: 'idle',
 };
 
 export const useGameLogic = (gameStarted: boolean = true) => {
   const [gameState, setGameState] = useState<GameState>({ ...INITIAL_GAME_STATE });
 
-  /**
-   * ✅ PERFORMANCE: spawn timers are refs (no re-render + no stale closure)
-   */
+  // ✅ PERFORMANCE: spawn timers are refs (no re-render + no stale closure)
   const lastCustomerSpawnRef = useRef(0);
   const lastPowerUpSpawnRef = useRef(0);
 
-  /**
-   * ✅ PERFORMANCE: ovenSoundStates is no longer React state.
-   * - avoids re-renders when sound-state changes
-   * - avoids JSON.stringify compare
-   * - avoids setState calls inside the tick
-   */
+  // ✅ PERFORMANCE: ovenSoundStates is no longer React state.
   const ovenSoundStatesRef = useRef<{ [key: number]: OvenSoundState }>({ ...DEFAULT_OVEN_SOUND_STATES });
 
   const prevShowStoreRef = useRef(false);
@@ -77,18 +70,21 @@ export const useGameLogic = (gameStarted: boolean = true) => {
   // --- 1. THE STABLE TICK REF ---
   const latestTickRef = useRef<() => void>(() => {});
 
-  // --- Helpers (Score, Spawning) ---
+  // --- Helpers ---
 
-  const addFloatingScore = useCallback((points: number, lane: number, position: number, state: GameState): GameState => {
-    const now = Date.now();
-    return {
-      ...state,
-      floatingScores: [...state.floatingScores, {
-        id: `score-${now}-${Math.random()}`,
-        points, lane, position, startTime: now,
-      }],
-    };
-  }, []);
+  const addFloatingScore = useCallback(
+    (points: number, lane: number, position: number, state: GameState): GameState => {
+      const now = Date.now();
+      return {
+        ...state,
+        floatingScores: [
+          ...state.floatingScores,
+          { id: `score-${now}-${Math.random()}`, points, lane, position, startTime: now },
+        ],
+      };
+    },
+    []
+  );
 
   /**
    * Consolidated "game over" cleanup:
@@ -120,6 +116,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     };
   }, []);
 
+  // Kept for backward compatibility / potential external calls (not used by tick anymore)
   const spawnPowerUp = useCallback(() => {
     const now = Date.now();
     if (now - lastPowerUpSpawnRef.current < SPAWN_RATES.POWERUP_MIN_INTERVAL) return;
@@ -133,23 +130,27 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
     setGameState(prev => ({
       ...prev,
-      powerUps: [...prev.powerUps, {
-        id: `powerup-${now}-${lane}`,
-        lane,
-        position: POSITIONS.POWERUP_SPAWN_X,
-        speed: ENTITY_SPEEDS.POWERUP,
-        type: randomType,
-      }],
+      powerUps: [
+        ...prev.powerUps,
+        {
+          id: `powerup-${now}-${lane}`,
+          lane,
+          position: POSITIONS.POWERUP_SPAWN_X,
+          speed: ENTITY_SPEEDS.POWERUP,
+          type: randomType,
+        },
+      ],
     }));
 
     lastPowerUpSpawnRef.current = now;
   }, []);
 
+  // Kept for backward compatibility / potential external calls (not used by tick anymore)
   const spawnCustomer = useCallback(() => {
     const now = Date.now();
     const spawnDelay =
       SPAWN_RATES.CUSTOMER_MIN_INTERVAL_BASE -
-      (gameState.level * SPAWN_RATES.CUSTOMER_MIN_INTERVAL_DECREMENT);
+      gameState.level * SPAWN_RATES.CUSTOMER_MIN_INTERVAL_DECREMENT;
 
     if (now - lastCustomerSpawnRef.current < spawnDelay) return;
     if (gameState.paused) return;
@@ -161,21 +162,24 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
     setGameState(prev => ({
       ...prev,
-      customers: [...prev.customers, {
-        id: `customer-${now}-${lane}`,
-        lane,
-        position: POSITIONS.SPAWN_X,
-        speed: ENTITY_SPEEDS.CUSTOMER_BASE,
-        served: false,
-        hasPlate: false,
-        leaving: false,
-        disappointed: false,
-        disappointedEmoji: disappointedEmojis[Math.floor(Math.random() * disappointedEmojis.length)],
-        movingRight: false,
-        critic: isCritic,
-        badLuckBrian: isBadLuckBrian,
-        flipped: isBadLuckBrian,
-      }],
+      customers: [
+        ...prev.customers,
+        {
+          id: `customer-${now}-${lane}`,
+          lane,
+          position: POSITIONS.SPAWN_X,
+          speed: ENTITY_SPEEDS.CUSTOMER_BASE,
+          served: false,
+          hasPlate: false,
+          leaving: false,
+          disappointed: false,
+          disappointedEmoji: disappointedEmojis[Math.floor(Math.random() * disappointedEmojis.length)],
+          movingRight: false,
+          critic: isCritic,
+          badLuckBrian: isBadLuckBrian,
+          flipped: isBadLuckBrian,
+        },
+      ],
     }));
 
     lastCustomerSpawnRef.current = now;
@@ -184,12 +188,13 @@ export const useGameLogic = (gameStarted: boolean = true) => {
   const spawnBossWave = useCallback((waveNumber: number): BossMinion[] => {
     const minions: BossMinion[] = [];
     const now = Date.now();
+
     for (let i = 0; i < BOSS_CONFIG.MINIONS_PER_WAVE; i++) {
       const lane = i % 4;
       minions.push({
         id: `minion-${now}-${waveNumber}-${i}`,
         lane,
-        position: POSITIONS.SPAWN_X + (Math.floor(i / 4) * 15),
+        position: POSITIONS.SPAWN_X + Math.floor(i / 4) * 15,
         speed: ENTITY_SPEEDS.MINION,
         defeated: false,
       });
@@ -200,29 +205,44 @@ export const useGameLogic = (gameStarted: boolean = true) => {
   // --- Actions (Chef, Pizza, Oven) ---
 
   const servePizza = useCallback(() => {
-    if (gameState.gameOver || gameState.paused || gameState.availableSlices <= 0 || gameState.nyanSweep?.active) return;
+    if (
+      gameState.gameOver ||
+      gameState.paused ||
+      gameState.availableSlices <= 0 ||
+      gameState.nyanSweep?.active
+    )
+      return;
+
     soundManager.servePizza();
+
     setGameState(prev => ({
       ...prev,
-      pizzaSlices: [...prev.pizzaSlices, {
-        id: `pizza-${Date.now()}-${gameState.chefLane}`,
-        lane: gameState.chefLane,
-        position: GAME_CONFIG.CHEF_X_POSITION,
-        speed: ENTITY_SPEEDS.PIZZA,
-      }],
+      pizzaSlices: [
+        ...prev.pizzaSlices,
+        {
+          id: `pizza-${Date.now()}-${gameState.chefLane}`,
+          lane: gameState.chefLane,
+          position: GAME_CONFIG.CHEF_X_POSITION,
+          speed: ENTITY_SPEEDS.PIZZA,
+        },
+      ],
       availableSlices: prev.availableSlices - 1,
     }));
   }, [gameState.gameOver, gameState.paused, gameState.chefLane, gameState.availableSlices, gameState.nyanSweep?.active]);
 
-  const moveChef = useCallback((direction: 'up' | 'down') => {
-    if (gameState.gameOver || gameState.paused || gameState.nyanSweep?.active) return;
-    setGameState(prev => {
-      let newLane = prev.chefLane;
-      if (direction === 'up' && newLane > GAME_CONFIG.LANE_TOP) newLane -= 1;
-      else if (direction === 'down' && newLane < GAME_CONFIG.LANE_BOTTOM) newLane += 1;
-      return { ...prev, chefLane: newLane };
-    });
-  }, [gameState.gameOver, gameState.paused, gameState.nyanSweep?.active]);
+  const moveChef = useCallback(
+    (direction: 'up' | 'down') => {
+      if (gameState.gameOver || gameState.paused || gameState.nyanSweep?.active) return;
+
+      setGameState(prev => {
+        let newLane = prev.chefLane;
+        if (direction === 'up' && newLane > GAME_CONFIG.LANE_TOP) newLane -= 1;
+        else if (direction === 'down' && newLane < GAME_CONFIG.LANE_BOTTOM) newLane += 1;
+        return { ...prev, chefLane: newLane };
+      });
+    },
+    [gameState.gameOver, gameState.paused, gameState.nyanSweep?.active]
+  );
 
   const useOven = useCallback(() => {
     if (gameState.gameOver || gameState.paused) return;
@@ -232,30 +252,30 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       if (result.action === 'STARTED') {
         soundManager.ovenStart();
-        // ✅ update ref (no re-render)
         ovenSoundStatesRef.current = { ...ovenSoundStatesRef.current, [prev.chefLane]: 'cooking' };
       } else if (result.action === 'SERVED') {
         soundManager.servePizza();
-        // ✅ update ref (no re-render)
         ovenSoundStatesRef.current = { ...ovenSoundStatesRef.current, [prev.chefLane]: 'idle' };
       }
 
-      if (result.newState) {
-        return { ...prev, ...result.newState };
-      }
+      if (result.newState) return { ...prev, ...result.newState };
       return prev;
     });
   }, [gameState.gameOver, gameState.paused, gameState.chefLane]);
 
   const cleanOven = useCallback(() => {
     if (gameState.gameOver || gameState.paused) return;
+
     setGameState(prev => {
       const currentOven = prev.ovens[prev.chefLane];
       if (currentOven.burned && currentOven.cleaningStartTime === 0) {
         soundManager.cleaningStart();
         return {
           ...prev,
-          ovens: { ...prev.ovens, [prev.chefLane]: { ...currentOven, cleaningStartTime: Date.now() } }
+          ovens: {
+            ...prev.ovens,
+            [prev.chefLane]: { ...currentOven, cleaningStartTime: Date.now() },
+          },
         };
       }
       return prev;
@@ -275,9 +295,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         }
         return prev;
       }
+
       if (prev.paused) return prev;
 
-      let newState = { ...prev, stats: { ...prev.stats, powerUpsUsed: { ...prev.stats.powerUpsUsed } } };
+      let newState: GameState = {
+        ...prev,
+        stats: { ...prev.stats, powerUpsUsed: { ...prev.stats.powerUpsUsed } },
+      };
+
       const now = Date.now();
 
       const hasDoge = newState.activePowerUps.some(p => p.type === 'doge');
@@ -287,29 +312,34 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       // 1. PROCESS OVENS (Logic from ovenSystem)
       const ovenTickResult = processOvenTick(
         newState.ovens,
-        ovenSoundStatesRef.current, // ✅ ref read
+        ovenSoundStatesRef.current,
         newState.ovenSpeedUpgrades,
         now
       );
-      newState.ovens = ovenTickResult.nextOvens;
 
-      // ✅ update ref directly; no JSON.stringify; no setState in tick
+      newState.ovens = ovenTickResult.nextOvens;
       ovenSoundStatesRef.current = ovenTickResult.nextSoundStates;
 
       ovenTickResult.events.forEach(event => {
         switch (event.type) {
-          case 'SOUND_READY': soundManager.ovenReady(); break;
-          case 'SOUND_WARNING': soundManager.ovenWarning(); break;
-          case 'SOUND_BURNING': soundManager.ovenBurning(); break;
-          case 'CLEANING_COMPLETE': soundManager.cleaningComplete(); break;
+          case 'SOUND_READY':
+            soundManager.ovenReady();
+            break;
+          case 'SOUND_WARNING':
+            soundManager.ovenWarning();
+            break;
+          case 'SOUND_BURNING':
+            soundManager.ovenBurning();
+            break;
+          case 'CLEANING_COMPLETE':
+            soundManager.cleaningComplete();
+            break;
           case 'BURNED_ALIVE':
             soundManager.ovenBurned();
             soundManager.lifeLost();
             newState.lives = Math.max(0, newState.lives - 1);
             newState.lastStarLostReason = 'burned_pizza';
-            if (newState.lives === 0) {
-              newState = triggerGameOver(newState, now);
-            }
+            if (newState.lives === 0) newState = triggerGameOver(newState, now);
             break;
         }
       });
@@ -356,76 +386,92 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           if (consumed || customer.served || customer.disappointed || customer.vomit || customer.leaving) return customer;
 
           const isHit = customer.lane === slice.lane && Math.abs(customer.position - slice.position) < 5;
+          if (!isHit) return customer;
 
-          if (isHit) {
-            consumed = true;
+          consumed = true;
 
-            const hitResult = processCustomerHit(customer, now);
+          const hitResult = processCustomerHit(customer, now);
 
-            if (hitResult.newEntities.droppedPlate) newState.droppedPlates = [...newState.droppedPlates, hitResult.newEntities.droppedPlate];
-            if (hitResult.newEntities.emptyPlate) newState.emptyPlates = [...newState.emptyPlates, hitResult.newEntities.emptyPlate];
+          if (hitResult.newEntities.droppedPlate) newState.droppedPlates = [...newState.droppedPlates, hitResult.newEntities.droppedPlate];
+          if (hitResult.newEntities.emptyPlate) newState.emptyPlates = [...newState.emptyPlates, hitResult.newEntities.emptyPlate];
 
-            hitResult.events.forEach(event => {
-              if (event === 'BRIAN_DROPPED_PLATE') {
-                soundManager.plateDropped();
-                newState.stats.currentCustomerStreak = 0;
-                newState.stats.currentPlateStreak = 0;
-              } else if (event === 'UNFROZEN_AND_SERVED') {
-                soundManager.customerUnfreeze();
-                const baseScore = customer.critic ? SCORING.CUSTOMER_CRITIC : SCORING.CUSTOMER_NORMAL;
-                const pointsEarned = Math.floor(baseScore * dogeMultiplier * getStreakMultiplier(newState.stats.currentCustomerStreak));
-                newState.score += pointsEarned;
-                newState.bank += SCORING.BASE_BANK_REWARD * dogeMultiplier;
-                customerScores.push({ points: pointsEarned, lane: customer.lane, position: customer.position });
-                newState.happyCustomers += 1;
-                newState.stats.customersServed += 1;
-                newState.stats.currentCustomerStreak += 1;
-                if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
+          hitResult.events.forEach(event => {
+            if (event === 'BRIAN_DROPPED_PLATE') {
+              soundManager.plateDropped();
+              newState.stats.currentCustomerStreak = 0;
+              newState.stats.currentPlateStreak = 0;
+              return;
+            }
 
+            if (event === 'UNFROZEN_AND_SERVED') {
+              soundManager.customerUnfreeze();
+              const baseScore = customer.critic ? SCORING.CUSTOMER_CRITIC : SCORING.CUSTOMER_NORMAL;
+              const pointsEarned = Math.floor(
+                baseScore * dogeMultiplier * getStreakMultiplier(newState.stats.currentCustomerStreak)
+              );
+              newState.score += pointsEarned;
+              newState.bank += SCORING.BASE_BANK_REWARD * dogeMultiplier;
+              customerScores.push({ points: pointsEarned, lane: customer.lane, position: customer.position });
+              newState.happyCustomers += 1;
+              newState.stats.customersServed += 1;
+              newState.stats.currentCustomerStreak += 1;
+              if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) {
+                newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
+              }
+
+              if (newState.happyCustomers % 8 === 0 && newState.lives < GAME_CONFIG.MAX_LIVES) {
+                const starsToAdd = Math.min(dogeMultiplier, GAME_CONFIG.MAX_LIVES - newState.lives);
+                newState.lives += starsToAdd;
+                if (starsToAdd > 0) soundManager.lifeGained();
+              }
+              return;
+            }
+
+            if (event === 'WOOZY_STEP_1') {
+              soundManager.woozyServed();
+              const baseScore = SCORING.CUSTOMER_FIRST_SLICE;
+              const pointsEarned = Math.floor(
+                baseScore * dogeMultiplier * getStreakMultiplier(newState.stats.currentCustomerStreak)
+              );
+              newState.score += pointsEarned;
+              newState.bank += SCORING.BASE_BANK_REWARD * dogeMultiplier;
+              customerScores.push({ points: pointsEarned, lane: customer.lane, position: customer.position });
+              return;
+            }
+
+            if (event === 'WOOZY_STEP_2' || event === 'SERVED_NORMAL' || event === 'SERVED_CRITIC') {
+              soundManager.customerServed();
+              const baseScore = customer.critic ? SCORING.CUSTOMER_CRITIC : SCORING.CUSTOMER_NORMAL;
+              const pointsEarned = Math.floor(
+                baseScore * dogeMultiplier * getStreakMultiplier(newState.stats.currentCustomerStreak)
+              );
+              newState.score += pointsEarned;
+              newState.bank += SCORING.BASE_BANK_REWARD * dogeMultiplier;
+              customerScores.push({ points: pointsEarned, lane: customer.lane, position: customer.position });
+              newState.happyCustomers += 1;
+              newState.stats.customersServed += 1;
+              newState.stats.currentCustomerStreak += 1;
+              if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) {
+                newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
+              }
+
+              if (customer.critic && event === 'SERVED_CRITIC') {
+                if (customer.position >= 50 && newState.lives < GAME_CONFIG.MAX_LIVES) {
+                  newState.lives += 1;
+                  soundManager.lifeGained();
+                }
+              } else {
                 if (newState.happyCustomers % 8 === 0 && newState.lives < GAME_CONFIG.MAX_LIVES) {
                   const starsToAdd = Math.min(dogeMultiplier, GAME_CONFIG.MAX_LIVES - newState.lives);
                   newState.lives += starsToAdd;
                   if (starsToAdd > 0) soundManager.lifeGained();
                 }
-              } else if (event === 'WOOZY_STEP_1') {
-                soundManager.woozyServed();
-                const baseScore = SCORING.CUSTOMER_FIRST_SLICE;
-                const pointsEarned = Math.floor(baseScore * dogeMultiplier * getStreakMultiplier(newState.stats.currentCustomerStreak));
-                newState.score += pointsEarned;
-                newState.bank += SCORING.BASE_BANK_REWARD * dogeMultiplier;
-                customerScores.push({ points: pointsEarned, lane: customer.lane, position: customer.position });
-              } else if (event === 'WOOZY_STEP_2' || event === 'SERVED_NORMAL' || event === 'SERVED_CRITIC') {
-                soundManager.customerServed();
-                const baseScore = customer.critic ? SCORING.CUSTOMER_CRITIC : SCORING.CUSTOMER_NORMAL;
-                const pointsEarned = Math.floor(baseScore * dogeMultiplier * getStreakMultiplier(newState.stats.currentCustomerStreak));
-                newState.score += pointsEarned;
-                newState.bank += SCORING.BASE_BANK_REWARD * dogeMultiplier;
-                customerScores.push({ points: pointsEarned, lane: customer.lane, position: customer.position });
-                newState.happyCustomers += 1;
-                newState.stats.customersServed += 1;
-                newState.stats.currentCustomerStreak += 1;
-                if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
-
-                if (customer.critic && event === 'SERVED_CRITIC') {
-                  if (customer.position >= 50 && newState.lives < GAME_CONFIG.MAX_LIVES) {
-                    newState.lives += 1;
-                    soundManager.lifeGained();
-                  }
-                } else {
-                  if (newState.happyCustomers % 8 === 0 && newState.lives < GAME_CONFIG.MAX_LIVES) {
-                    const starsToAdd = Math.min(dogeMultiplier, GAME_CONFIG.MAX_LIVES - newState.lives);
-                    newState.lives += starsToAdd;
-                    if (starsToAdd > 0) soundManager.lifeGained();
-                  }
-                }
               }
-            });
+            }
+          });
 
-            platesFromSlices.add(slice.id);
-            return hitResult.updatedCustomer;
-          }
-
-          return customer;
+          platesFromSlices.add(slice.id);
+          return hitResult.updatedCustomer;
         });
 
         if (!consumed && slice.position < POSITIONS.OFF_SCREEN_RIGHT) {
@@ -443,22 +489,28 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       const finalSlices = remainingSlices.filter(slice => {
         if (platesFromSlices.has(slice.id)) return true;
+
         const hitPowerUp = Array.from(destroyedPowerUpIds).some(powerUpId => {
           const powerUp = newState.powerUps.find(p => p.id === powerUpId);
           return powerUp && powerUp.lane === slice.lane && Math.abs(powerUp.position - slice.position) < 5;
         });
+
         if (hitPowerUp) sliceWentOffScreen = true;
         return !hitPowerUp;
       });
+
       newState.pizzaSlices = finalSlices;
       newState.powerUps = newState.powerUps.filter(p => !destroyedPowerUpIds.has(p.id));
 
       if (sliceWentOffScreen) newState.stats.currentPlateStreak = 0;
-      customerScores.forEach(({ points, lane, position }) => { newState = addFloatingScore(points, lane, position, newState); });
+      customerScores.forEach(({ points, lane, position }) => {
+        newState = addFloatingScore(points, lane, position, newState);
+      });
 
       // --- 4. CLEANUP EXPIRATIONS ---
       newState.floatingScores = newState.floatingScores.filter(fs => now - fs.startTime < TIMINGS.FLOATING_SCORE_LIFETIME);
       newState.droppedPlates = newState.droppedPlates.filter(dp => now - dp.startTime < TIMINGS.DROPPED_PLATE_LIFETIME);
+
       newState.customers = newState.customers.map(customer => {
         if (customer.textMessage && customer.textMessageTime && now - customer.textMessageTime >= TIMINGS.TEXT_MESSAGE_LIFETIME) {
           return { ...customer, textMessage: undefined, textMessageTime: undefined };
@@ -468,107 +520,202 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       const expiredStarPower = newState.activePowerUps.some(p => p.type === 'star' && now >= p.endTime);
       const expiredHoney = newState.activePowerUps.some(p => p.type === 'honey' && now >= p.endTime);
+
       newState.activePowerUps = newState.activePowerUps.filter(powerUp => now < powerUp.endTime);
+
       if (expiredStarPower) newState.starPowerActive = false;
       if (expiredHoney) newState.customers = newState.customers.map(c => ({ ...c, hotHoneyAffected: false }));
+
       if (newState.powerUpAlert && now >= newState.powerUpAlert.endTime) {
         if (newState.powerUpAlert.type !== 'doge' || !hasDoge) newState.powerUpAlert = undefined;
       }
 
       // --- 5. STAR POWER AUTO-FEED ---
       const starPowerScores: Array<{ points: number; lane: number; position: number }> = [];
+
       if (hasStar && newState.availableSlices > 0) {
         newState.customers = newState.customers.map(customer => {
-          if (customer.lane === newState.chefLane && !customer.served && !customer.disappointed && !customer.vomit && Math.abs(customer.position - GAME_CONFIG.CHEF_X_POSITION) < 8) {
+          if (
+            customer.lane === newState.chefLane &&
+            !customer.served &&
+            !customer.disappointed &&
+            !customer.vomit &&
+            Math.abs(customer.position - GAME_CONFIG.CHEF_X_POSITION) < 8
+          ) {
             newState.availableSlices = Math.max(0, newState.availableSlices - 1);
+
             if (customer.badLuckBrian) {
               soundManager.plateDropped();
               newState.stats.currentCustomerStreak = 0;
               newState.stats.currentPlateStreak = 0;
-              const droppedPlate = { id: `dropped-${Date.now()}-${customer.id}`, lane: customer.lane, position: customer.position, startTime: Date.now(), hasSlice: true };
+              const droppedPlate = {
+                id: `dropped-${Date.now()}-${customer.id}`,
+                lane: customer.lane,
+                position: customer.position,
+                startTime: Date.now(),
+                hasSlice: true,
+              };
               newState.droppedPlates = [...newState.droppedPlates, droppedPlate];
-              return { ...customer, flipped: false, leaving: true, movingRight: true, textMessage: "Ugh! I dropped my slice!", textMessageTime: Date.now() };
+              return {
+                ...customer,
+                flipped: false,
+                leaving: true,
+                movingRight: true,
+                textMessage: 'Ugh! I dropped my slice!',
+                textMessageTime: Date.now(),
+              };
             }
+
             soundManager.customerServed();
+
             const baseScore = customer.critic ? SCORING.CUSTOMER_CRITIC : SCORING.CUSTOMER_NORMAL;
             const customerStreakMultiplier = getStreakMultiplier(newState.stats.currentCustomerStreak);
             const pointsEarned = Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
+
             newState.score += pointsEarned;
             newState.bank += SCORING.BASE_BANK_REWARD * dogeMultiplier;
             newState.happyCustomers += 1;
             starPowerScores.push({ points: pointsEarned, lane: customer.lane, position: customer.position });
             newState.stats.customersServed += 1;
             newState.stats.currentCustomerStreak += 1;
-            if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
+
+            if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) {
+              newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
+            }
+
             if (!customer.critic && newState.happyCustomers % 8 === 0 && newState.lives < GAME_CONFIG.MAX_LIVES) {
               const starsToAdd = Math.min(dogeMultiplier, GAME_CONFIG.MAX_LIVES - newState.lives);
               newState.lives += starsToAdd;
               if (starsToAdd > 0) soundManager.lifeGained();
             }
-            const newPlate: EmptyPlate = { id: `plate-star-${Date.now()}-${customer.id}`, lane: customer.lane, position: customer.position, speed: ENTITY_SPEEDS.PLATE };
+
+            const newPlate: EmptyPlate = {
+              id: `plate-star-${Date.now()}-${customer.id}`,
+              lane: customer.lane,
+              position: customer.position,
+              speed: ENTITY_SPEEDS.PLATE,
+            };
+
             newState.emptyPlates = [...newState.emptyPlates, newPlate];
             return { ...customer, served: true, hasPlate: false };
           }
           return customer;
         });
       }
-      starPowerScores.forEach(({ points, lane, position }) => { newState = addFloatingScore(points, lane, position, newState); });
+
+      starPowerScores.forEach(({ points, lane, position }) => {
+        newState = addFloatingScore(points, lane, position, newState);
+      });
 
       // --- 6. CHEF POWERUP COLLISIONS ---
       const caughtPowerUpIds = new Set<string>();
       const powerUpScores: Array<{ points: number; lane: number; position: number }> = [];
+
       newState.powerUps.forEach(powerUp => {
-        if (powerUp.position <= GAME_CONFIG.CHEF_X_POSITION && powerUp.lane === newState.chefLane && !newState.nyanSweep?.active) {
+        if (
+          powerUp.position <= GAME_CONFIG.CHEF_X_POSITION &&
+          powerUp.lane === newState.chefLane &&
+          !newState.nyanSweep?.active
+        ) {
           soundManager.powerUpCollected(powerUp.type);
+
           const pointsEarned = SCORING.POWERUP_COLLECTED * dogeMultiplier;
           newState.score += pointsEarned;
           powerUpScores.push({ points: pointsEarned, lane: powerUp.lane, position: powerUp.position });
           caughtPowerUpIds.add(powerUp.id);
+
           newState.stats.powerUpsUsed[powerUp.type] += 1;
 
           if (powerUp.type === 'beer') {
             let livesLost = 0;
             let lastReason: StarLostReason | undefined;
+
             newState.customers = newState.customers.map(customer => {
               if (customer.critic) {
-                if (customer.woozy) return { ...customer, woozy: false, woozyState: undefined, frozen: false, hotHoneyAffected: false, textMessage: "I prefer wine", textMessageTime: Date.now() };
-                if (!customer.served && !customer.vomit && !customer.disappointed && !customer.leaving) return { ...customer, textMessage: "I prefer wine", textMessageTime: Date.now() };
+                if (customer.woozy) {
+                  return {
+                    ...customer,
+                    woozy: false,
+                    woozyState: undefined,
+                    frozen: false,
+                    hotHoneyAffected: false,
+                    textMessage: 'I prefer wine',
+                    textMessageTime: Date.now(),
+                  };
+                }
+                if (!customer.served && !customer.vomit && !customer.disappointed && !customer.leaving) {
+                  return { ...customer, textMessage: 'I prefer wine', textMessageTime: Date.now() };
+                }
                 return customer;
               }
+
               if (customer.woozy) {
                 livesLost += 1;
                 lastReason = 'beer_vomit';
                 return { ...customer, woozy: false, vomit: true, disappointed: true, movingRight: true };
               }
+
               if (!customer.served && !customer.vomit && !customer.disappointed && !customer.leaving) {
                 if (customer.badLuckBrian) {
                   livesLost += 1;
                   lastReason = 'brian_hurled';
-                  return { ...customer, vomit: true, disappointed: true, movingRight: true, flipped: false, textMessage: "Oh man I hurled", textMessageTime: Date.now(), hotHoneyAffected: false, frozen: false };
+                  return {
+                    ...customer,
+                    vomit: true,
+                    disappointed: true,
+                    movingRight: true,
+                    flipped: false,
+                    textMessage: 'Oh man I hurled',
+                    textMessageTime: Date.now(),
+                    hotHoneyAffected: false,
+                    frozen: false,
+                  };
                 }
-                return { ...customer, woozy: true, woozyState: 'normal', movingRight: true, hotHoneyAffected: false, frozen: false };
+                return {
+                  ...customer,
+                  woozy: true,
+                  woozyState: 'normal',
+                  movingRight: true,
+                  hotHoneyAffected: false,
+                  frozen: false,
+                };
               }
+
               return customer;
             });
+
             newState.lives = Math.max(0, newState.lives - livesLost);
+
             if (livesLost > 0) {
               soundManager.lifeLost();
               newState.stats.currentCustomerStreak = 0;
               if (lastReason) newState.lastStarLostReason = lastReason;
             }
-            if (newState.lives === 0) {
-              newState = triggerGameOver(newState, now);
-            }
+
+            if (newState.lives === 0) newState = triggerGameOver(newState, now);
           } else if (powerUp.type === 'star') {
             newState.availableSlices = GAME_CONFIG.MAX_SLICES;
             newState.starPowerActive = true;
-            newState.activePowerUps = [...newState.activePowerUps.filter(p => p.type !== 'star'), { type: 'star', endTime: now + POWERUPS.DURATION }];
+            newState.activePowerUps = [
+              ...newState.activePowerUps.filter(p => p.type !== 'star'),
+              { type: 'star', endTime: now + POWERUPS.DURATION },
+            ];
           } else if (powerUp.type === 'doge') {
-            newState.activePowerUps = [...newState.activePowerUps.filter(p => p.type !== 'doge'), { type: 'doge', endTime: now + POWERUPS.DURATION }];
+            newState.activePowerUps = [
+              ...newState.activePowerUps.filter(p => p.type !== 'doge'),
+              { type: 'doge', endTime: now + POWERUPS.DURATION },
+            ];
             newState.powerUpAlert = { type: 'doge', endTime: now + POWERUPS.ALERT_DURATION_DOGE, chefLane: newState.chefLane };
           } else if (powerUp.type === 'nyan') {
             if (!newState.nyanSweep?.active) {
-              newState.nyanSweep = { active: true, xPosition: GAME_CONFIG.CHEF_X_POSITION, laneDirection: 1, startTime: now, lastUpdateTime: now, startingLane: newState.chefLane };
+              newState.nyanSweep = {
+                active: true,
+                xPosition: GAME_CONFIG.CHEF_X_POSITION,
+                laneDirection: 1,
+                startTime: now,
+                lastUpdateTime: now,
+                startingLane: newState.chefLane,
+              };
               soundManager.nyanCatPowerUp();
               if (!hasDoge || newState.powerUpAlert?.type !== 'doge') {
                 newState.powerUpAlert = { type: 'nyan', endTime: now + POWERUPS.ALERT_DURATION_NYAN, chefLane: newState.chefLane };
@@ -581,19 +728,49 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             newState.bank += moltoMoney;
             powerUpScores.push({ points: moltoScore, lane: newState.chefLane, position: GAME_CONFIG.CHEF_X_POSITION });
           } else {
-            newState.activePowerUps = [...newState.activePowerUps.filter(p => p.type !== powerUp.type), { type: powerUp.type, endTime: now + POWERUPS.DURATION }];
+            newState.activePowerUps = [
+              ...newState.activePowerUps.filter(p => p.type !== powerUp.type),
+              { type: powerUp.type, endTime: now + POWERUPS.DURATION },
+            ];
+
             if (powerUp.type === 'honey') {
               newState.customers = newState.customers.map(c => {
                 if (c.served || c.disappointed || c.vomit || c.leaving) return c;
-                if (c.badLuckBrian) return { ...c, shouldBeHotHoneyAffected: false, hotHoneyAffected: false, frozen: false, woozy: false, woozyState: undefined, textMessage: "I can't do spicy.", textMessageTime: Date.now() };
-                return { ...c, shouldBeHotHoneyAffected: true, hotHoneyAffected: true, frozen: false, woozy: false, woozyState: undefined };
+                if (c.badLuckBrian) {
+                  return {
+                    ...c,
+                    shouldBeHotHoneyAffected: false,
+                    hotHoneyAffected: false,
+                    frozen: false,
+                    woozy: false,
+                    woozyState: undefined,
+                    textMessage: "I can't do spicy.",
+                    textMessageTime: Date.now(),
+                  };
+                }
+                return {
+                  ...c,
+                  shouldBeHotHoneyAffected: true,
+                  hotHoneyAffected: true,
+                  frozen: false,
+                  woozy: false,
+                  woozyState: undefined,
+                };
               });
             }
+
             if (powerUp.type === 'ice-cream') {
               newState.customers = newState.customers.map(c => {
                 if (!c.served && !c.disappointed && !c.vomit) {
                   if (c.badLuckBrian) return { ...c, textMessage: "I'm lactose intolerant", textMessageTime: Date.now() };
-                  return { ...c, shouldBeFrozenByIceCream: true, frozen: true, hotHoneyAffected: false, woozy: false, woozyState: undefined };
+                  return {
+                    ...c,
+                    shouldBeFrozenByIceCream: true,
+                    frozen: true,
+                    hotHoneyAffected: false,
+                    woozy: false,
+                    woozyState: undefined,
+                  };
                 }
                 return c;
               });
@@ -601,14 +778,19 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           }
         }
       });
+
       newState.powerUps = newState.powerUps
         .filter(powerUp => !caughtPowerUpIds.has(powerUp.id))
         .map(powerUp => ({ ...powerUp, position: powerUp.position - powerUp.speed }))
         .filter(powerUp => powerUp.position > 0);
-      powerUpScores.forEach(({ points, lane, position }) => { newState = addFloatingScore(points, lane, position, newState); });
+
+      powerUpScores.forEach(({ points, lane, position }) => {
+        newState = addFloatingScore(points, lane, position, newState);
+      });
 
       // --- 7. PLATE CATCHING LOGIC ---
       const platesToAddScores: Array<{ points: number; lane: number; position: number }> = [];
+
       newState.emptyPlates = newState.emptyPlates
         .map(plate => ({ ...plate, position: plate.position - plate.speed }))
         .filter(plate => {
@@ -620,16 +802,24 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             platesToAddScores.push({ points: pointsEarned, lane: plate.lane, position: plate.position });
             newState.stats.platesCaught += 1;
             newState.stats.currentPlateStreak += 1;
-            if (newState.stats.currentPlateStreak > newState.stats.largestPlateStreak) newState.stats.largestPlateStreak = newState.stats.currentPlateStreak;
+            if (newState.stats.currentPlateStreak > newState.stats.largestPlateStreak) {
+              newState.stats.largestPlateStreak = newState.stats.currentPlateStreak;
+            }
             return false;
-          } else if (plate.position <= 0) {
+          }
+
+          if (plate.position <= 0) {
             soundManager.plateDropped();
             newState.stats.currentPlateStreak = 0;
             return false;
           }
+
           return true;
         });
-      platesToAddScores.forEach(({ points, lane, position }) => { newState = addFloatingScore(points, lane, position, newState); });
+
+      platesToAddScores.forEach(({ points, lane, position }) => {
+        newState = addFloatingScore(points, lane, position, newState);
+      });
 
       // --- 8. NYAN CAT SWEEP LOGIC ---
       if (newState.nyanSweep?.active) {
@@ -639,10 +829,12 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         const totalDistance = MAX_X - INITIAL_X;
         const duration = 2600;
         const moveIncrement = (totalDistance / duration) * dt;
+
         const oldX = newState.nyanSweep.xPosition;
         const newXPosition = oldX + moveIncrement;
+
         const laneChangeSpeed = 0.01;
-        let newLane = newState.chefLane + (newState.nyanSweep.laneDirection * laneChangeSpeed * dt);
+        let newLane = newState.chefLane + newState.nyanSweep.laneDirection * laneChangeSpeed * dt;
         let newLaneDirection = newState.nyanSweep.laneDirection;
 
         if (newLane > GAME_CONFIG.LANE_BOTTOM) {
@@ -654,8 +846,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         }
 
         const nyanScores: Array<{ points: number; lane: number; position: number }> = [];
+
         newState.customers = newState.customers.map(customer => {
           if (customer.served || customer.disappointed || customer.vomit) return customer;
+
           const isLaneHit = Math.abs(customer.lane - newLane) < 0.8;
           const sweepStart = oldX - 10;
           const sweepEnd = newXPosition + 10;
@@ -664,18 +858,33 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           if (isLaneHit && isPositionHit) {
             if (customer.badLuckBrian) {
               soundManager.customerServed();
-              return { ...customer, brianNyaned: true, leaving: true, hasPlate: false, flipped: false, movingRight: true, woozy: false, frozen: false, unfrozenThisPeriod: undefined };
+              return {
+                ...customer,
+                brianNyaned: true,
+                leaving: true,
+                hasPlate: false,
+                flipped: false,
+                movingRight: true,
+                woozy: false,
+                frozen: false,
+                unfrozenThisPeriod: undefined,
+              };
             }
+
             soundManager.customerServed();
             const baseScore = customer.critic ? SCORING.CUSTOMER_CRITIC : SCORING.CUSTOMER_NORMAL;
             const pointsEarned = Math.floor(baseScore * dogeMultiplier * getStreakMultiplier(newState.stats.currentCustomerStreak));
+
             newState.score += pointsEarned;
             newState.bank += SCORING.BASE_BANK_REWARD * dogeMultiplier;
             nyanScores.push({ points: pointsEarned, lane: customer.lane, position: customer.position });
             newState.happyCustomers += 1;
             newState.stats.customersServed += 1;
             newState.stats.currentCustomerStreak += 1;
-            if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
+
+            if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) {
+              newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
+            }
 
             if (customer.critic) {
               if (customer.position >= 55 && newState.lives < GAME_CONFIG.MAX_LIVES) {
@@ -689,14 +898,24 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 if (starsToAdd > 0) soundManager.lifeGained();
               }
             }
-            return { ...customer, served: true, hasPlate: false, woozy: false, frozen: false, unfrozenThisPeriod: undefined };
+
+            return {
+              ...customer,
+              served: true,
+              hasPlate: false,
+              woozy: false,
+              frozen: false,
+              unfrozenThisPeriod: undefined,
+            };
           }
+
           return customer;
         });
 
         if (newState.bossBattle?.active && !newState.bossBattle.bossDefeated) {
           newState.bossBattle.minions = newState.bossBattle.minions.map(minion => {
             if (minion.defeated) return minion;
+
             const isLaneHit = Math.abs(minion.lane - newLane) < 0.8;
             const sweepStart = oldX - 10;
             const sweepEnd = newXPosition + 10;
@@ -709,13 +928,22 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               newState = addFloatingScore(pointsEarned, minion.lane, minion.position, newState);
               return { ...minion, defeated: true };
             }
+
             return minion;
           });
         }
-        nyanScores.forEach(({ points, lane, position }) => { newState = addFloatingScore(points, lane, position, newState); });
+
+        nyanScores.forEach(({ points, lane, position }) => {
+          newState = addFloatingScore(points, lane, position, newState);
+        });
 
         newState.chefLane = newLane;
-        newState.nyanSweep = { ...newState.nyanSweep, xPosition: newXPosition, laneDirection: newLaneDirection, lastUpdateTime: now };
+        newState.nyanSweep = {
+          ...newState.nyanSweep,
+          xPosition: newXPosition,
+          laneDirection: newLaneDirection,
+          lastUpdateTime: now,
+        };
 
         if (newState.nyanSweep.xPosition >= MAX_X) {
           newState.chefLane = Math.round(newState.chefLane);
@@ -735,27 +963,28 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         const oldLevel = newState.level;
         newState.level = targetLevel;
 
-        const highestStoreLevel = Math.floor(targetLevel / GAME_CONFIG.STORE_LEVEL_INTERVAL) * GAME_CONFIG.STORE_LEVEL_INTERVAL;
+        const highestStoreLevel =
+          Math.floor(targetLevel / GAME_CONFIG.STORE_LEVEL_INTERVAL) * GAME_CONFIG.STORE_LEVEL_INTERVAL;
+
         if (highestStoreLevel >= 10 && highestStoreLevel > newState.lastStoreLevelShown) {
           newState.lastStoreLevelShown = highestStoreLevel;
           if (newState.nyanSweep?.active) newState.pendingStoreShow = true;
           else newState.showStore = true;
         }
 
-        const crossedBossLevel = BOSS_CONFIG.TRIGGER_LEVELS.find(triggerLvl =>
-          oldLevel < triggerLvl && targetLevel >= triggerLvl
-        );
+        const crossedBossLevel = BOSS_CONFIG.TRIGGER_LEVELS.find(triggerLvl => oldLevel < triggerLvl && targetLevel >= triggerLvl);
 
-        if (crossedBossLevel !== undefined &&
+        if (
+          crossedBossLevel !== undefined &&
           !newState.defeatedBossLevels.includes(crossedBossLevel) &&
-          !newState.bossBattle?.active) {
-
+          !newState.bossBattle?.active
+        ) {
           const initialMinions: BossMinion[] = [];
           for (let i = 0; i < BOSS_CONFIG.MINIONS_PER_WAVE; i++) {
             initialMinions.push({
               id: `minion-${now}-1-${i}`,
               lane: i % 4,
-              position: POSITIONS.SPAWN_X + (Math.floor(i / 4) * 15),
+              position: POSITIONS.SPAWN_X + Math.floor(i / 4) * 15,
               speed: ENTITY_SPEEDS.MINION,
               defeated: false,
             });
@@ -775,6 +1004,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       if (newState.bossBattle?.active && !newState.bossBattle.bossDefeated) {
         const bossScores: Array<{ points: number; lane: number; position: number }> = [];
+
         newState.bossBattle.minions = newState.bossBattle.minions.map(minion => {
           if (minion.defeated) return minion;
           return { ...minion, position: minion.position - minion.speed };
@@ -785,17 +1015,17 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           if (minion.position <= GAME_CONFIG.CHEF_X_POSITION) {
             soundManager.lifeLost();
             newState.lives = Math.max(0, newState.lives - 1);
-            if (newState.lives === 0) {
-              newState = triggerGameOver(newState, now);
-            }
+            if (newState.lives === 0) newState = triggerGameOver(newState, now);
             return { ...minion, defeated: true };
           }
           return minion;
         });
 
         const consumedSliceIds = new Set<string>();
+
         newState.pizzaSlices.forEach(slice => {
           if (consumedSliceIds.has(slice.id)) return;
+
           newState.bossBattle!.minions = newState.bossBattle!.minions.map(minion => {
             if (minion.defeated || consumedSliceIds.has(slice.id)) return minion;
             if (minion.lane === slice.lane && Math.abs(minion.position - slice.position) < 8) {
@@ -817,6 +1047,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               consumedSliceIds.add(slice.id);
               soundManager.customerServed();
               newState.bossBattle!.bossHealth -= 1;
+
               const pointsEarned = SCORING.BOSS_HIT;
               newState.score += pointsEarned;
               bossScores.push({ points: pointsEarned, lane: slice.lane, position: slice.position });
@@ -828,11 +1059,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 newState.score += SCORING.BOSS_DEFEAT;
                 bossScores.push({ points: SCORING.BOSS_DEFEAT, lane: 1, position: newState.bossBattle!.bossPosition });
 
-                const currentBossLevel = BOSS_CONFIG.TRIGGER_LEVELS
-                  .slice()
-                  .reverse()
-                  .find(lvl => newState.level >= lvl);
-
+                const currentBossLevel = BOSS_CONFIG.TRIGGER_LEVELS.slice().reverse().find(lvl => newState.level >= lvl);
                 if (currentBossLevel && !newState.defeatedBossLevels.includes(currentBossLevel)) {
                   newState.defeatedBossLevels = [...newState.defeatedBossLevels, currentBossLevel];
                 }
@@ -840,23 +1067,28 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             }
           });
         }
+
         newState.pizzaSlices = newState.pizzaSlices.filter(slice => !consumedSliceIds.has(slice.id));
-        bossScores.forEach(({ points, lane, position }) => { newState = addFloatingScore(points, lane, position, newState); });
+        bossScores.forEach(({ points, lane, position }) => {
+          newState = addFloatingScore(points, lane, position, newState);
+        });
 
         const activeMinions = newState.bossBattle.minions.filter(m => !m.defeated);
         if (activeMinions.length === 0) {
           if (newState.bossBattle.currentWave < BOSS_CONFIG.WAVES) {
             const nextWave = newState.bossBattle.currentWave + 1;
             const newMinions: BossMinion[] = [];
+
             for (let i = 0; i < BOSS_CONFIG.MINIONS_PER_WAVE; i++) {
               newMinions.push({
                 id: `minion-${now}-${nextWave}-${i}`,
                 lane: i % 4,
-                position: POSITIONS.SPAWN_X + (Math.floor(i / 4) * 15),
+                position: POSITIONS.SPAWN_X + Math.floor(i / 4) * 15,
                 speed: ENTITY_SPEEDS.MINION,
                 defeated: false,
               });
             }
+
             newState.bossBattle.currentWave = nextWave;
             newState.bossBattle.minions = newMinions;
           } else if (!newState.bossBattle.bossVulnerable) {
@@ -868,7 +1100,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       return newState;
     });
-  }, [addFloatingScore, triggerGameOver]); // ✅ removed gameState.* and ovenSoundStates deps
+  }, [addFloatingScore, triggerGameOver]);
 
   // --- Store / Upgrades / Debug (now via storeSystem.ts) ---
 
@@ -887,9 +1119,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
   const bribeReviewer = useCallback(() => {
     setGameState(prev => {
       const result = bribeReviewerStore(prev);
-      if (result.events.some(e => e.type === 'LIFE_GAINED')) {
-        soundManager.lifeGained();
-      }
+      if (result.events.some(e => e.type === 'LIFE_GAINED')) soundManager.lifeGained();
       return result.nextState;
     });
   }, []);
@@ -898,95 +1128,169 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     setGameState(prev => buyPowerUpStore(prev, type, Date.now()));
   }, []);
 
-  const debugActivatePowerUp = useCallback((type: PowerUpType) => {
-    setGameState(prev => {
-      if (prev.gameOver) return prev;
-      const now = Date.now();
-      let newState = {
-        ...prev,
-        stats: {
-          ...prev.stats,
-          powerUpsUsed: { ...prev.stats.powerUpsUsed, [type]: prev.stats.powerUpsUsed[type] + 1 }
-        }
-      };
+  const debugActivatePowerUp = useCallback(
+    (type: PowerUpType) => {
+      setGameState(prev => {
+        if (prev.gameOver) return prev;
 
-      const dogeMultiplier = prev.activePowerUps.some(p => p.type === 'doge') ? 2 : 1;
+        const now = Date.now();
+        let newState: any = {
+          ...prev,
+          stats: {
+            ...prev.stats,
+            powerUpsUsed: { ...prev.stats.powerUpsUsed, [type]: prev.stats.powerUpsUsed[type] + 1 },
+          },
+        };
 
-      if (type === 'beer') {
-        let livesLost = 0;
-        let lastReason: StarLostReason | undefined;
-        newState.customers = newState.customers.map(customer => {
-          if (customer.critic) {
-            if (customer.woozy) return { ...customer, woozy: false, woozyState: undefined, frozen: false, hotHoneyAffected: false, textMessage: "I prefer wine", textMessageTime: Date.now() };
-            if (!customer.served && !customer.vomit && !customer.disappointed && !customer.leaving) return { ...customer, textMessage: "I prefer wine", textMessageTime: Date.now() };
-            return customer;
-          }
-          if (customer.woozy) {
-            livesLost += 1;
-            lastReason = 'beer_vomit';
-            return { ...customer, woozy: false, vomit: true, disappointed: true, movingRight: true };
-          }
-          if (!customer.served && !customer.vomit && !customer.leaving) {
-            if (customer.badLuckBrian) {
+        const dogeMultiplier = prev.activePowerUps.some(p => p.type === 'doge') ? 2 : 1;
+
+        if (type === 'beer') {
+          let livesLost = 0;
+          let lastReason: StarLostReason | undefined;
+
+          newState.customers = newState.customers.map((customer: Customer) => {
+            if (customer.critic) {
+              if (customer.woozy) {
+                return {
+                  ...customer,
+                  woozy: false,
+                  woozyState: undefined,
+                  frozen: false,
+                  hotHoneyAffected: false,
+                  textMessage: 'I prefer wine',
+                  textMessageTime: Date.now(),
+                };
+              }
+              if (!customer.served && !customer.vomit && !customer.disappointed && !customer.leaving) {
+                return { ...customer, textMessage: 'I prefer wine', textMessageTime: Date.now() };
+              }
+              return customer;
+            }
+
+            if (customer.woozy) {
               livesLost += 1;
-              lastReason = 'brian_hurled';
-              return { ...customer, vomit: true, disappointed: true, movingRight: true, flipped: false, textMessage: "Oh man I hurled", textMessageTime: Date.now(), hotHoneyAffected: false, frozen: false };
+              lastReason = 'beer_vomit';
+              return { ...customer, woozy: false, vomit: true, disappointed: true, movingRight: true };
             }
-            return { ...customer, woozy: true, woozyState: 'normal', movingRight: true, hotHoneyAffected: false, frozen: false };
-          }
-          return customer;
-        });
-        newState.lives = Math.max(0, newState.lives - livesLost);
-        if (livesLost > 0) {
-          newState.stats.currentCustomerStreak = 0;
-          if (lastReason) newState.lastStarLostReason = lastReason;
-        }
-        if (newState.lives === 0) {
-          newState = triggerGameOver(newState as GameState, now);
-        }
-      } else if (type === 'star') {
-        newState.availableSlices = GAME_CONFIG.MAX_SLICES;
-        newState.starPowerActive = true;
-        newState.activePowerUps = [...newState.activePowerUps.filter(p => p.type !== 'star'), { type: 'star', endTime: now + POWERUPS.DURATION }];
-      } else if (type === 'doge') {
-        newState.activePowerUps = [...newState.activePowerUps.filter(p => p.type !== 'doge'), { type: 'doge', endTime: now + POWERUPS.DURATION }];
-        newState.powerUpAlert = { type: 'doge', endTime: now + POWERUPS.ALERT_DURATION_DOGE, chefLane: newState.chefLane };
-      } else if (type === 'nyan') {
-        if (!newState.nyanSweep?.active) {
-          newState.nyanSweep = { active: true, xPosition: GAME_CONFIG.CHEF_X_POSITION, laneDirection: 1, startTime: now, lastUpdateTime: now, startingLane: newState.chefLane };
-          soundManager.nyanCatPowerUp();
-          if (!newState.activePowerUps.some(p => p.type === 'doge') || newState.powerUpAlert?.type !== 'doge') {
-            newState.powerUpAlert = { type: 'nyan', endTime: now + POWERUPS.ALERT_DURATION_NYAN, chefLane: newState.chefLane };
-          }
-        }
-      } else {
-        newState.activePowerUps = [...newState.activePowerUps.filter(p => p.type !== type), { type: type, endTime: now + POWERUPS.DURATION }];
-        if (type === 'honey') {
-          newState.customers = newState.customers.map(c => {
-            if (c.served || c.disappointed || c.vomit || c.leaving) return c;
-            if (c.badLuckBrian) return { ...c, shouldBeHotHoneyAffected: false, hotHoneyAffected: false, frozen: false, woozy: false, woozyState: undefined, textMessage: "I can't do spicy.", textMessageTime: Date.now() };
-            return { ...c, shouldBeHotHoneyAffected: true, hotHoneyAffected: true, frozen: false, woozy: false, woozyState: undefined };
-          });
-        }
-        if (type === 'ice-cream') {
-          newState.customers = newState.customers.map(c => {
-            if (!c.served && !c.disappointed && !c.vomit) {
-              if (c.badLuckBrian) return { ...c, textMessage: "I'm lactose intolerant", textMessageTime: Date.now() };
-              return { ...c, shouldBeFrozenByIceCream: true, frozen: true, hotHoneyAffected: false, woozy: false, woozyState: undefined };
+
+            if (!customer.served && !customer.vomit && !customer.leaving) {
+              if (customer.badLuckBrian) {
+                livesLost += 1;
+                lastReason = 'brian_hurled';
+                return {
+                  ...customer,
+                  vomit: true,
+                  disappointed: true,
+                  movingRight: true,
+                  flipped: false,
+                  textMessage: 'Oh man I hurled',
+                  textMessageTime: Date.now(),
+                  hotHoneyAffected: false,
+                  frozen: false,
+                };
+              }
+              return {
+                ...customer,
+                woozy: true,
+                woozyState: 'normal',
+                movingRight: true,
+                hotHoneyAffected: false,
+                frozen: false,
+              };
             }
-            return c;
+
+            return customer;
           });
+
+          newState.lives = Math.max(0, newState.lives - livesLost);
+
+          if (livesLost > 0) {
+            newState.stats.currentCustomerStreak = 0;
+            if (lastReason) newState.lastStarLostReason = lastReason;
+          }
+
+          if (newState.lives === 0) newState = triggerGameOver(newState as GameState, now);
+        } else if (type === 'star') {
+          newState.availableSlices = GAME_CONFIG.MAX_SLICES;
+          newState.starPowerActive = true;
+          newState.activePowerUps = [
+            ...newState.activePowerUps.filter((p: any) => p.type !== 'star'),
+            { type: 'star', endTime: now + POWERUPS.DURATION },
+          ];
+        } else if (type === 'doge') {
+          newState.activePowerUps = [
+            ...newState.activePowerUps.filter((p: any) => p.type !== 'doge'),
+            { type: 'doge', endTime: now + POWERUPS.DURATION },
+          ];
+          newState.powerUpAlert = { type: 'doge', endTime: now + POWERUPS.ALERT_DURATION_DOGE, chefLane: newState.chefLane };
+        } else if (type === 'nyan') {
+          if (!newState.nyanSweep?.active) {
+            newState.nyanSweep = { active: true, xPosition: GAME_CONFIG.CHEF_X_POSITION, laneDirection: 1, startTime: now, lastUpdateTime: now, startingLane: newState.chefLane };
+            soundManager.nyanCatPowerUp();
+            if (!newState.activePowerUps.some((p: any) => p.type === 'doge') || newState.powerUpAlert?.type !== 'doge') {
+              newState.powerUpAlert = { type: 'nyan', endTime: now + POWERUPS.ALERT_DURATION_NYAN, chefLane: newState.chefLane };
+            }
+          }
+        } else {
+          newState.activePowerUps = [
+            ...newState.activePowerUps.filter((p: any) => p.type !== type),
+            { type, endTime: now + POWERUPS.DURATION },
+          ];
+
+          if (type === 'honey') {
+            newState.customers = newState.customers.map((c: Customer) => {
+              if (c.served || c.disappointed || c.vomit || c.leaving) return c;
+              if (c.badLuckBrian) {
+                return {
+                  ...c,
+                  shouldBeHotHoneyAffected: false,
+                  hotHoneyAffected: false,
+                  frozen: false,
+                  woozy: false,
+                  woozyState: undefined,
+                  textMessage: "I can't do spicy.",
+                  textMessageTime: Date.now(),
+                };
+              }
+              return {
+                ...c,
+                shouldBeHotHoneyAffected: true,
+                hotHoneyAffected: true,
+                frozen: false,
+                woozy: false,
+                woozyState: undefined,
+              };
+            });
+          }
+
+          if (type === 'ice-cream') {
+            newState.customers = newState.customers.map((c: Customer) => {
+              if (!c.served && !c.disappointed && !c.vomit) {
+                if (c.badLuckBrian) return { ...c, textMessage: "I'm lactose intolerant", textMessageTime: Date.now() };
+                return {
+                  ...c,
+                  shouldBeFrozenByIceCream: true,
+                  frozen: true,
+                  hotHoneyAffected: false,
+                  woozy: false,
+                  woozyState: undefined,
+                };
+              }
+              return c;
+            });
+          }
         }
-      }
-      return newState as GameState;
-    });
-  }, [triggerGameOver]);
+
+        return newState as GameState;
+      });
+    },
+    [triggerGameOver]
+  );
 
   const resetGame = useCallback(() => {
     setGameState({ ...INITIAL_GAME_STATE });
     lastCustomerSpawnRef.current = 0;
     lastPowerUpSpawnRef.current = 0;
-    // ✅ reset ref (no render)
     ovenSoundStatesRef.current = { ...DEFAULT_OVEN_SOUND_STATES };
   }, []);
 
@@ -1009,25 +1313,25 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       setGameState(prev => ({
         ...prev,
         paused: true,
-        ovens: calculateOvenPauseState(prev.ovens, true, now)
+        ovens: calculateOvenPauseState(prev.ovens, true, now),
       }));
     }
+
     if (prevShowStore && !currentShowStore) {
       setGameState(prev => ({
         ...prev,
         paused: false,
-        ovens: calculateOvenPauseState(prev.ovens, false, now)
+        ovens: calculateOvenPauseState(prev.ovens, false, now),
       }));
     }
+
     prevShowStoreRef.current = currentShowStore;
   }, [gameState.showStore]);
 
   // --- 2. THE CONSOLIDATED TICK FUNCTION ---
-  // Combines physics (updateGame) + spawning in a way that uses latest state.
   const tick = useCallback(() => {
     updateGame();
 
-    // Spawn decision uses current state (functional) so it doesn't depend on closures.
     setGameState(current => {
       if (current.paused || current.gameOver) return current;
 
@@ -1036,19 +1340,18 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       // Customer spawn (gate by min interval)
       const spawnDelay =
         SPAWN_RATES.CUSTOMER_MIN_INTERVAL_BASE -
-        (current.level * SPAWN_RATES.CUSTOMER_MIN_INTERVAL_DECREMENT);
+        current.level * SPAWN_RATES.CUSTOMER_MIN_INTERVAL_DECREMENT;
 
       const levelSpawnRate =
         SPAWN_RATES.CUSTOMER_BASE_RATE +
         (current.level - 1) * SPAWN_RATES.CUSTOMER_LEVEL_INCREMENT;
 
-      const effectiveSpawnRate = current.bossBattle?.active
-        ? levelSpawnRate * 0.5
-        : levelSpawnRate;
+      const effectiveSpawnRate = current.bossBattle?.active ? levelSpawnRate * 0.5 : levelSpawnRate;
 
       let next = current;
 
-      if (now - lastCustomerSpawnRef.current >= spawnDelay && Math.random() < effectiveSpawnRate * 0.01) {
+      // ✅ FIX: removed "* 0.01" (it was making spawns 100× rarer)
+      if (now - lastCustomerSpawnRef.current >= spawnDelay && Math.random() < effectiveSpawnRate) {
         const lane = Math.floor(Math.random() * GAME_CONFIG.LANE_COUNT);
         const disappointedEmojis = ['😢', '😭', '😠', '🤬'];
         const isCritic = Math.random() < PROBABILITIES.CRITIC_CHANCE;
@@ -1074,13 +1377,16 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               critic: isCritic,
               badLuckBrian: isBadLuckBrian,
               flipped: isBadLuckBrian,
-            }
-          ]
+            },
+          ],
         };
       }
 
       // PowerUp spawn (gate by min interval)
-      if (now - lastPowerUpSpawnRef.current >= SPAWN_RATES.POWERUP_MIN_INTERVAL && Math.random() < SPAWN_RATES.POWERUP_CHANCE) {
+      if (
+        now - lastPowerUpSpawnRef.current >= SPAWN_RATES.POWERUP_MIN_INTERVAL &&
+        Math.random() < SPAWN_RATES.POWERUP_CHANCE
+      ) {
         const lane = Math.floor(Math.random() * GAME_CONFIG.LANE_COUNT);
         const rand = Math.random();
         const randomType =
@@ -1100,8 +1406,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               position: POSITIONS.POWERUP_SPAWN_X,
               speed: ENTITY_SPEEDS.POWERUP,
               type: randomType,
-            }
-          ]
+            },
+          ],
         };
       }
 
