@@ -42,6 +42,15 @@ import {
   processCustomerHit
 } from '../logic/customerSystem';
 
+import {
+  calculateCustomerScore,
+  calculatePlateScore,
+  calculateMinionScore,
+  calculatePowerUpScore,
+  checkLifeGain,
+  updateStatsForStreak
+} from '../logic/scoringSystem';
+
 // --- Store System (actions only) ---
 import {
   upgradeOven as upgradeOvenStore,
@@ -75,7 +84,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
   const prevShowStoreRef = useRef(false);
 
   // --- 1. THE STABLE TICK REF ---
-  const latestTickRef = useRef<() => void>(() => {});
+  const latestTickRef = useRef<() => void>(() => { });
 
   // --- Helpers (Score, Spawning) ---
 
@@ -372,51 +381,69 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 newState.stats.currentPlateStreak = 0;
               } else if (event === 'UNFROZEN_AND_SERVED') {
                 soundManager.customerUnfreeze();
-                const baseScore = customer.critic ? SCORING.CUSTOMER_CRITIC : SCORING.CUSTOMER_NORMAL;
-                const pointsEarned = Math.floor(baseScore * dogeMultiplier * getStreakMultiplier(newState.stats.currentCustomerStreak));
+
+                const { points: pointsEarned, bank: bankEarned } = calculateCustomerScore(
+                  customer,
+                  dogeMultiplier,
+                  getStreakMultiplier(newState.stats.currentCustomerStreak)
+                );
+
                 newState.score += pointsEarned;
-                newState.bank += SCORING.BASE_BANK_REWARD * dogeMultiplier;
+                newState.bank += bankEarned;
                 customerScores.push({ points: pointsEarned, lane: customer.lane, position: customer.position });
+
                 newState.happyCustomers += 1;
                 newState.stats.customersServed += 1;
-                newState.stats.currentCustomerStreak += 1;
-                if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
+                newState.stats = updateStatsForStreak(newState.stats, 'customer');
 
-                if (newState.happyCustomers % 8 === 0 && newState.lives < GAME_CONFIG.MAX_LIVES) {
-                  const starsToAdd = Math.min(dogeMultiplier, GAME_CONFIG.MAX_LIVES - newState.lives);
-                  newState.lives += starsToAdd;
-                  if (starsToAdd > 0) soundManager.lifeGained();
+                const lifeResult = checkLifeGain(newState.lives, newState.happyCustomers, dogeMultiplier);
+                if (lifeResult.livesToAdd > 0) {
+                  newState.lives += lifeResult.livesToAdd;
+                  if (lifeResult.shouldPlaySound) soundManager.lifeGained();
                 }
+
               } else if (event === 'WOOZY_STEP_1') {
                 soundManager.woozyServed();
-                const baseScore = SCORING.CUSTOMER_FIRST_SLICE;
-                const pointsEarned = Math.floor(baseScore * dogeMultiplier * getStreakMultiplier(newState.stats.currentCustomerStreak));
+
+                const { points: pointsEarned, bank: bankEarned } = calculateCustomerScore(
+                  customer,
+                  dogeMultiplier,
+                  getStreakMultiplier(newState.stats.currentCustomerStreak),
+                  true // isFirstSlice
+                );
+
                 newState.score += pointsEarned;
-                newState.bank += SCORING.BASE_BANK_REWARD * dogeMultiplier;
+                newState.bank += bankEarned;
                 customerScores.push({ points: pointsEarned, lane: customer.lane, position: customer.position });
+
               } else if (event === 'WOOZY_STEP_2' || event === 'SERVED_NORMAL' || event === 'SERVED_CRITIC') {
                 soundManager.customerServed();
-                const baseScore = customer.critic ? SCORING.CUSTOMER_CRITIC : SCORING.CUSTOMER_NORMAL;
-                const pointsEarned = Math.floor(baseScore * dogeMultiplier * getStreakMultiplier(newState.stats.currentCustomerStreak));
+
+                const { points: pointsEarned, bank: bankEarned } = calculateCustomerScore(
+                  customer,
+                  dogeMultiplier,
+                  getStreakMultiplier(newState.stats.currentCustomerStreak)
+                );
+
                 newState.score += pointsEarned;
-                newState.bank += SCORING.BASE_BANK_REWARD * dogeMultiplier;
+                newState.bank += bankEarned;
                 customerScores.push({ points: pointsEarned, lane: customer.lane, position: customer.position });
+
                 newState.happyCustomers += 1;
                 newState.stats.customersServed += 1;
-                newState.stats.currentCustomerStreak += 1;
-                if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
+                newState.stats = updateStatsForStreak(newState.stats, 'customer');
 
-                if (customer.critic && event === 'SERVED_CRITIC') {
-                  if (customer.position >= 50 && newState.lives < GAME_CONFIG.MAX_LIVES) {
-                    newState.lives += 1;
-                    soundManager.lifeGained();
-                  }
-                } else {
-                  if (newState.happyCustomers % 8 === 0 && newState.lives < GAME_CONFIG.MAX_LIVES) {
-                    const starsToAdd = Math.min(dogeMultiplier, GAME_CONFIG.MAX_LIVES - newState.lives);
-                    newState.lives += starsToAdd;
-                    if (starsToAdd > 0) soundManager.lifeGained();
-                  }
+                const lifeResult = checkLifeGain(
+                  newState.lives,
+                  newState.happyCustomers,
+                  dogeMultiplier,
+                  customer.critic,
+                  customer.position
+                );
+
+                if (lifeResult.livesToAdd > 0) {
+                  newState.lives += lifeResult.livesToAdd;
+                  if (lifeResult.shouldPlaySound) soundManager.lifeGained();
                 }
               }
             });
@@ -490,21 +517,29 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               return { ...customer, flipped: false, leaving: true, movingRight: true, textMessage: "Ugh! I dropped my slice!", textMessageTime: Date.now() };
             }
             soundManager.customerServed();
-            const baseScore = customer.critic ? SCORING.CUSTOMER_CRITIC : SCORING.CUSTOMER_NORMAL;
-            const customerStreakMultiplier = getStreakMultiplier(newState.stats.currentCustomerStreak);
-            const pointsEarned = Math.floor(baseScore * dogeMultiplier * customerStreakMultiplier);
+
+            const { points: pointsEarned, bank: bankEarned } = calculateCustomerScore(
+              customer,
+              dogeMultiplier,
+              getStreakMultiplier(newState.stats.currentCustomerStreak)
+            );
+
             newState.score += pointsEarned;
-            newState.bank += SCORING.BASE_BANK_REWARD * dogeMultiplier;
+            newState.bank += bankEarned;
             newState.happyCustomers += 1;
             starPowerScores.push({ points: pointsEarned, lane: customer.lane, position: customer.position });
+
             newState.stats.customersServed += 1;
-            newState.stats.currentCustomerStreak += 1;
-            if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
-            if (!customer.critic && newState.happyCustomers % 8 === 0 && newState.lives < GAME_CONFIG.MAX_LIVES) {
-              const starsToAdd = Math.min(dogeMultiplier, GAME_CONFIG.MAX_LIVES - newState.lives);
-              newState.lives += starsToAdd;
-              if (starsToAdd > 0) soundManager.lifeGained();
+            newState.stats = updateStatsForStreak(newState.stats, 'customer');
+
+            if (!customer.critic) {
+              const lifeResult = checkLifeGain(newState.lives, newState.happyCustomers, dogeMultiplier);
+              if (lifeResult.livesToAdd > 0) {
+                newState.lives += lifeResult.livesToAdd;
+                if (lifeResult.shouldPlaySound) soundManager.lifeGained();
+              }
             }
+
             const newPlate: EmptyPlate = { id: `plate-star-${Date.now()}-${customer.id}`, lane: customer.lane, position: customer.position, speed: ENTITY_SPEEDS.PLATE };
             newState.emptyPlates = [...newState.emptyPlates, newPlate];
             return { ...customer, served: true, hasPlate: false };
@@ -520,9 +555,13 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       newState.powerUps.forEach(powerUp => {
         if (powerUp.position <= GAME_CONFIG.CHEF_X_POSITION && powerUp.lane === newState.chefLane && !newState.nyanSweep?.active) {
           soundManager.powerUpCollected(powerUp.type);
-          const pointsEarned = SCORING.POWERUP_COLLECTED * dogeMultiplier;
-          newState.score += pointsEarned;
-          powerUpScores.push({ points: pointsEarned, lane: powerUp.lane, position: powerUp.position });
+
+          if (powerUp.type !== 'moltobenny') {
+            const pointsEarned = calculatePowerUpScore(dogeMultiplier);
+            newState.score += pointsEarned;
+            powerUpScores.push({ points: pointsEarned, lane: powerUp.lane, position: powerUp.position });
+          }
+
           caughtPowerUpIds.add(powerUp.id);
           newState.stats.powerUpsUsed[powerUp.type] += 1;
 
@@ -614,13 +653,17 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         .filter(plate => {
           if (plate.position <= 10 && plate.lane === newState.chefLane && !newState.nyanSweep?.active) {
             soundManager.plateCaught();
-            const baseScore = SCORING.PLATE_CAUGHT;
-            const pointsEarned = Math.floor(baseScore * dogeMultiplier * getStreakMultiplier(newState.stats.currentPlateStreak));
+
+            const pointsEarned = calculatePlateScore(
+              dogeMultiplier,
+              getStreakMultiplier(newState.stats.currentPlateStreak)
+            );
+
             newState.score += pointsEarned;
             platesToAddScores.push({ points: pointsEarned, lane: plate.lane, position: plate.position });
+
             newState.stats.platesCaught += 1;
-            newState.stats.currentPlateStreak += 1;
-            if (newState.stats.currentPlateStreak > newState.stats.largestPlateStreak) newState.stats.largestPlateStreak = newState.stats.currentPlateStreak;
+            newState.stats = updateStatsForStreak(newState.stats, 'plate');
             return false;
           } else if (plate.position <= 0) {
             soundManager.plateDropped();
@@ -667,27 +710,31 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               return { ...customer, brianNyaned: true, leaving: true, hasPlate: false, flipped: false, movingRight: true, woozy: false, frozen: false, unfrozenThisPeriod: undefined };
             }
             soundManager.customerServed();
-            const baseScore = customer.critic ? SCORING.CUSTOMER_CRITIC : SCORING.CUSTOMER_NORMAL;
-            const pointsEarned = Math.floor(baseScore * dogeMultiplier * getStreakMultiplier(newState.stats.currentCustomerStreak));
+
+            const { points: pointsEarned, bank: bankEarned } = calculateCustomerScore(
+              customer,
+              dogeMultiplier,
+              getStreakMultiplier(newState.stats.currentCustomerStreak)
+            );
+
             newState.score += pointsEarned;
-            newState.bank += SCORING.BASE_BANK_REWARD * dogeMultiplier;
+            newState.bank += bankEarned;
             nyanScores.push({ points: pointsEarned, lane: customer.lane, position: customer.position });
+
             newState.happyCustomers += 1;
             newState.stats.customersServed += 1;
-            newState.stats.currentCustomerStreak += 1;
-            if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
+            newState.stats = updateStatsForStreak(newState.stats, 'customer');
 
-            if (customer.critic) {
-              if (customer.position >= 55 && newState.lives < GAME_CONFIG.MAX_LIVES) {
-                newState.lives += 1;
-                soundManager.lifeGained();
-              }
-            } else {
-              if (newState.happyCustomers % 8 === 0 && newState.lives < GAME_CONFIG.MAX_LIVES) {
-                const starsToAdd = Math.min(dogeMultiplier, GAME_CONFIG.MAX_LIVES - newState.lives);
-                newState.lives += starsToAdd;
-                if (starsToAdd > 0) soundManager.lifeGained();
-              }
+            const lifeResult = checkLifeGain(
+              newState.lives,
+              newState.happyCustomers,
+              dogeMultiplier,
+              customer.critic,
+              customer.position
+            );
+            if (lifeResult.livesToAdd > 0) {
+              newState.lives += lifeResult.livesToAdd;
+              if (lifeResult.shouldPlaySound) soundManager.lifeGained();
             }
             return { ...customer, served: true, hasPlate: false, woozy: false, frozen: false, unfrozenThisPeriod: undefined };
           }
@@ -704,7 +751,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
             if (isLaneHit && isPositionHit) {
               soundManager.customerServed();
-              const pointsEarned = SCORING.MINION_DEFEAT;
+              const pointsEarned = calculateMinionScore();
               newState.score += pointsEarned;
               newState = addFloatingScore(pointsEarned, minion.lane, minion.position, newState);
               return { ...minion, defeated: true };
