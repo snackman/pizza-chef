@@ -51,6 +51,17 @@ import {
   updateStatsForStreak
 } from '../logic/scoringSystem';
 
+import {
+  checkSliceCustomerCollision,
+  checkSlicePowerUpCollision,
+  checkChefPowerUpCollision,
+  checkChefPlateCollision,
+  checkNyanSweepCollision,
+  checkStarPowerRange,
+  checkMinionReachedChef,
+  checkSliceMinionCollision
+} from '../logic/collisionSystem';
+
 // --- Store System (actions only) ---
 import {
   upgradeOven as upgradeOvenStore,
@@ -364,7 +375,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         newState.customers = newState.customers.map(customer => {
           if (consumed || customer.served || customer.disappointed || customer.vomit || customer.leaving) return customer;
 
-          const isHit = customer.lane === slice.lane && Math.abs(customer.position - slice.position) < 5;
+          const isHit = checkSliceCustomerCollision(slice, customer);
 
           if (isHit) {
             consumed = true;
@@ -458,7 +469,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         if (!consumed && slice.position < POSITIONS.OFF_SCREEN_RIGHT) {
           remainingSlices.push(slice);
           newState.powerUps.forEach(powerUp => {
-            if (powerUp.lane === slice.lane && Math.abs(powerUp.position - slice.position) < 5) {
+            if (checkSlicePowerUpCollision(slice, powerUp)) {
               soundManager.pizzaDestroyed();
               destroyedPowerUpIds.add(powerUp.id);
             }
@@ -506,7 +517,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       const starPowerScores: Array<{ points: number; lane: number; position: number }> = [];
       if (hasStar && newState.availableSlices > 0) {
         newState.customers = newState.customers.map(customer => {
-          if (customer.lane === newState.chefLane && !customer.served && !customer.disappointed && !customer.vomit && Math.abs(customer.position - GAME_CONFIG.CHEF_X_POSITION) < 8) {
+          if (checkStarPowerRange(newState.chefLane, GAME_CONFIG.CHEF_X_POSITION, customer)) {
             newState.availableSlices = Math.max(0, newState.availableSlices - 1);
             if (customer.badLuckBrian) {
               soundManager.plateDropped();
@@ -553,7 +564,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       const caughtPowerUpIds = new Set<string>();
       const powerUpScores: Array<{ points: number; lane: number; position: number }> = [];
       newState.powerUps.forEach(powerUp => {
-        if (powerUp.position <= GAME_CONFIG.CHEF_X_POSITION && powerUp.lane === newState.chefLane && !newState.nyanSweep?.active) {
+        if (checkChefPowerUpCollision(newState.chefLane, GAME_CONFIG.CHEF_X_POSITION, powerUp) && !newState.nyanSweep?.active) {
           soundManager.powerUpCollected(powerUp.type);
 
           if (powerUp.type !== 'moltobenny') {
@@ -651,7 +662,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       newState.emptyPlates = newState.emptyPlates
         .map(plate => ({ ...plate, position: plate.position - plate.speed }))
         .filter(plate => {
-          if (plate.position <= 10 && plate.lane === newState.chefLane && !newState.nyanSweep?.active) {
+          if (checkChefPlateCollision(newState.chefLane, plate) && !newState.nyanSweep?.active) {
             soundManager.plateCaught();
 
             const pointsEarned = calculatePlateScore(
@@ -699,12 +710,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         const nyanScores: Array<{ points: number; lane: number; position: number }> = [];
         newState.customers = newState.customers.map(customer => {
           if (customer.served || customer.disappointed || customer.vomit) return customer;
-          const isLaneHit = Math.abs(customer.lane - newLane) < 0.8;
-          const sweepStart = oldX - 10;
-          const sweepEnd = newXPosition + 10;
-          const isPositionHit = customer.position >= sweepStart && customer.position <= sweepEnd;
-
-          if (isLaneHit && isPositionHit) {
+          if (checkNyanSweepCollision(newLane, oldX, newXPosition, customer)) {
             if (customer.badLuckBrian) {
               soundManager.customerServed();
               return { ...customer, brianNyaned: true, leaving: true, hasPlate: false, flipped: false, movingRight: true, woozy: false, frozen: false, unfrozenThisPeriod: undefined };
@@ -829,7 +835,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
         newState.bossBattle.minions = newState.bossBattle.minions.map(minion => {
           if (minion.defeated) return minion;
-          if (minion.position <= GAME_CONFIG.CHEF_X_POSITION) {
+          if (checkMinionReachedChef(minion)) {
             soundManager.lifeLost();
             newState.lives = Math.max(0, newState.lives - 1);
             if (newState.lives === 0) {
@@ -845,7 +851,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           if (consumedSliceIds.has(slice.id)) return;
           newState.bossBattle!.minions = newState.bossBattle!.minions.map(minion => {
             if (minion.defeated || consumedSliceIds.has(slice.id)) return minion;
-            if (minion.lane === slice.lane && Math.abs(minion.position - slice.position) < 8) {
+            if (checkSliceMinionCollision(slice, minion, 8)) {
               consumedSliceIds.add(slice.id);
               soundManager.customerServed();
               const pointsEarned = SCORING.MINION_DEFEAT;
