@@ -51,21 +51,27 @@ import {
   buyPowerUp as buyPowerUpStore
 } from '../logic/storeSystem';
 
+const DEFAULT_OVEN_SOUND_STATES: { [key: number]: OvenSoundState } = {
+  0: 'idle', 1: 'idle', 2: 'idle', 3: 'idle'
+};
+
 export const useGameLogic = (gameStarted: boolean = true) => {
   const [gameState, setGameState] = useState<GameState>({ ...INITIAL_GAME_STATE });
 
   const [lastCustomerSpawn, setLastCustomerSpawn] = useState(0);
   const [lastPowerUpSpawn, setLastPowerUpSpawn] = useState(0);
 
-  const [ovenSoundStates, setOvenSoundStates] = useState<{ [key: number]: OvenSoundState }>({
-    0: 'idle', 1: 'idle', 2: 'idle', 3: 'idle'
-  });
+  /**
+   * ✅ PERFORMANCE: ovenSoundStates is no longer React state.
+   * - avoids re-renders when sound-state changes
+   * - avoids JSON.stringify compare
+   * - avoids setState calls inside the tick
+   */
+  const ovenSoundStatesRef = useRef<{ [key: number]: OvenSoundState }>({ ...DEFAULT_OVEN_SOUND_STATES });
 
   const prevShowStoreRef = useRef(false);
 
   // --- 1. THE STABLE TICK REF ---
-  // This ref will always hold the latest version of the 'tick' function
-  // preventing the setInterval from needing to restart when state changes.
   const latestTickRef = useRef<() => void>(() => {});
 
   // --- Helpers (Score, Spawning) ---
@@ -91,8 +97,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
   const triggerGameOver = useCallback((state: GameState, now: number): GameState => {
     if (state.gameOver) return state;
 
+    // ✅ reset oven sound state ref (no render)
+    ovenSoundStatesRef.current = { ...DEFAULT_OVEN_SOUND_STATES };
+
     // Stop oven loop + freeze oven timers
-    setOvenSoundStates({ 0: 'idle', 1: 'idle', 2: 'idle', 3: 'idle' });
     const pausedOvens = calculateOvenPauseState(state.ovens, true, now);
 
     soundManager.gameOver();
@@ -135,7 +143,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
   const spawnCustomer = useCallback(() => {
     const now = Date.now();
-    const spawnDelay = SPAWN_RATES.CUSTOMER_MIN_INTERVAL_BASE - (gameState.level * SPAWN_RATES.CUSTOMER_MIN_INTERVAL_DECREMENT);
+    const spawnDelay =
+      SPAWN_RATES.CUSTOMER_MIN_INTERVAL_BASE -
+      (gameState.level * SPAWN_RATES.CUSTOMER_MIN_INTERVAL_DECREMENT);
+
     if (now - lastCustomerSpawn < spawnDelay) return;
     if (gameState.paused) return;
 
@@ -216,10 +227,12 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       if (result.action === 'STARTED') {
         soundManager.ovenStart();
-        setOvenSoundStates(s => ({ ...s, [prev.chefLane]: 'cooking' }));
+        // ✅ update ref (no re-render)
+        ovenSoundStatesRef.current = { ...ovenSoundStatesRef.current, [prev.chefLane]: 'cooking' };
       } else if (result.action === 'SERVED') {
         soundManager.servePizza();
-        setOvenSoundStates(s => ({ ...s, [prev.chefLane]: 'idle' }));
+        // ✅ update ref (no re-render)
+        ovenSoundStatesRef.current = { ...ovenSoundStatesRef.current, [prev.chefLane]: 'idle' };
       }
 
       if (result.newState) {
@@ -269,14 +282,15 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       // 1. PROCESS OVENS (Logic from ovenSystem)
       const ovenTickResult = processOvenTick(
         newState.ovens,
-        ovenSoundStates,
+        ovenSoundStatesRef.current, // ✅ ref read
         newState.ovenSpeedUpgrades,
         now
       );
       newState.ovens = ovenTickResult.nextOvens;
-      if (JSON.stringify(ovenTickResult.nextSoundStates) !== JSON.stringify(ovenSoundStates)) {
-        setOvenSoundStates(ovenTickResult.nextSoundStates);
-      }
+
+      // ✅ update ref directly; no JSON.stringify; no setState in tick
+      ovenSoundStatesRef.current = ovenTickResult.nextSoundStates;
+
       ovenTickResult.events.forEach(event => {
         switch (event.type) {
           case 'SOUND_READY': soundManager.ovenReady(); break;
@@ -310,7 +324,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         }
         if (event === 'STAR_LOST_CRITIC') {
           newState.lives = Math.max(0, newState.lives - 2);
-          newState.lastStarLostReason = 'disappointed_critic'; // or woozy variation
+          newState.lastStarLostReason = 'disappointed_critic';
         }
         if (event === 'STAR_LOST_NORMAL') {
           newState.lives = Math.max(0, newState.lives - 1);
@@ -334,23 +348,18 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         let consumed = false;
 
         newState.customers = newState.customers.map(customer => {
-          // Skip if already consumed or departing
           if (consumed || customer.served || customer.disappointed || customer.vomit || customer.leaving) return customer;
 
-          // Simple Collision Check
           const isHit = customer.lane === slice.lane && Math.abs(customer.position - slice.position) < 5;
 
           if (isHit) {
             consumed = true;
 
-            // --- CALL THE NEW HIT LOGIC ---
             const hitResult = processCustomerHit(customer, now);
 
-            // A. Add new entities
             if (hitResult.newEntities.droppedPlate) newState.droppedPlates = [...newState.droppedPlates, hitResult.newEntities.droppedPlate];
             if (hitResult.newEntities.emptyPlate) newState.emptyPlates = [...newState.emptyPlates, hitResult.newEntities.emptyPlate];
 
-            // B. Process Side Effects (Scoring/Sound)
             hitResult.events.forEach(event => {
               if (event === 'BRIAN_DROPPED_PLATE') {
                 soundManager.plateDropped();
@@ -358,7 +367,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 newState.stats.currentPlateStreak = 0;
               } else if (event === 'UNFROZEN_AND_SERVED') {
                 soundManager.customerUnfreeze();
-                // Apply Scoring
                 const baseScore = customer.critic ? SCORING.CUSTOMER_CRITIC : SCORING.CUSTOMER_NORMAL;
                 const pointsEarned = Math.floor(baseScore * dogeMultiplier * getStreakMultiplier(newState.stats.currentCustomerStreak));
                 newState.score += pointsEarned;
@@ -369,7 +377,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 newState.stats.currentCustomerStreak += 1;
                 if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
 
-                // Check Life Gain
                 if (newState.happyCustomers % 8 === 0 && newState.lives < GAME_CONFIG.MAX_LIVES) {
                   const starsToAdd = Math.min(dogeMultiplier, GAME_CONFIG.MAX_LIVES - newState.lives);
                   newState.lives += starsToAdd;
@@ -394,7 +401,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 newState.stats.currentCustomerStreak += 1;
                 if (newState.stats.currentCustomerStreak > newState.stats.longestCustomerStreak) newState.stats.longestCustomerStreak = newState.stats.currentCustomerStreak;
 
-                // Critic Bonus Life or Happy Customer Life
                 if (customer.critic && event === 'SERVED_CRITIC') {
                   if (customer.position >= 50 && newState.lives < GAME_CONFIG.MAX_LIVES) {
                     newState.lives += 1;
@@ -430,7 +436,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         }
       });
 
-      // --- Cleanup Arrays after Loops ---
       const finalSlices = remainingSlices.filter(slice => {
         if (platesFromSlices.has(slice.id)) return true;
         const hitPowerUp = Array.from(destroyedPowerUpIds).some(powerUpId => {
@@ -475,7 +480,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               soundManager.plateDropped();
               newState.stats.currentCustomerStreak = 0;
               newState.stats.currentPlateStreak = 0;
-              const droppedPlate = { id: `dropped-${Date.now()}-${customer.id}`, lane: customer.lane, position: customer.position, startTime: Date.now(), hasSlice: true, };
+              const droppedPlate = { id: `dropped-${Date.now()}-${customer.id}`, lane: customer.lane, position: customer.position, startTime: Date.now(), hasSlice: true };
               newState.droppedPlates = [...newState.droppedPlates, droppedPlate];
               return { ...customer, flipped: false, leaving: true, movingRight: true, textMessage: "Ugh! I dropped my slice!", textMessageTime: Date.now() };
             }
@@ -495,7 +500,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               newState.lives += starsToAdd;
               if (starsToAdd > 0) soundManager.lifeGained();
             }
-            const newPlate: EmptyPlate = { id: `plate-star-${Date.now()}-${customer.id}`, lane: customer.lane, position: customer.position, speed: ENTITY_SPEEDS.PLATE, };
+            const newPlate: EmptyPlate = { id: `plate-star-${Date.now()}-${customer.id}`, lane: customer.lane, position: customer.position, speed: ENTITY_SPEEDS.PLATE };
             newState.emptyPlates = [...newState.emptyPlates, newPlate];
             return { ...customer, served: true, hasPlate: false };
           }
@@ -530,7 +535,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 lastReason = 'beer_vomit';
                 return { ...customer, woozy: false, vomit: true, disappointed: true, movingRight: true };
               }
-              if (!customer.served && !customer.vomit && !customer.disappointed &&!customer.leaving) {
+              if (!customer.served && !customer.vomit && !customer.disappointed && !customer.leaving) {
                 if (customer.badLuckBrian) {
                   livesLost += 1;
                   lastReason = 'brian_hurled';
@@ -818,7 +823,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 newState.score += SCORING.BOSS_DEFEAT;
                 bossScores.push({ points: SCORING.BOSS_DEFEAT, lane: 1, position: newState.bossBattle!.bossPosition });
 
-                // --- BOSS DEFEAT TRACKING (PATCHED) ---
                 const currentBossLevel = BOSS_CONFIG.TRIGGER_LEVELS
                   .slice()
                   .reverse()
@@ -859,7 +863,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       return newState;
     });
-  }, [gameState.gameOver, gameState.paused, ovenSoundStates, addFloatingScore, triggerGameOver]);
+  }, [addFloatingScore, triggerGameOver]); // ✅ removed gameState.* and ovenSoundStates deps
 
   // --- Store / Upgrades / Debug (now via storeSystem.ts) ---
 
@@ -897,7 +901,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         ...prev,
         stats: {
           ...prev.stats,
-          powerUpsUsed: { ...prev.stats.powerUpsUsed, [type]: prev.stats.powerUpsUsed[type] + 1, }
+          powerUpsUsed: { ...prev.stats.powerUpsUsed, [type]: prev.stats.powerUpsUsed[type] + 1 }
         }
       };
 
@@ -977,7 +981,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     setGameState({ ...INITIAL_GAME_STATE });
     setLastCustomerSpawn(0);
     setLastPowerUpSpawn(0);
-    setOvenSoundStates({ 0: 'idle', 1: 'idle', 2: 'idle', 3: 'idle' });
+    // ✅ reset ref (no render)
+    ovenSoundStatesRef.current = { ...DEFAULT_OVEN_SOUND_STATES };
   }, []);
 
   const togglePause = useCallback(() => {
@@ -1013,16 +1018,21 @@ export const useGameLogic = (gameStarted: boolean = true) => {
   }, [gameState.showStore]);
 
   // --- 2. THE CONSOLIDATED TICK FUNCTION ---
-  // This combines physics (updateGame) and spawning into one logic block
-  // that can be referenced via the ref.
-  // --- 2. THE CONSOLIDATED TICK FUNCTION ---
-const tick = useCallback(() => {
-  // A) Run main physics loop (already uses functional setGameState inside updateGame)
-  updateGame();
+  // Combines physics (updateGame) + spawning in a way that uses latest state.
+  const tick = useCallback(() => {
+    updateGame();
 
-  // B) Run spawning logic using the *latest* state via functional setGameState
-  setGameState(current => {
-    if (!current.paused && !current.gameOver) {
+    // Spawn decision uses current state (functional) so it doesn't depend on closures.
+    setGameState(current => {
+      if (current.paused || current.gameOver) return current;
+
+      const now = Date.now();
+
+      // Customer spawn (gate by min interval)
+      const spawnDelay =
+        SPAWN_RATES.CUSTOMER_MIN_INTERVAL_BASE -
+        (current.level * SPAWN_RATES.CUSTOMER_MIN_INTERVAL_DECREMENT);
+
       const levelSpawnRate =
         SPAWN_RATES.CUSTOMER_BASE_RATE +
         (current.level - 1) * SPAWN_RATES.CUSTOMER_LEVEL_INCREMENT;
@@ -1031,20 +1041,66 @@ const tick = useCallback(() => {
         ? levelSpawnRate * 0.5
         : levelSpawnRate;
 
-      if (Math.random() < effectiveSpawnRate * 0.01) {
-        spawnCustomer();
+      if (now - lastCustomerSpawn >= spawnDelay && Math.random() < effectiveSpawnRate * 0.01) {
+        const lane = Math.floor(Math.random() * GAME_CONFIG.LANE_COUNT);
+        const disappointedEmojis = ['😢', '😭', '😠', '🤬'];
+        const isCritic = Math.random() < PROBABILITIES.CRITIC_CHANCE;
+        const isBadLuckBrian = !isCritic && Math.random() < PROBABILITIES.BAD_LUCK_BRIAN_CHANCE;
+
+        setLastCustomerSpawn(now);
+
+        return {
+          ...current,
+          customers: [
+            ...current.customers,
+            {
+              id: `customer-${now}-${lane}`,
+              lane,
+              position: POSITIONS.SPAWN_X,
+              speed: ENTITY_SPEEDS.CUSTOMER_BASE,
+              served: false,
+              hasPlate: false,
+              leaving: false,
+              disappointed: false,
+              disappointedEmoji: disappointedEmojis[Math.floor(Math.random() * disappointedEmojis.length)],
+              movingRight: false,
+              critic: isCritic,
+              badLuckBrian: isBadLuckBrian,
+              flipped: isBadLuckBrian,
+            }
+          ]
+        };
       }
 
-      if (Math.random() < SPAWN_RATES.POWERUP_CHANCE) {
-        spawnPowerUp();
+      // PowerUp spawn (gate by min interval)
+      if (now - lastPowerUpSpawn >= SPAWN_RATES.POWERUP_MIN_INTERVAL && Math.random() < SPAWN_RATES.POWERUP_CHANCE) {
+        const lane = Math.floor(Math.random() * GAME_CONFIG.LANE_COUNT);
+        const rand = Math.random();
+        const randomType =
+          rand < PROBABILITIES.POWERUP_STAR_CHANCE
+            ? 'star'
+            : POWERUPS.TYPES[Math.floor(Math.random() * POWERUPS.TYPES.length)];
+
+        setLastPowerUpSpawn(now);
+
+        return {
+          ...current,
+          powerUps: [
+            ...current.powerUps,
+            {
+              id: `powerup-${now}-${lane}`,
+              lane,
+              position: POSITIONS.POWERUP_SPAWN_X,
+              speed: ENTITY_SPEEDS.POWERUP,
+              type: randomType,
+            }
+          ]
+        };
       }
-    }
 
-    // IMPORTANT: return current unchanged
-    return current;
-  });
-}, [updateGame, spawnCustomer, spawnPowerUp]);
-
+      return current;
+    });
+  }, [updateGame, lastCustomerSpawn, lastPowerUpSpawn]);
 
   // --- 3. KEEP REF UPDATED ---
   useEffect(() => {
@@ -1052,7 +1108,6 @@ const tick = useCallback(() => {
   }, [tick]);
 
   // --- 4. THE STABLE INTERVAL LOOP ---
-  // Only depends on gameStarted. Never resets when gameState changes.
   useEffect(() => {
     if (!gameStarted) return;
     const gameLoop = setInterval(() => {
@@ -1062,7 +1117,18 @@ const tick = useCallback(() => {
   }, [gameStarted]);
 
   return {
-    gameState, servePizza, moveChef, useOven, cleanOven, resetGame, togglePause, upgradeOven, upgradeOvenSpeed,
-    closeStore, bribeReviewer, buyPowerUp, debugActivatePowerUp,
+    gameState,
+    servePizza,
+    moveChef,
+    useOven,
+    cleanOven,
+    resetGame,
+    togglePause,
+    upgradeOven,
+    upgradeOvenSpeed,
+    closeStore,
+    bribeReviewer,
+    buyPowerUp,
+    debugActivatePowerUp,
   };
 };
