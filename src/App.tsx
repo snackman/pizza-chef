@@ -17,7 +17,7 @@ import ControlsOverlay from './components/ControlsOverlay';
 import { useGameLogic } from './hooks/useGameLogic';
 import { bg } from './lib/assets';
 
-const counterImg = bg("counter.png");
+const counterImg = bg('counter.png');
 
 function App() {
   const [showGameOver, setShowGameOver] = useState(false);
@@ -32,7 +32,40 @@ function App() {
   const gameBoardRef = useRef<HTMLDivElement>(null);
   const SHOW_DEBUG = false;
 
-  const { gameState, servePizza, moveChef, useOven, cleanOven, resetGame, togglePause, upgradeOven, upgradeOvenSpeed, closeStore, bribeReviewer, buyPowerUp, debugActivatePowerUp } = useGameLogic(gameStarted);
+  const {
+    gameState,
+    servePizza,
+    moveChef,
+    useOven,
+    cleanOven,
+    resetGame,
+    togglePause,
+    upgradeOven,
+    upgradeOvenSpeed,
+    closeStore,
+    bribeReviewer,
+    buyPowerUp,
+    debugActivatePowerUp,
+  } = useGameLogic(gameStarted);
+
+  // ---- Refs to avoid stale closures + re-binding keyboard handler every tick ----
+  const gameStateRef = useRef(gameState);
+  useEffect(() => {
+    gameStateRef.current = gameState;
+  }, [gameState]);
+
+  const actionsRef = useRef({
+    servePizza,
+    moveChef,
+    useOven,
+    cleanOven,
+    togglePause,
+    resetGame,
+  });
+
+  useEffect(() => {
+    actionsRef.current = { servePizza, moveChef, useOven, cleanOven, togglePause, resetGame };
+  }, [servePizza, moveChef, useOven, cleanOven, togglePause, resetGame]);
 
   useEffect(() => {
     if (gameState.gameOver && !showGameOver && !showHighScores) {
@@ -60,6 +93,7 @@ function App() {
       togglePause();
     }
   };
+
   useEffect(() => {
     const checkOrientation = () => {
       const mobile = window.innerWidth < 1000;
@@ -104,52 +138,63 @@ function App() {
       window.removeEventListener('orientationchange', updateMarblePosition);
       resizeObserver.disconnect();
     };
+    // NOTE: you had [isMobile, gameState]; keeping it to preserve behavior, but it's heavier than needed.
   }, [isMobile, gameState]);
 
   useEffect(() => {
     if (showInstructions && !gameState.paused && gameStarted && !gameState.gameOver) {
       togglePause();
     }
-  }, [showInstructions, gameStarted]);
+  }, [showInstructions, gameStarted, gameState.paused, gameState.gameOver, togglePause]);
 
+  // ✅ Stable keyboard listener (no re-bind every tick)
   useEffect(() => {
-    const handleKeyPress = (event: KeyboardEvent) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const gs = gameStateRef.current;
+      const a = actionsRef.current;
+
       if (!gameStarted || showInstructions) return;
 
-      const target = event.target as HTMLElement;
-      const isTyping = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
+      // Optional: block input when overlays/modals are up
+      if (showControlsOverlay || showHighScores || showGameOver || gs.showStore) return;
 
-      if (isTyping) {
-        return;
-      }
+      const target = event.target as HTMLElement | null;
+      const isTyping =
+        !!target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          // contenteditable (e.g. some UI libs)
+          (target as any).isContentEditable);
+
+      if (isTyping) return;
 
       if (event.key === ' ' || event.key === 'ArrowLeft') {
         event.preventDefault();
-        const currentOven = gameState.ovens[gameState.chefLane];
+        const currentOven = gs.ovens[gs.chefLane];
         if (currentOven.burned) {
-          cleanOven();
+          a.cleanOven();
         } else {
-          useOven();
+          a.useOven();
         }
       } else if (event.key === 'ArrowUp') {
         event.preventDefault();
-        moveChef('up');
+        a.moveChef('up');
       } else if (event.key === 'ArrowDown') {
         event.preventDefault();
-        moveChef('down');
+        a.moveChef('down');
       } else if (event.key === 'ArrowRight') {
         event.preventDefault();
-        servePizza();
+        a.servePizza();
       } else if (event.key === 'p' || event.key === 'P') {
-        togglePause();
+        a.togglePause();
       } else if (event.key === 'r' || event.key === 'R') {
-        resetGame();
+        a.resetGame();
       }
     };
 
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [servePizza, moveChef, useOven, cleanOven, togglePause, resetGame, gameState.ovens, gameState.chefLane, gameStarted, showInstructions]);
+    window.addEventListener('keydown', handleKeyDown, { passive: false });
+    return () => window.removeEventListener('keydown', handleKeyDown as any);
+  }, [gameStarted, showInstructions, showControlsOverlay, showHighScores, showGameOver]);
 
   const handleGameBoardClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (!gameStarted || gameState.gameOver || gameState.paused || gameState.showStore) return;
@@ -196,9 +241,7 @@ function App() {
             <PowerUpAlert powerUpType={gameState.powerUpAlert.type} chefLane={gameState.powerUpAlert.chefLane} />
           )}
 
-          {!gameState.gameOver && !gameState.paused && !gameState.showStore && (
-            <StreakDisplay stats={gameState.stats} />
-          )}
+          {!gameState.gameOver && !gameState.paused && !gameState.showStore && <StreakDisplay stats={gameState.stats} />}
 
           <LandscapeScoreBoard gameState={gameState} onShowInstructions={() => setShowInstructions(true)} />
           <LandscapeControls
@@ -234,9 +277,7 @@ function App() {
             </div>
           )}
 
-          {showControlsOverlay && (
-            <ControlsOverlay onClose={handleCloseControlsOverlay} />
-          )}
+          {showControlsOverlay && <ControlsOverlay onClose={handleCloseControlsOverlay} />}
 
           {gameState.paused && !gameState.gameOver && !gameState.showStore && !showControlsOverlay && (
             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
@@ -312,7 +353,11 @@ function App() {
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-orange-200 via-yellow-100 to-red-200 flex items-center justify-center overflow-hidden">
       <div className="relative w-full h-full flex flex-col">
-        <div className={`flex-1 flex flex-col items-center ${isMobile ? 'justify-start' : 'justify-center p-2 sm:p-4 gap-0'} ${isMobile ? 'relative' : ''}`}>
+        <div
+          className={`flex-1 flex flex-col items-center ${
+            isMobile ? 'justify-start' : 'justify-center p-2 sm:p-4 gap-0'
+          } ${isMobile ? 'relative' : ''}`}
+        >
           <div className={`w-full ${isMobile ? '' : 'max-w-6xl'}`}>
             <ScoreBoard gameState={gameState} onShowInstructions={() => setShowInstructions(true)} />
           </div>
@@ -328,13 +373,9 @@ function App() {
               <PowerUpAlert powerUpType={gameState.powerUpAlert.type} chefLane={gameState.powerUpAlert.chefLane} />
             )}
 
-            {!gameState.gameOver && !gameState.paused && !gameState.showStore && (
-              <StreakDisplay stats={gameState.stats} />
-            )}
+            {!gameState.gameOver && !gameState.paused && !gameState.showStore && <StreakDisplay stats={gameState.stats} />}
 
-              {showControlsOverlay && (
-              <ControlsOverlay onClose={handleCloseControlsOverlay} />
-            )}
+            {showControlsOverlay && <ControlsOverlay onClose={handleCloseControlsOverlay} />}
 
             {gameState.paused && !gameState.gameOver && !gameState.showStore && !showControlsOverlay && (
               <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
