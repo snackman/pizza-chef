@@ -46,7 +46,8 @@ const ItemStore: React.FC<ItemStoreProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-2xl p-2 sm:p-4 w-full max-w-3xl mx-2 sm:mx-4 relative max-h-[95vh] overflow-y-auto">
+    // ADDED z-[100] here to ensure the Store Card sits above text prompts (which are z-50)
+    <div className="bg-white rounded-lg shadow-2xl p-2 sm:p-4 w-full max-w-3xl mx-2 sm:mx-4 relative z-[100] max-h-[95vh] overflow-y-auto">
       {/* Header Row */}
       <div className="flex items-center justify-between mb-2 sm:mb-4">
         {/* Left: Store Title + Bank */}
