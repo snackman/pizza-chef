@@ -35,19 +35,35 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onStart }) => {
         </button>
       </div>
 
-      {/* GitHub link — bottom right */}
-      <a
-        href="https://github.com/snackman/pizza-chef"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="absolute bottom-4 right-4"
-      >
-        <img
-          src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg"
-          alt="GitHub"
-          className="w-8 h-8 filter invert"
-        />
-      </a>
+      {/* GitHub + Google Sheets links — bottom right */}
+<div className="absolute bottom-4 right-4 flex items-center gap-3">
+  {/* Google Sheets (left) */}
+  <a
+    href="https://docs.google.com/spreadsheets/d/10EgfJDorCyW1QbODlYQk28ragDWHeYDdDXGu63XOQK4/edit?gid=0#gid=0"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    <img
+      src="https://cdn.simpleicons.org/googlesheets/000000"
+      alt="Google Sheets"
+      className="w-8 h-8 filter invert"
+    />
+  </a>
+
+  {/* GitHub (right) */}
+  <a
+    href="https://github.com/snackman/pizza-chef"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    <img
+      src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg"
+      alt="GitHub"
+      className="w-8 h-8 filter invert"
+    />
+  </a>
+</div>
+
     </div>
   );
 };
