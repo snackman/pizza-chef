@@ -39,7 +39,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onStart }) => {
 <div className="absolute bottom-4 right-4 flex items-center gap-3">
   {/* Google Sheets (left) */}
   <a
-    href="https://docs.google.com/spreadsheets/d/10EgfJDorCyW1QbODlYQk28ragDWHeYDdDXGu63XOQK4/edit?gid=0#gid=0"
+    href="https://docs.google.com/spreadsheets/d/1J3-Usmmfd2B_av_BVvC9m70cRdpLvmGv5Wm2d6m_Y_w/edit?gid=0#gid=0"
     target="_blank"
     rel="noopener noreferrer"
   >
