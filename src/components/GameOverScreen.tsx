@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Send, Trophy, Download, Share2, Check, Copy as CopyIcon, ArrowLeft, RotateCcw } from 'lucide-react';
-import { submitScore, createGameSession, GameSession, uploadScorecardImage, updateGameSessionImage } from '../services/highScores';
+import { submitScore, createGameSession, GameSession, uploadScorecardImage, updateGameSessionImage, checkIfTopScore } from '../services/highScores';
 import { GameStats, StarLostReason } from '../types/game';
 import HighScores from './HighScores';
+import PizzaConfetti from './PizzaConfetti';
 import { sprite, ui } from '../lib/assets';
 
 interface GameOverScreenProps {
@@ -97,6 +98,8 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
   const [submittedName, setSubmittedName] = useState('');
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [leaderboardRefreshKey, setLeaderboardRefreshKey] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imagesRef = useRef<LoadedImages>({
     splashLogo: null,
@@ -469,6 +472,14 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
       setScoreSubmitted(true);
       setShowLeaderboard(true);
       setSubmitting(false);
+
+      // Check if score made it to top 10 and show confetti
+      const isTopScore = await checkIfTopScore(score);
+      if (isTopScore) {
+        setShowConfetti(true);
+        setLeaderboardRefreshKey(prev => prev + 1);
+      }
+
       onSubmitted(session, nameToSubmit);
     } else if (scoreSuccess) {
       const fallbackSession: GameSession = {
@@ -489,6 +500,14 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
       setScoreSubmitted(true);
       setShowLeaderboard(true);
       setSubmitting(false);
+
+      // Check if score made it to top 10 and show confetti
+      const isTopScore = await checkIfTopScore(score);
+      if (isTopScore) {
+        setShowConfetti(true);
+        setLeaderboardRefreshKey(prev => prev + 1);
+      }
+
       onSubmitted(fallbackSession, nameToSubmit);
     } else {
       setError('Failed to submit score. Please try again.');
@@ -585,7 +604,8 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
 
     return (
       <div className="flex flex-col items-center gap-4 w-full max-w-4xl mx-auto">
-        <HighScores userScore={{ name: displayNameForScore, score }} />
+        <PizzaConfetti active={showConfetti} />
+        <HighScores userScore={{ name: displayNameForScore, score }} refreshKey={leaderboardRefreshKey} />
 
         {scoreSubmitted ? (
           <div className="flex gap-3 w-full">

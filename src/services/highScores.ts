@@ -46,6 +46,21 @@ export async function getTopScores(limit: number = 10): Promise<HighScore[]> {
   return data || [];
 }
 
+export async function checkIfTopScore(score: number, limit: number = 10): Promise<boolean> {
+  if (!supabase) {
+    return false;
+  }
+
+  const topScores = await getTopScores(limit);
+
+  if (topScores.length < limit) {
+    return true; // Less than 10 scores, any score qualifies
+  }
+
+  const lowestTopScore = topScores[topScores.length - 1]?.score ?? 0;
+  return score > lowestTopScore;
+}
+
 export async function submitScore(playerName: string, score: number, gameSessionId?: string): Promise<boolean> {
   if (!supabase) {
     console.warn('Supabase not configured - cannot submit score');

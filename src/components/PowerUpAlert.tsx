@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { PowerUpType } from '../types/game';
 
 interface PowerUpAlertProps {
@@ -7,12 +7,22 @@ interface PowerUpAlertProps {
 }
 
 const PowerUpAlert: React.FC<PowerUpAlertProps> = ({ powerUpType }) => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1000);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const getAlertContent = () => {
     switch (powerUpType) {
       case 'doge':
         return {
           image: 'https://i.imgur.com/n0FtlUg.png',
           scale: 6,
+          mobileScale: 2, // 1/3 size on mobile
         };
       default:
         return null;
@@ -22,7 +32,7 @@ const PowerUpAlert: React.FC<PowerUpAlertProps> = ({ powerUpType }) => {
   const content = getAlertContent();
   if (!content) return null;
 
-  const scale = content.scale || 1;
+  const scale = isMobile ? (content.mobileScale || content.scale / 3) : (content.scale || 1);
 
   return (
     <div

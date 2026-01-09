@@ -193,36 +193,11 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown as any);
   }, [gameStarted, showInstructions, showControlsOverlay, showHighScores, showGameOver]);
 
-  const handleGameBoardClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (!gameStarted || gameState.gameOver || gameState.paused || gameState.showStore) return;
-
-    const rect = event.currentTarget.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    const relativeX = x / rect.width;
-    const relativeY = y / rect.height;
-
-    const laneHeight = 0.25;
-    const chefY = gameState.chefLane * laneHeight + 0.06;
-    const counterX = 0.42;
-
-    if (relativeX > counterX) {
-      servePizza();
-    } else if (relativeX < counterX) {
-      if (relativeY >= chefY && relativeY <= chefY + laneHeight) {
-        const currentOven = gameState.ovens[gameState.chefLane];
-        if (currentOven.burned) {
-          cleanOven();
-        } else {
-          useOven();
-        }
-      } else if (relativeY < chefY && gameState.chefLane > 0) {
-        moveChef('up');
-      } else if (relativeY > chefY + laneHeight && gameState.chefLane < 3) {
-        moveChef('down');
-      }
-    }
-  };
+  // Game board click controls disabled - keyboard only
+  // const handleGameBoardClick = (event: React.MouseEvent<HTMLDivElement>) => {
+  //   if (!gameStarted || gameState.gameOver || gameState.paused || gameState.showStore) return;
+  //   ...
+  // };
 
   if (showSplash) {
     return <SplashScreen onStart={handleStartGame} />;
@@ -245,7 +220,6 @@ function App() {
               ref={gameBoardRef}
               className="relative w-full max-h-[calc(100vh-60px)] aspect-[5/3] z-30"
               style={{ maxWidth: 'calc((100vh - 60px) * 5 / 3)' }}
-              onClick={handleGameBoardClick}
             >
               <GameBoard gameState={gameState} />
 
@@ -381,7 +355,6 @@ function App() {
           <div
             ref={gameBoardRef}
             className={`relative w-full ${isMobile ? '' : 'max-w-6xl'} aspect-[5/3] z-30`}
-            onClick={handleGameBoardClick}
           >
             <GameBoard gameState={gameState} />
 
