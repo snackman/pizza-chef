@@ -12,8 +12,8 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onStart }) => {
     <div className="fixed inset-0 bg-red-600 flex items-center justify-center z-50">
       <div className="text-center space-y-3 p-8 relative">
         <img
-          src={"https://i.imgur.com/EPCSa79.png"}
-          alt="PizzaDAO Logo"
+          src={chefImg}
+          alt="Chef"
           className="w-48 h-auto mx-auto mb-5"
         />
 

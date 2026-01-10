@@ -1,5 +1,7 @@
-import { GameState, PowerUp, StarLostReason, PowerUpType, ActivePowerUp } from '../types/game';
+import { GameState, PowerUp, StarLostReason, PowerUpType, ActivePowerUp, NyanSweep } from '../types/game';
 import { GAME_CONFIG, POWERUPS, SCORING } from '../lib/constants';
+import { checkChefPowerUpCollision } from './collisionSystem';
+import { calculatePowerUpScore } from './scoringSystem';
 
 // Result of collecting a power-up
 export interface PowerUpCollectionResult {
@@ -8,6 +10,17 @@ export interface PowerUpCollectionResult {
     livesLost: number; // For sound effects
     shouldTriggerGameOver: boolean;
     powerUpAlert?: { type: PowerUpType; endTime: number; chefLane: number };
+    nyanSweepStarted: boolean; // Whether a new Nyan sweep was started
+}
+
+// Result of processing all chef power-up collisions
+export interface ChefPowerUpCollisionResult {
+    newState: GameState;
+    caughtPowerUpIds: Set<string>;
+    scores: Array<{ points: number; lane: number; position: number }>;
+    livesLost: number;
+    shouldTriggerGameOver: boolean;
+    nyanSweepStarted: boolean;
 }
 
 // Result of processing expirations
@@ -88,8 +101,19 @@ export const processPowerUpCollection = (
         newState.activePowerUps = [...newState.activePowerUps.filter(p => p.type !== 'doge'), { type: 'doge', endTime: now + POWERUPS.DOGE_DURATION }];
         newState.powerUpAlert = { type: 'doge', endTime: now + POWERUPS.ALERT_DURATION_DOGE, chefLane: newState.chefLane };
     } else if (powerUp.type === 'nyan') {
-        // Note: Nyan sweep initialization is handled by caller or separate system, but we set the alert here
         newState.powerUpAlert = { type: 'nyan', endTime: now + POWERUPS.ALERT_DURATION_NYAN, chefLane: newState.chefLane };
+        // Initialize Nyan sweep if not already active
+        if (!newState.nyanSweep?.active) {
+            newState.nyanSweep = {
+                active: true,
+                xPosition: GAME_CONFIG.CHEF_X_POSITION,
+                laneDirection: 1,
+                startTime: now,
+                lastUpdateTime: now,
+                startingLane: newState.chefLane
+            };
+            return { newState, scoresToAdd, livesLost, shouldTriggerGameOver, powerUpAlert: newState.powerUpAlert, nyanSweepStarted: true };
+        }
     } else if (powerUp.type === 'moltobenny') {
         const moltoScore = SCORING.MOLTOBENNY_POINTS * dogeMultiplier;
         const moltoMoney = SCORING.MOLTOBENNY_CASH * dogeMultiplier;
@@ -122,7 +146,7 @@ export const processPowerUpCollection = (
         }
     }
 
-    return { newState, scoresToAdd, livesLost, shouldTriggerGameOver, powerUpAlert: newState.powerUpAlert };
+    return { newState, scoresToAdd, livesLost, shouldTriggerGameOver, powerUpAlert: newState.powerUpAlert, nyanSweepStarted: false };
 };
 
 /**
@@ -144,5 +168,60 @@ export const processPowerUpExpirations = (
         expiredTypes,
         starPowerActive
     };
+};
+
+/**
+ * Processes all chef power-up collisions in a single pass
+ * Returns updated state, caught IDs, scores, and events for sound handling
+ */
+export const processChefPowerUpCollisions = (
+    state: GameState,
+    chefLane: number,
+    chefXPosition: number,
+    dogeMultiplier: number,
+    now: number
+): ChefPowerUpCollisionResult => {
+    const caughtPowerUpIds = new Set<string>();
+    const scores: Array<{ points: number; lane: number; position: number }> = [];
+    let newState = state;
+    let totalLivesLost = 0;
+    let shouldTriggerGameOver = false;
+    let nyanSweepStarted = false;
+
+    // Skip collision detection during active Nyan sweep
+    if (state.nyanSweep?.active) {
+        return { newState, caughtPowerUpIds, scores, livesLost: 0, shouldTriggerGameOver: false, nyanSweepStarted: false };
+    }
+
+    state.powerUps.forEach(powerUp => {
+        if (checkChefPowerUpCollision(chefLane, chefXPosition, powerUp)) {
+            caughtPowerUpIds.add(powerUp.id);
+
+            // Add base score for non-moltobenny power-ups
+            if (powerUp.type !== 'moltobenny') {
+                const pointsEarned = calculatePowerUpScore(dogeMultiplier);
+                newState = { ...newState, score: newState.score + pointsEarned };
+                scores.push({ points: pointsEarned, lane: powerUp.lane, position: powerUp.position });
+            }
+
+            // Process the collection effects
+            const collectionResult = processPowerUpCollection(newState, powerUp, dogeMultiplier, now);
+            newState = collectionResult.newState;
+
+            // Aggregate results
+            totalLivesLost += collectionResult.livesLost;
+            if (collectionResult.shouldTriggerGameOver) {
+                shouldTriggerGameOver = true;
+            }
+            if (collectionResult.nyanSweepStarted) {
+                nyanSweepStarted = true;
+            }
+            if (collectionResult.scoresToAdd.length > 0) {
+                scores.push(...collectionResult.scoresToAdd);
+            }
+        }
+    });
+
+    return { newState, caughtPowerUpIds, scores, livesLost: totalLivesLost, shouldTriggerGameOver, nyanSweepStarted };
 };
 

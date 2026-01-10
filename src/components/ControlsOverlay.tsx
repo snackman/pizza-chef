@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ui } from '../lib/assets';
 
 interface ControlsOverlayProps {
@@ -7,6 +7,19 @@ interface ControlsOverlayProps {
 
 const ControlsOverlay: React.FC<ControlsOverlayProps> = ({ onClose }) => {
   const controls = ui("controls.png");
+
+  // Close on Escape key or Enter key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   const handleImageClick = (event: React.MouseEvent<HTMLDivElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -23,8 +36,8 @@ const ControlsOverlay: React.FC<ControlsOverlayProps> = ({ onClose }) => {
 
   return (
     <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 rounded-lg">
-      <div 
-        className="relative max-w-4xl w-full mx-4 cursor-pointer"
+      <div
+        className="relative max-w-4xl w-full mx-4 cursor-pointer flex flex-col items-center"
         onClick={handleImageClick}
       >
         <img
@@ -32,10 +45,7 @@ const ControlsOverlay: React.FC<ControlsOverlayProps> = ({ onClose }) => {
           alt="Game Controls"
           className="w-full h-auto rounded-lg shadow-2xl"
         />
-        {/* Visual indicator for close area (optional, can be removed) */}
-        {/*
-        <div className="absolute top-0 right-0 w-[20%] h-[20%] opacity-0 hover:opacity-20 transition-opacity bg-white rounded-bl-lg" />
-        */}
+        <p className="text-white text-xs mt-2 opacity-80">Press any key or click to close</p>
       </div>
     </div>
   );

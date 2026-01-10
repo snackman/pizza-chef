@@ -40,19 +40,18 @@ import {
 import {
   calculateCustomerScore,
   calculateMinionScore,
-  calculatePowerUpScore,
   checkLifeGain,
   updateStatsForStreak,
   applyCustomerScoring
 } from '../logic/scoringSystem';
 
 import {
-  checkChefPowerUpCollision,
   checkSlicePowerUpCollision,
   checkSliceCustomerCollision
 } from '../logic/collisionSystem';
 
 import {
+  processChefPowerUpCollisions,
   processPowerUpCollection,
   processPowerUpExpirations
 } from '../logic/powerUpSystem';
@@ -510,59 +509,44 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       }
 
       // --- 6. CHEF POWERUP COLLISIONS ---
-      const caughtPowerUpIds = new Set<string>();
-      const powerUpScores: Array<{ points: number; lane: number; position: number }> = [];
-      newState.powerUps.forEach(powerUp => {
-        if (checkChefPowerUpCollision(newState.chefLane, GAME_CONFIG.CHEF_X_POSITION, powerUp) && !newState.nyanSweep?.active) {
-          soundManager.powerUpCollected(powerUp.type);
+      const powerUpResult = processChefPowerUpCollisions(
+        newState,
+        newState.chefLane,
+        GAME_CONFIG.CHEF_X_POSITION,
+        dogeMultiplier,
+        now
+      );
+      newState = powerUpResult.newState;
 
-          if (powerUp.type !== 'moltobenny') {
-            const pointsEarned = calculatePowerUpScore(dogeMultiplier);
-            newState.score += pointsEarned;
-            powerUpScores.push({ points: pointsEarned, lane: powerUp.lane, position: powerUp.position });
-          }
-
-          caughtPowerUpIds.add(powerUp.id);
-
-          // Use new PowerUp System
-          const collectionResult = processPowerUpCollection(newState, powerUp, dogeMultiplier, now);
-          newState = collectionResult.newState;
-
-          // Handle side effects that couldn't be in pure function (sounds, complex sweep init)
-          if (collectionResult.livesLost > 0) {
-            soundManager.lifeLost();
-            if (collectionResult.shouldTriggerGameOver) {
-              newState = triggerGameOver(newState, now);
-            }
-          }
-
-          if (collectionResult.scoresToAdd && collectionResult.scoresToAdd.length > 0) {
-            powerUpScores.push(...collectionResult.scoresToAdd);
-          }
-
-          // Special handling for Nyan Cat Sweep Initialization (kept here for now or moved to nyanSystem helper later)
-          if (powerUp.type === 'nyan') {
-            if (!newState.nyanSweep?.active) {
-              // We manually init the sweep here because we want to trigger the sound
-              // pure function handled the alert logic already
-              newState.nyanSweep = {
-                active: true,
-                xPosition: GAME_CONFIG.CHEF_X_POSITION,
-                laneDirection: 1,
-                startTime: now,
-                lastUpdateTime: now,
-                startingLane: newState.chefLane
-              };
-              soundManager.nyanCatPowerUp();
-            }
-          }
-        }
+      // Play sounds for caught power-ups
+      powerUpResult.caughtPowerUpIds.forEach(id => {
+        const powerUp = newState.powerUps.find(p => p.id === id);
+        if (powerUp) soundManager.powerUpCollected(powerUp.type);
       });
+
+      // Handle life loss sounds
+      if (powerUpResult.livesLost > 0) {
+        soundManager.lifeLost();
+        if (powerUpResult.shouldTriggerGameOver) {
+          newState = triggerGameOver(newState, now);
+        }
+      }
+
+      // Handle Nyan sweep sound
+      if (powerUpResult.nyanSweepStarted) {
+        soundManager.nyanCatPowerUp();
+      }
+
+      // Update power-ups: remove caught, move remaining, remove off-screen
       newState.powerUps = newState.powerUps
-        .filter(powerUp => !caughtPowerUpIds.has(powerUp.id))
+        .filter(powerUp => !powerUpResult.caughtPowerUpIds.has(powerUp.id))
         .map(powerUp => ({ ...powerUp, position: powerUp.position - powerUp.speed }))
         .filter(powerUp => powerUp.position > 0);
-      powerUpScores.forEach(({ points, lane, position }) => { newState = addFloatingScore(points, lane, position, newState); });
+
+      // Add floating scores
+      powerUpResult.scores.forEach(({ points, lane, position }) => {
+        newState = addFloatingScore(points, lane, position, newState);
+      });
 
       // --- 7. PLATE CATCHING LOGIC ---
       const plateResult = processPlates(
@@ -826,16 +810,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         }
       }
 
-      // Special handling for Nyan Cat sweep initialization
-      if (type === 'nyan' && !prev.nyanSweep?.active) {
-        newState.nyanSweep = {
-          active: true,
-          xPosition: GAME_CONFIG.CHEF_X_POSITION,
-          laneDirection: 1,
-          startTime: now,
-          lastUpdateTime: now,
-          startingLane: prev.chefLane
-        };
+      // Play Nyan sweep sound if started
+      if (result.nyanSweepStarted) {
         soundManager.nyanCatPowerUp();
       }
 

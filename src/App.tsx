@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import GameBoard from './components/GameBoard';
 import ScoreBoard from './components/ScoreBoard';
 import MobileGameControls from './components/MobileGameControls';
@@ -10,13 +10,12 @@ import PowerUpAlert from './components/PowerUpAlert';
 import StreakDisplay from './components/StreakDisplay';
 import DebugPanel from './components/DebugPanel';
 import ControlsOverlay from './components/ControlsOverlay';
+import PauseMenu from './components/PauseMenu';
 import { useGameLogic } from './hooks/useGameLogic';
-import { bg, sprite } from './lib/assets';
-import { Play, RotateCcw, Volume2, VolumeX, Trophy, HelpCircle, ShoppingBag } from 'lucide-react';
+import { bg } from './lib/assets';
 import { soundManager } from './utils/sounds';
 
 const counterImg = bg('counter.png');
-const smokingChefImg = sprite('chef-smoking.png');
 
 function App() {
   const [showGameOver, setShowGameOver] = useState(false);
@@ -122,6 +121,46 @@ function App() {
     }
     setControlsOpenedFromPause(false);
   };
+
+  // Pause menu action handlers
+  const handlePauseResume = useCallback(() => {
+    handlePauseToggle();
+  }, [handlePauseToggle]);
+
+  const handlePauseReset = useCallback(() => {
+    resetGame();
+    setShowPauseMenu(false);
+  }, [resetGame]);
+
+  const handlePauseToggleMute = useCallback(() => {
+    setIsMuted(soundManager.toggleMute());
+  }, []);
+
+  const handlePauseShowScores = useCallback(() => {
+    setShowPauseMenu(false);
+    setShowHighScores(true);
+  }, []);
+
+  const handlePauseShowHelp = useCallback(() => {
+    setControlsOpenedFromPause(true);
+    setShowControlsOverlay(true);
+  }, []);
+
+  // Handle Enter/Escape to close high scores view
+  useEffect(() => {
+    if (!showHighScores || gameState.gameOver) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === 'Escape' || e.key === ' ') {
+        e.preventDefault();
+        setShowHighScores(false);
+        setShowPauseMenu(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showHighScores, gameState.gameOver]);
 
   useEffect(() => {
     const checkOrientation = () => {
@@ -267,64 +306,16 @@ function App() {
 
               {showControlsOverlay && <ControlsOverlay onClose={handleCloseControlsOverlay} />}
 
-              {showPauseMenu && !gameState.gameOver && !showControlsOverlay && (
-                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg z-[70]">
-                  <div
-                    className="text-center p-6 sm:p-8 rounded-xl shadow-2xl mx-4 border-4 border-amber-800 relative"
-                    style={{
-                      background: 'linear-gradient(to bottom, #f5e6c8 0%, #e8d4a8 100%)',
-                      boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.3), 0 8px 32px rgba(0,0,0,0.3)'
-                    }}
-                  >
-                    {/* Help button */}
-                    <button
-                      onClick={() => { setControlsOpenedFromPause(true); setShowControlsOverlay(true); }}
-                      className="absolute top-3 right-3 p-2 rounded-full hover:bg-amber-200 transition-colors"
-                      style={{ color: '#8B4513' }}
-                      aria-label="How to play"
-                    >
-                      <HelpCircle className="w-6 h-6" />
-                    </button>
-
-                    <img
-                      src={smokingChefImg}
-                      alt="Chef taking a break"
-                      className="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-4 object-contain"
-                    />
-
-                    {/* Button grid */}
-                    <div className="grid grid-cols-2 gap-3 mb-3">
-                      <button
-                        onClick={handlePauseToggle}
-                        className="flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-bold shadow-lg"
-                      >
-                        <Play className="w-5 h-5" />
-                        <span className="hidden sm:inline">Resume</span>
-                      </button>
-                      <button
-                        onClick={() => { resetGame(); setShowPauseMenu(false); }}
-                        className="flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-bold shadow-lg"
-                      >
-                        <RotateCcw className="w-5 h-5" />
-                        <span className="hidden sm:inline">Reset</span>
-                      </button>
-                      <button
-                        onClick={() => { setIsMuted(soundManager.toggleMute()); }}
-                        className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-bold shadow-lg"
-                      >
-                        {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                        <span className="hidden sm:inline">{isMuted ? 'Unmute' : 'Mute'}</span>
-                      </button>
-                      <button
-                        onClick={() => { setShowPauseMenu(false); setShowHighScores(true); }}
-                        className="flex items-center justify-center gap-2 px-4 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors font-bold shadow-lg"
-                      >
-                        <Trophy className="w-5 h-5" />
-                        <span className="hidden sm:inline">Scores</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
+              {!gameState.gameOver && !showControlsOverlay && (
+                <PauseMenu
+                  isVisible={showPauseMenu}
+                  isMuted={isMuted}
+                  onResume={handlePauseResume}
+                  onReset={handlePauseReset}
+                  onToggleMute={handlePauseToggleMute}
+                  onShowScores={handlePauseShowScores}
+                  onShowHelp={handlePauseShowHelp}
+                />
               )}
 
               {gameState.showStore && (
@@ -385,7 +376,7 @@ function App() {
                 <HighScores />
                 <button
                   onClick={() => { setShowHighScores(false); setShowPauseMenu(true); }}
-                  className="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors font-semibold"
+                  className="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors font-semibold ring-2 ring-white ring-opacity-80"
                 >
                   Back
                 </button>
@@ -432,64 +423,16 @@ function App() {
 
             {showControlsOverlay && <ControlsOverlay onClose={handleCloseControlsOverlay} />}
 
-            {showPauseMenu && !gameState.gameOver && !showControlsOverlay && (
-              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg z-[70]">
-                <div
-                  className="text-center p-6 sm:p-8 rounded-xl shadow-2xl mx-4 border-4 border-amber-800 relative"
-                  style={{
-                    background: 'linear-gradient(to bottom, #f5e6c8 0%, #e8d4a8 100%)',
-                    boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.3), 0 8px 32px rgba(0,0,0,0.3)'
-                  }}
-                >
-                  {/* Help button */}
-                  <button
-                    onClick={() => { setControlsOpenedFromPause(true); setShowControlsOverlay(true); }}
-                    className="absolute top-3 right-3 p-2 rounded-full hover:bg-amber-200 transition-colors"
-                    style={{ color: '#8B4513' }}
-                    aria-label="How to play"
-                  >
-                    <HelpCircle className="w-6 h-6" />
-                  </button>
-
-                  <img
-                    src={smokingChefImg}
-                    alt="Chef taking a break"
-                    className="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-4 object-contain"
-                  />
-
-                  {/* Button grid */}
-                  <div className="grid grid-cols-2 gap-3 mb-3">
-                    <button
-                      onClick={handlePauseToggle}
-                      className="flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-bold shadow-lg"
-                    >
-                      <Play className="w-5 h-5" />
-                      <span className="hidden sm:inline">Resume</span>
-                    </button>
-                    <button
-                      onClick={() => { resetGame(); setShowPauseMenu(false); }}
-                      className="flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-bold shadow-lg"
-                    >
-                      <RotateCcw className="w-5 h-5" />
-                      <span className="hidden sm:inline">Reset</span>
-                    </button>
-                    <button
-                      onClick={() => { setIsMuted(soundManager.toggleMute()); }}
-                      className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-bold shadow-lg"
-                    >
-                      {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                      <span className="hidden sm:inline">{isMuted ? 'Unmute' : 'Mute'}</span>
-                    </button>
-                    <button
-                      onClick={() => { setShowPauseMenu(false); setShowHighScores(true); }}
-                      className="flex items-center justify-center gap-2 px-4 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors font-bold shadow-lg"
-                    >
-                      <Trophy className="w-5 h-5" />
-                      <span className="hidden sm:inline">Scores</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
+            {!gameState.gameOver && !showControlsOverlay && (
+              <PauseMenu
+                isVisible={showPauseMenu}
+                isMuted={isMuted}
+                onResume={handlePauseResume}
+                onReset={handlePauseReset}
+                onToggleMute={handlePauseToggleMute}
+                onShowScores={handlePauseShowScores}
+                onShowHelp={handlePauseShowHelp}
+              />
             )}
 
             {gameState.showStore && (
@@ -549,7 +492,7 @@ function App() {
               <HighScores />
               <button
                 onClick={() => { setShowHighScores(false); setShowPauseMenu(true); }}
-                className="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors font-semibold"
+                className="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors font-semibold ring-2 ring-white ring-opacity-80"
               >
                 Back
               </button>
@@ -572,6 +515,34 @@ function App() {
             ovens={gameState.ovens}
             ovenSpeedUpgrades={gameState.ovenSpeedUpgrades}
           />
+        )}
+
+        {/* GitHub + Google Sheets links - desktop only, light brown */}
+        {!isMobile && (
+          <div className="fixed bottom-4 right-4 flex items-center gap-3 z-50">
+            <a
+              href="https://docs.google.com/spreadsheets/d/1J3-Usmmfd2B_av_BVvC9m70cRdpLvmGv5Wm2d6m_Y_w/edit?gid=0#gid=0"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="https://cdn.simpleicons.org/googlesheets/A67B5B"
+                alt="Google Sheets"
+                className="w-8 h-8 opacity-80 hover:opacity-100 transition-opacity"
+              />
+            </a>
+            <a
+              href="https://github.com/snackman/pizza-chef"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="https://cdn.simpleicons.org/github/A67B5B"
+                alt="GitHub"
+                className="w-8 h-8 opacity-80 hover:opacity-100 transition-opacity"
+              />
+            </a>
+          </div>
         )}
       </div>
     </div>

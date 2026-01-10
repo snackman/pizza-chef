@@ -15,6 +15,8 @@ import { getOvenDisplayStatus } from '../logic/ovenSystem';
 import { OVEN_CONFIG, TIMINGS } from '../lib/constants';
 
 const chefImg = sprite("chef.png");
+const sadChefImg = sprite("sad-chef.png");
+const nyanChefImg = sprite("nyan-chef.png");
 
 interface GameBoardProps {
   gameState: GameState;
@@ -150,7 +152,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
           }}
         >
           <img
-            src={gameState.gameOver ? "https://i.imgur.com/PwRdw0u.png" : "https://i.imgur.com/EPCSa79.png"}
+            src={gameState.gameOver ? sadChefImg : chefImg}
             alt={gameState.gameOver ? "game over" : "chef"}
             className="w-full h-full object-contain"
             style={{ transform: 'none' }}
@@ -184,7 +186,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
           }}
         >
           <img
-            src="https://i.imgur.com/fGPU4Pu.png"
+            src={nyanChefImg}
             alt="nyan chef"
             className="w-full h-full object-contain"
             style={{ transform: 'scale(1.5)' }}
