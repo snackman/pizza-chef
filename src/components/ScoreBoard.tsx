@@ -4,10 +4,10 @@ import { Star, Trophy, Timer, DollarSign, Pause, HelpCircle, Layers } from 'luci
 
 interface ScoreBoardProps {
   gameState: GameState;
-  onShowInstructions: () => void;
+  onPauseClick: () => void;
 }
 
-const ScoreBoard: React.FC<ScoreBoardProps> = ({ gameState, onShowInstructions }) => {
+const ScoreBoard: React.FC<ScoreBoardProps> = ({ gameState, onPauseClick }) => {
   return (
     <div className="bg-gradient-to-r from-red-600 to-red-700 text-white p-3 sm:p-4 sm:rounded-lg shadow-lg">
       <div className="flex items-center justify-center sm:justify-between">
@@ -45,13 +45,12 @@ const ScoreBoard: React.FC<ScoreBoardProps> = ({ gameState, onShowInstructions }
           </div>
 
           <button
-            onClick={onShowInstructions}
+            onClick={onPauseClick}
             className="flex items-center space-x-1 px-2 py-1 bg-blue-500 hover:bg-blue-600 rounded transition-colors"
-            aria-label="Pause and show controls"
+            aria-label="Pause game"
           >
-            <Pause className="w-3 h-3 sm:w-4 sm:h-4 sm:hidden" />
-            <HelpCircle className="w-3 h-3 sm:w-4 sm:h-4 sm:hidden" />
-            <span className="hidden sm:inline text-xs font-medium">Pause/Controls</span>
+            <Pause className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline text-xs font-medium">Pause</span>
           </button>
         </div>
       </div>

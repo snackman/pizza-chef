@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Send, Trophy, Download, Share2, Check, Copy as CopyIcon, ArrowLeft, RotateCcw } from 'lucide-react';
-import { submitScore, createGameSession, GameSession, uploadScorecardImage, updateGameSessionImage, checkIfTopScore } from '../services/highScores';
+import { submitScore, createGameSession, GameSession, uploadScorecardImage, updateGameSessionImage, checkIfTopScore, checkIfNumberOneScore } from '../services/highScores';
 import { GameStats, StarLostReason } from '../types/game';
 import HighScores from './HighScores';
 import PizzaConfetti from './PizzaConfetti';
@@ -99,6 +99,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
   const [submittedName, setSubmittedName] = useState('');
   const [showConfetti, setShowConfetti] = useState(false);
+  const [isNumberOne, setIsNumberOne] = useState(false);
   const [leaderboardRefreshKey, setLeaderboardRefreshKey] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imagesRef = useRef<LoadedImages>({
@@ -476,6 +477,8 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
       // Check if score made it to top 10 and show confetti
       const isTopScore = await checkIfTopScore(score);
       if (isTopScore) {
+        const isNumOne = await checkIfNumberOneScore(score);
+        setIsNumberOne(isNumOne);
         setShowConfetti(true);
         setLeaderboardRefreshKey(prev => prev + 1);
       }
@@ -504,6 +507,8 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
       // Check if score made it to top 10 and show confetti
       const isTopScore = await checkIfTopScore(score);
       if (isTopScore) {
+        const isNumOne = await checkIfNumberOneScore(score);
+        setIsNumberOne(isNumOne);
         setShowConfetti(true);
         setLeaderboardRefreshKey(prev => prev + 1);
       }
@@ -604,7 +609,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
 
     return (
       <div className="flex flex-col items-center gap-4 w-full max-w-4xl mx-auto">
-        <PizzaConfetti active={showConfetti} />
+        <PizzaConfetti active={showConfetti} isNumberOne={isNumberOne} />
         <HighScores userScore={{ name: displayNameForScore, score }} refreshKey={leaderboardRefreshKey} />
 
         {scoreSubmitted ? (

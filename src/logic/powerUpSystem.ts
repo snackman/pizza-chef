@@ -85,7 +85,7 @@ export const processPowerUpCollection = (
         newState.starPowerActive = true;
         newState.activePowerUps = [...newState.activePowerUps.filter(p => p.type !== 'star'), { type: 'star', endTime: now + POWERUPS.DURATION }];
     } else if (powerUp.type === 'doge') {
-        newState.activePowerUps = [...newState.activePowerUps.filter(p => p.type !== 'doge'), { type: 'doge', endTime: now + POWERUPS.DURATION }];
+        newState.activePowerUps = [...newState.activePowerUps.filter(p => p.type !== 'doge'), { type: 'doge', endTime: now + POWERUPS.DOGE_DURATION }];
         newState.powerUpAlert = { type: 'doge', endTime: now + POWERUPS.ALERT_DURATION_DOGE, chefLane: newState.chefLane };
     } else if (powerUp.type === 'nyan') {
         // Note: Nyan sweep initialization is handled by caller or separate system, but we set the alert here

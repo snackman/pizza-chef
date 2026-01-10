@@ -1,3 +1,32 @@
+// Customer state machine types
+export type CustomerState =
+  | 'approaching'  // Moving toward chef
+  | 'served'       // Got pizza, leaving happy
+  | 'disappointed' // Reached chef without pizza, leaving sad
+  | 'leaving'      // Generic leaving (Brian complaining, etc.)
+  | 'vomit';       // Beer+woozy = sick
+
+export type CustomerVariant = 'normal' | 'critic' | 'badLuckBrian' | 'scumbagSteve';
+
+export type WoozyState = 'normal' | 'drooling' | 'satisfied';
+
+// Helper functions for state checks
+export const isCustomerLeaving = (c: Customer): boolean =>
+  c.served || c.disappointed || c.leaving || c.vomit || false;
+
+export const isCustomerApproaching = (c: Customer): boolean =>
+  !isCustomerLeaving(c);
+
+export const getCustomerVariant = (c: Customer): CustomerVariant => {
+  if (c.scumbagSteve) return 'scumbagSteve';
+  if (c.badLuckBrian) return 'badLuckBrian';
+  if (c.critic) return 'critic';
+  return 'normal';
+};
+
+export const isCustomerAffectedByPowerUps = (c: Customer): boolean =>
+  !c.badLuckBrian && !c.critic && !c.scumbagSteve && !c.served && !c.leaving && !c.disappointed;
+
 export interface Customer {
   id: string;
   lane: number;
@@ -8,7 +37,7 @@ export interface Customer {
   disappointed?: boolean;
   disappointedEmoji?: string;
   woozy?: boolean;
-  woozyState?: 'normal' | 'drooling' | 'satisfied';
+  woozyState?: WoozyState;
   movingRight?: boolean;
   vomit?: boolean;
   frozen?: boolean;
@@ -18,6 +47,9 @@ export interface Customer {
   shouldBeHotHoneyAffected?: boolean;
   critic?: boolean;
   badLuckBrian?: boolean;
+  scumbagSteve?: boolean;
+  slicesReceived?: number; // For Steve who needs 2 slices
+  lastLaneChangeTime?: number; // For Steve's random lane changes
   leaving?: boolean;
   brianNyaned?: boolean; // Brian got hit by Nyan + is flying away
   flipped?: boolean;
@@ -39,6 +71,10 @@ export interface EmptyPlate {
   lane: number;
   position: number;
   speed: number;
+  // For angled throws (Steve)
+  startLane?: number;
+  startPosition?: number;
+  targetLane?: number;
 }
 
 export interface NyanSweep {
@@ -68,6 +104,15 @@ export interface ActivePowerUp {
 export interface FloatingScore {
   id: string;
   points: number;
+  lane: number;
+  position: number;
+  startTime: number;
+}
+
+export interface FloatingStar {
+  id: string;
+  isGain: boolean; // true = gained star (green +), false = lost star (red -)
+  count: number; // number of stars (e.g., 2 for critic)
   lane: number;
   position: number;
   startTime: number;
@@ -106,6 +151,8 @@ export interface BossBattle {
   bossVulnerable: boolean;
   bossDefeated: boolean;
   bossPosition: number;
+  bossLane: number;
+  bossLaneDirection: number; // 1 = moving down, -1 = moving up
 }
 
 export interface GameStats {
@@ -147,6 +194,7 @@ export interface GameState {
   powerUps: PowerUp[];
   activePowerUps: ActivePowerUp[];
   floatingScores: FloatingScore[];
+  floatingStars: FloatingStar[];
   droppedPlates: DroppedPlate[];
   chefLane: number;
   score: number;
@@ -171,4 +219,7 @@ export interface GameState {
   stats: GameStats;
   bossBattle?: BossBattle;
   defeatedBossLevels: number[];
+  cleanKitchenStartTime?: number;
+  lastCleanKitchenBonusTime?: number;
+  cleanKitchenBonusAlert?: { endTime: number };
 }

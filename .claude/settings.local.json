@@ -25,7 +25,10 @@
       "Bash(python:*)",
       "Bash(magick:*)",
       "Bash(pip install:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(npx vitest run src/logic/customerSystem.test.ts)",
+      "Bash(npx vitest:*)",
+      "Bash(timeout 5 npm run dev:*)"
     ]
   }
 }

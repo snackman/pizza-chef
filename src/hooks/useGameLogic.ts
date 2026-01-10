@@ -6,7 +6,9 @@ import {
   GameStats,
   PowerUpType,
   StarLostReason,
-  EmptyPlate
+  EmptyPlate,
+  isCustomerLeaving,
+  getCustomerVariant
 } from '../types/game';
 import { soundManager } from '../utils/sounds';
 import { getStreakMultiplier } from '../components/StreakDisplay';
@@ -121,6 +123,17 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     };
   }, []);
 
+  const addFloatingStar = useCallback((isGain: boolean, lane: number, position: number, state: GameState, count: number = 1): GameState => {
+    const now = Date.now();
+    return {
+      ...state,
+      floatingStars: [...state.floatingStars, {
+        id: `star-${now}-${Math.random()}`,
+        isGain, count, lane, position, startTime: now,
+      }],
+    };
+  }, []);
+
   /**
    * Consolidated "game over" cleanup:
    * - triggers game over sound once
@@ -137,6 +150,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     // Stop oven loop + freeze oven timers
     const pausedOvens = calculateOvenPauseState(state.ovens, true, now);
 
+    // Stop Nyan cat song
+    soundManager.stopNyan();
     soundManager.gameOver();
 
     const shouldDropPizza = state.availableSlices > 0;
@@ -239,6 +254,11 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       const hasStar = newState.activePowerUps.some(p => p.type === 'star');
       const dogeMultiplier = hasDoge ? 2 : 1;
 
+      // Initialize clean kitchen timer if not set
+      if (newState.cleanKitchenStartTime === undefined) {
+        newState.cleanKitchenStartTime = now;
+      }
+
       // 1. PROCESS OVENS (Logic from ovenSystem)
       const ovenTickResult = processOvenTick(
         newState.ovens,
@@ -262,6 +282,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             soundManager.lifeLost();
             newState.lives = Math.max(0, newState.lives - 1);
             newState.lastStarLostReason = 'burned_pizza';
+            // Use the oven's lane for the floating star
+            newState = addFloatingStar(false, event.lane, 5, newState);
+            // Reset clean kitchen timer
+            newState.cleanKitchenStartTime = now;
             if (newState.lives === 0) {
               newState = triggerGameOver(newState, now);
             }
@@ -278,19 +302,22 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       }
 
       customerUpdate.events.forEach(event => {
-        if (event === 'LIFE_LOST') {
+        if (event.type === 'LIFE_LOST') {
           soundManager.customerDisappointed();
           soundManager.lifeLost();
         }
-        if (event === 'STAR_LOST_CRITIC') {
+        if (event.type === 'STAR_LOST_CRITIC') {
           newState.lives = Math.max(0, newState.lives - 2);
           newState.lastStarLostReason = 'disappointed_critic';
+          // Critic loses 2 stars - show one indicator with 2 stars
+          newState = addFloatingStar(false, event.lane, event.position, newState, 2);
         }
-        if (event === 'STAR_LOST_NORMAL') {
+        if (event.type === 'STAR_LOST_NORMAL') {
           newState.lives = Math.max(0, newState.lives - 1);
           newState.lastStarLostReason = 'disappointed_customer';
+          newState = addFloatingStar(false, event.lane, event.position, newState);
         }
-        if (event === 'GAME_OVER' && newState.lives === 0) {
+        if (event.type === 'GAME_OVER' && newState.lives === 0) {
           newState = triggerGameOver(newState, now);
         }
       });
@@ -302,20 +329,21 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       const destroyedPowerUpIds = new Set<string>();
       const platesFromSlices = new Set<string>();
       const customerScores: Array<{ points: number; lane: number; position: number }> = [];
+      const starGainsToAdd: Array<{ lane: number; position: number }> = [];
       let sliceWentOffScreen = false;
 
       newState.pizzaSlices.forEach(slice => {
         let consumed = false;
 
         newState.customers = newState.customers.map(customer => {
-          if (consumed || customer.served || customer.disappointed || customer.vomit || customer.leaving) return customer;
+          if (consumed || isCustomerLeaving(customer)) return customer;
 
           const isHit = checkSliceCustomerCollision(slice, customer);
 
           if (isHit) {
             consumed = true;
 
-            const hitResult = processCustomerHit(customer, now);
+            const hitResult = processCustomerHit(customer, now, hasDoge);
 
             if (hitResult.newEntities.droppedPlate) newState.droppedPlates = [...newState.droppedPlates, hitResult.newEntities.droppedPlate];
             if (hitResult.newEntities.emptyPlate) newState.emptyPlates = [...newState.emptyPlates, hitResult.newEntities.emptyPlate];
@@ -325,6 +353,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 soundManager.plateDropped();
                 newState.stats.currentCustomerStreak = 0;
                 newState.stats.currentPlateStreak = 0;
+                // Reset clean kitchen timer
+                newState.cleanKitchenStartTime = now;
+                // Brian still pays $1 even when he drops the slice
+                newState.bank += SCORING.BASE_BANK_REWARD;
               } else if (event === 'UNFROZEN_AND_SERVED') {
                 soundManager.customerUnfreeze();
 
@@ -346,6 +378,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 if (lifeResult.livesToAdd > 0) {
                   newState.lives += lifeResult.livesToAdd;
                   if (lifeResult.shouldPlaySound) soundManager.lifeGained();
+                  starGainsToAdd.push({ lane: customer.lane, position: customer.position });
                 }
 
               } else if (event === 'WOOZY_STEP_1') {
@@ -362,7 +395,54 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 newState.bank += bankEarned;
                 customerScores.push({ points: pointsEarned, lane: customer.lane, position: customer.position });
 
-              } else if (event === 'WOOZY_STEP_2' || event === 'SERVED_NORMAL' || event === 'SERVED_CRITIC') {
+              } else if (event === 'STEVE_FIRST_SLICE') {
+                // Steve got his first slice but wants more - NO PAYMENT
+                soundManager.woozyServed();
+
+                const { points: pointsEarned } = calculateCustomerScore(
+                  customer,
+                  dogeMultiplier,
+                  getStreakMultiplier(newState.stats.currentCustomerStreak),
+                  true // isFirstSlice
+                );
+
+                newState.score += pointsEarned;
+                // NO bank reward - Steve doesn't pay!
+                customerScores.push({ points: pointsEarned, lane: customer.lane, position: customer.position });
+
+              } else if (event === 'STEVE_SERVED') {
+                // Steve is satisfied - NO PAYMENT but counts as served
+                soundManager.customerServed();
+
+                const { points: pointsEarned } = calculateCustomerScore(
+                  customer,
+                  dogeMultiplier,
+                  getStreakMultiplier(newState.stats.currentCustomerStreak)
+                );
+
+                newState.score += pointsEarned;
+                // NO bank reward - Steve doesn't pay!
+                customerScores.push({ points: pointsEarned, lane: customer.lane, position: customer.position });
+
+                newState.happyCustomers += 1;
+                newState.stats.customersServed += 1;
+                newState.stats = updateStatsForStreak(newState.stats, 'customer');
+
+                const lifeResult = checkLifeGain(
+                  newState.lives,
+                  newState.happyCustomers,
+                  dogeMultiplier,
+                  false, // Steve is not a critic
+                  customer.position
+                );
+
+                if (lifeResult.livesToAdd > 0) {
+                  newState.lives += lifeResult.livesToAdd;
+                  if (lifeResult.shouldPlaySound) soundManager.lifeGained();
+                  starGainsToAdd.push({ lane: customer.lane, position: customer.position });
+                }
+
+              } else if (event === 'WOOZY_STEP_2' || event === 'SERVED_NORMAL' || event === 'SERVED_CRITIC' || event === 'SERVED_BRIAN_DOGE') {
                 soundManager.customerServed();
 
                 const { points: pointsEarned, bank: bankEarned } = calculateCustomerScore(
@@ -383,13 +463,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                   newState.lives,
                   newState.happyCustomers,
                   dogeMultiplier,
-                  customer.critic,
+                  getCustomerVariant(customer) === 'critic',
                   customer.position
                 );
 
                 if (lifeResult.livesToAdd > 0) {
                   newState.lives += lifeResult.livesToAdd;
                   if (lifeResult.shouldPlaySound) soundManager.lifeGained();
+                  starGainsToAdd.push({ lane: customer.lane, position: customer.position });
                 }
               }
             });
@@ -426,11 +507,16 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       newState.pizzaSlices = finalSlices;
       newState.powerUps = newState.powerUps.filter(p => !destroyedPowerUpIds.has(p.id));
 
-      if (sliceWentOffScreen) newState.stats.currentPlateStreak = 0;
+      if (sliceWentOffScreen) {
+        newState.stats.currentPlateStreak = 0;
+        newState.cleanKitchenStartTime = now;
+      }
       customerScores.forEach(({ points, lane, position }) => { newState = addFloatingScore(points, lane, position, newState); });
+      starGainsToAdd.forEach(({ lane, position }) => { newState = addFloatingStar(true, lane, position, newState); });
 
       // --- 4. CLEANUP EXPIRATIONS ---
       newState.floatingScores = newState.floatingScores.filter(fs => now - fs.startTime < TIMINGS.FLOATING_SCORE_LIFETIME);
+      newState.floatingStars = newState.floatingStars.filter(fs => now - fs.startTime < TIMINGS.FLOATING_SCORE_LIFETIME);
       newState.droppedPlates = newState.droppedPlates.filter(dp => now - dp.startTime < TIMINGS.DROPPED_PLATE_LIFETIME);
       newState.customers = newState.customers.map(customer => {
         if (customer.textMessage && customer.textMessageTime && now - customer.textMessageTime >= TIMINGS.TEXT_MESSAGE_LIFETIME) {
@@ -530,7 +616,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       plateResult.events.forEach(event => {
         if (event === 'CAUGHT') soundManager.plateCaught();
-        else if (event === 'DROPPED') soundManager.plateDropped();
+        else if (event === 'DROPPED') {
+          soundManager.plateDropped();
+          newState.cleanKitchenStartTime = now;
+        }
       });
 
       plateResult.scores.forEach(({ points, lane, position }) => {
@@ -561,7 +650,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         if (hitCustomerSet.size > 0) {
           newState.customers = newState.customers.map(customer => {
             if (hitCustomerSet.has(customer.id)) {
-              if (customer.badLuckBrian) {
+              if (getCustomerVariant(customer) === 'badLuckBrian') {
                 soundManager.customerServed();
                 return { ...customer, brianNyaned: true, leaving: true, hasPlate: false, flipped: false, movingRight: true, woozy: false, frozen: false, unfrozenThisPeriod: undefined };
               }
@@ -586,13 +675,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 newState.lives,
                 newState.happyCustomers,
                 dogeMultiplier,
-                customer.critic,
+                getCustomerVariant(customer) === 'critic',
                 customer.position
               );
 
               if (lifeResult.livesToAdd > 0) {
                 newState.lives += lifeResult.livesToAdd;
                 if (lifeResult.shouldPlaySound) soundManager.lifeGained();
+                newState = addFloatingStar(true, customer.lane, customer.position, newState);
               }
 
               return { ...customer, served: true, hasPlate: false, woozy: false, frozen: false, unfrozenThisPeriod: undefined };
@@ -680,6 +770,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         if (bossResult.livesLost > 0) {
           for (let i = 0; i < bossResult.livesLost; i++) {
             soundManager.lifeLost();
+            newState = addFloatingStar(false, i % 4, GAME_CONFIG.CHEF_X_POSITION, newState);
           }
           newState.lives = Math.max(0, newState.lives - bossResult.livesLost);
           if (newState.lives === 0) {
@@ -701,9 +792,33 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         });
       }
 
+      // --- CLEAN KITCHEN BONUS CHECK ---
+      if (newState.cleanKitchenStartTime !== undefined) {
+        const cleanDuration = now - newState.cleanKitchenStartTime;
+        const timeSinceLastBonus = newState.lastCleanKitchenBonusTime
+          ? now - newState.lastCleanKitchenBonusTime
+          : Infinity;
+
+        // Award bonus if 30 seconds of clean kitchen and at least 30 seconds since last bonus
+        if (cleanDuration >= SCORING.CLEAN_KITCHEN_TIME && timeSinceLastBonus >= SCORING.CLEAN_KITCHEN_TIME) {
+          const bonusPoints = SCORING.CLEAN_KITCHEN_BONUS * dogeMultiplier;
+          newState.score += bonusPoints;
+          newState = addFloatingScore(bonusPoints, newState.chefLane, GAME_CONFIG.CHEF_X_POSITION, newState);
+          newState.cleanKitchenStartTime = now; // Reset timer for next bonus
+          newState.lastCleanKitchenBonusTime = now;
+          newState.cleanKitchenBonusAlert = { endTime: now + 3000 }; // Show for 3 seconds
+          soundManager.lifeGained(); // Use a celebratory sound
+        }
+      }
+
+      // Clear expired clean kitchen bonus alert
+      if (newState.cleanKitchenBonusAlert && now >= newState.cleanKitchenBonusAlert.endTime) {
+        newState.cleanKitchenBonusAlert = undefined;
+      }
+
       return newState;
     });
-  }, [addFloatingScore, triggerGameOver]); // ✅ removed gameState.* and ovenSoundStates deps
+  }, [addFloatingScore, addFloatingStar, triggerGameOver]); // ✅ removed gameState.* and ovenSoundStates deps
 
   // --- Store / Upgrades / Debug (now via storeSystem.ts) ---
 
@@ -777,6 +892,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
   }, [triggerGameOver]);
 
   const resetGame = useCallback(() => {
+    soundManager.stopNyan();
     setGameState({ ...INITIAL_GAME_STATE });
     lastCustomerSpawnRef.current = 0;
     lastPowerUpSpawnRef.current = 0;
@@ -788,6 +904,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     setGameState(prev => {
       const newPaused = !prev.paused;
       const updatedOvens = calculateOvenPauseState(prev.ovens, newPaused, Date.now());
+
+      // Pause/resume Nyan cat song
+      if (newPaused) {
+        soundManager.pauseNyan();
+      } else {
+        soundManager.resumeNyan();
+      }
+
       return { ...prev, paused: newPaused, ovens: updatedOvens };
     });
   }, []);

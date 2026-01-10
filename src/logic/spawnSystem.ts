@@ -1,11 +1,12 @@
-import { Customer, PowerUp } from '../types/game';
+import { Customer, PowerUp, CustomerVariant } from '../types/game';
 import {
   SPAWN_RATES,
   GAME_CONFIG,
   PROBABILITIES,
   POSITIONS,
   ENTITY_SPEEDS,
-  POWERUPS
+  POWERUPS,
+  SCUMBAG_STEVE
 } from '../lib/constants';
 
 export interface SpawnResult<T> {
@@ -56,23 +57,39 @@ export const trySpawnCustomer = (
   // Create the customer
   const lane = Math.floor(Math.random() * GAME_CONFIG.LANE_COUNT);
   const disappointedEmojis = ['😢', '😭', '😠', '🤬'];
-  const isCritic = Math.random() < PROBABILITIES.CRITIC_CHANCE;
-  const isBadLuckBrian = !isCritic && Math.random() < PROBABILITIES.BAD_LUCK_BRIAN_CHANCE;
 
+  // Determine customer variant (mutually exclusive)
+  const variant: CustomerVariant =
+    Math.random() < PROBABILITIES.CRITIC_CHANCE ? 'critic' :
+    Math.random() < PROBABILITIES.BAD_LUCK_BRIAN_CHANCE ? 'badLuckBrian' :
+    Math.random() < PROBABILITIES.SCUMBAG_STEVE_CHANCE ? 'scumbagSteve' :
+    'normal';
+
+  // Calculate speed (Steve is faster)
+  const speed = variant === 'scumbagSteve'
+    ? ENTITY_SPEEDS.CUSTOMER_BASE * SCUMBAG_STEVE.SPEED_MULTIPLIER
+    : ENTITY_SPEEDS.CUSTOMER_BASE;
+
+  // Create customer in 'approaching' state
   const customer: Customer = {
     id: `customer-${now}-${lane}`,
     lane,
     position: POSITIONS.SPAWN_X,
-    speed: ENTITY_SPEEDS.CUSTOMER_BASE,
+    speed,
+    // Initial state: approaching (not served, leaving, or disappointed)
     served: false,
     hasPlate: false,
     leaving: false,
     disappointed: false,
     disappointedEmoji: disappointedEmojis[Math.floor(Math.random() * disappointedEmojis.length)],
     movingRight: false,
-    critic: isCritic,
-    badLuckBrian: isBadLuckBrian,
-    flipped: isBadLuckBrian,
+    // Customer variant
+    critic: variant === 'critic',
+    badLuckBrian: variant === 'badLuckBrian',
+    scumbagSteve: variant === 'scumbagSteve',
+    slicesReceived: variant === 'scumbagSteve' ? 0 : undefined,
+    lastLaneChangeTime: variant === 'scumbagSteve' ? now : undefined,
+    flipped: variant === 'badLuckBrian',
   };
 
   return { shouldSpawn: true, entity: customer };

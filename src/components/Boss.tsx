@@ -15,12 +15,12 @@ const Boss: React.FC<BossProps> = ({ bossBattle }) => {
     <>
       {!bossBattle.bossDefeated && (
         <div
-          className="absolute transition-all duration-100 flex items-center justify-center"
+          className="absolute transition-none flex items-center justify-center"
           style={{
             left: `${bossBattle.bossPosition}%`,
-            top: '12.5%',
+            top: `${bossBattle.bossLane * 25}%`,
             width: '24%',
-            height: '75%',
+            height: '25%',
             opacity: bossBattle.bossVulnerable ? 1 : 0.5,
           }}
         >

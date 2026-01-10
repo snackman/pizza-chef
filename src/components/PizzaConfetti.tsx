@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { sprite } from '../lib/assets';
 
 interface ConfettiPiece {
   id: number;
@@ -12,9 +13,10 @@ interface ConfettiPiece {
 interface PizzaConfettiProps {
   active: boolean;
   duration?: number; // How long to show confetti in ms
+  isNumberOne?: boolean; // Use Molto Benny instead of pizza
 }
 
-const PizzaConfetti: React.FC<PizzaConfettiProps> = ({ active, duration = 5000 }) => {
+const PizzaConfetti: React.FC<PizzaConfettiProps> = ({ active, duration = 5000, isNumberOne = false }) => {
   const [pieces, setPieces] = useState<ConfettiPiece[]>([]);
   const [visible, setVisible] = useState(false);
 
@@ -55,13 +57,23 @@ const PizzaConfetti: React.FC<PizzaConfettiProps> = ({ active, duration = 5000 }
           style={{
             left: `${piece.left}%`,
             top: '-50px',
-            fontSize: `${piece.size}px`,
+            width: isNumberOne ? `${piece.size}px` : undefined,
+            height: isNumberOne ? `${piece.size}px` : undefined,
+            fontSize: isNumberOne ? undefined : `${piece.size}px`,
             animationDelay: `${piece.delay}s`,
             animationDuration: `${piece.duration}s`,
             '--rotation': `${piece.rotation}deg`,
           } as React.CSSProperties}
         >
-          🍕
+          {isNumberOne ? (
+            <img
+              src={sprite("molto-benny.png")}
+              alt="Molto Benny"
+              className="w-full h-full object-contain"
+            />
+          ) : (
+            '🍕'
+          )}
         </div>
       ))}
 

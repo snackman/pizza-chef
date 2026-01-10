@@ -51,7 +51,15 @@ export const SPAWN_RATES = {
 export const PROBABILITIES = {
   CRITIC_CHANCE: 0.15,
   BAD_LUCK_BRIAN_CHANCE: 0.1, // If not critic
+  SCUMBAG_STEVE_CHANCE: 0.08, // If not critic or brian
   POWERUP_STAR_CHANCE: 0.1,
+};
+
+export const SCUMBAG_STEVE = {
+  SPEED_MULTIPLIER: 1.4, // 40% faster than normal
+  SLICES_REQUIRED: 2,
+  LANE_CHANGE_INTERVAL: 1500, // ms between possible lane changes
+  LANE_CHANGE_CHANCE: 0.3, // 30% chance to change lane each interval
 };
 
 export const SCORING = {
@@ -75,6 +83,10 @@ export const SCORING = {
 
   // Bank
   BASE_BANK_REWARD: 1,
+
+  // Clean Kitchen Bonus
+  CLEAN_KITCHEN_BONUS: 1000,
+  CLEAN_KITCHEN_TIME: 30000, // 30 seconds
 };
 
 export const COSTS = {
@@ -94,7 +106,8 @@ export const BOSS_CONFIG = {
 
 export const POWERUPS = {
   DURATION: 5000, // ms
-  ALERT_DURATION_DOGE: 5000,
+  DOGE_DURATION: 8750, // 75% longer than base duration
+  ALERT_DURATION_DOGE: 8750,
   ALERT_DURATION_NYAN: 3000,
   TYPES: ['honey', 'ice-cream', 'beer', 'doge', 'nyan', 'moltobenny'] as const,
 };
@@ -120,6 +133,7 @@ export const INITIAL_GAME_STATE = {
   powerUps: [],
   activePowerUps: [],
   floatingScores: [],
+  floatingStars: [],
   droppedPlates: [],
   chefLane: 0,
   score: 0,
@@ -169,4 +183,7 @@ export const INITIAL_GAME_STATE = {
   },
   bossBattle: undefined,
   defeatedBossLevels: [],
+  cleanKitchenStartTime: undefined,
+  lastCleanKitchenBonusTime: undefined,
+  cleanKitchenBonusAlert: undefined,
 };

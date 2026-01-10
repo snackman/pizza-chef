@@ -1,12 +1,19 @@
-import { Customer, DroppedPlate, EmptyPlate, GameState } from '../types/game';
-import { ENTITY_SPEEDS, GAME_CONFIG, POSITIONS } from '../lib/constants';
+import {
+  Customer,
+  DroppedPlate,
+  EmptyPlate,
+  isCustomerLeaving,
+  isCustomerAffectedByPowerUps,
+  getCustomerVariant
+} from '../types/game';
+import { ENTITY_SPEEDS, GAME_CONFIG, POSITIONS, SCUMBAG_STEVE } from '../lib/constants';
 
 // --- Types for the Update Result ---
-export type CustomerUpdateEvent = 
-  | 'GAME_OVER' 
-  | 'LIFE_LOST' 
-  | 'STAR_LOST_CRITIC' 
-  | 'STAR_LOST_NORMAL';
+export type CustomerUpdateEvent =
+  | { type: 'GAME_OVER' }
+  | { type: 'LIFE_LOST'; lane: number; position: number }
+  | { type: 'STAR_LOST_CRITIC'; lane: number; position: number }
+  | { type: 'STAR_LOST_NORMAL'; lane: number; position: number };
 
 export interface CustomerUpdateResult {
   nextCustomers: Customer[];
@@ -17,13 +24,16 @@ export interface CustomerUpdateResult {
 }
 
 // --- Types for the Hit Result ---
-export type CustomerHitEvent = 
+export type CustomerHitEvent =
   | 'SERVED_NORMAL'
   | 'SERVED_CRITIC'
+  | 'SERVED_BRIAN_DOGE'
   | 'WOOZY_STEP_1'
   | 'WOOZY_STEP_2'
   | 'UNFROZEN_AND_SERVED'
-  | 'BRIAN_DROPPED_PLATE';
+  | 'BRIAN_DROPPED_PLATE'
+  | 'STEVE_FIRST_SLICE'
+  | 'STEVE_SERVED';
 
 export interface CustomerHitResult {
   updatedCustomer: Customer;
@@ -79,7 +89,7 @@ export const updateCustomerPositions = (
         processedCustomer.textMessage = "Just plain, thanks.";
         processedCustomer.textMessageTime = now;
       }
-    } else if (!processedCustomer.woozy && !processedCustomer.served && !processedCustomer.leaving && !processedCustomer.disappointed) {
+    } else if (isCustomerAffectedByPowerUps(processedCustomer)) {
       // Normal customers get effects
       if (hasHoney && hasIceCream) {
         if (honeyEnd > iceCreamEnd) {
@@ -106,15 +116,25 @@ export const updateCustomerPositions = (
 
     // Clear effects if powerups are gone
     if (!hasIceCream && (processedCustomer.frozen || processedCustomer.shouldBeFrozenByIceCream)) {
+      // If woozy customer was frozen, cure them when ice cream ends
+      if (processedCustomer.woozy && processedCustomer.frozen) {
+        processedCustomer.woozy = false;
+        processedCustomer.woozyState = 'drooling';
+      }
       processedCustomer.frozen = false;
       processedCustomer.shouldBeFrozenByIceCream = false;
     }
     if (!hasHoney && processedCustomer.hotHoneyAffected) {
+      // If woozy customer had hot honey, cure them when honey ends
+      if (processedCustomer.woozy) {
+        processedCustomer.woozy = false;
+        processedCustomer.woozyState = 'drooling';
+      }
       processedCustomer.hotHoneyAffected = false;
     }
 
     // C. Movement Calculations
-    const isDeparting = processedCustomer.served || processedCustomer.disappointed || processedCustomer.vomit || processedCustomer.leaving;
+    const isDeparting = isCustomerLeaving(processedCustomer);
 
     // 1. Nyan Cat pushed (Zoom!)
     if (processedCustomer.brianNyaned) {
@@ -154,10 +174,12 @@ export const updateCustomerPositions = (
         const newPos = processedCustomer.position - (processedCustomer.speed * 0.75);
         if (newPos <= GAME_CONFIG.CHEF_X_POSITION) {
           // Game Over Condition for Woozy
-          events.push('LIFE_LOST');
-          events.push(processedCustomer.critic ? 'STAR_LOST_CRITIC' : 'STAR_LOST_NORMAL');
-          events.push('GAME_OVER'); // Technically game over logic checks lives later, but this signals a fail state
-          
+          events.push({ type: 'LIFE_LOST', lane: processedCustomer.lane, position: newPos });
+          events.push(getCustomerVariant(processedCustomer) === 'critic'
+            ? { type: 'STAR_LOST_CRITIC', lane: processedCustomer.lane, position: newPos }
+            : { type: 'STAR_LOST_NORMAL', lane: processedCustomer.lane, position: newPos });
+          events.push({ type: 'GAME_OVER' }); // Technically game over logic checks lives later, but this signals a fail state
+
           processedCustomer.disappointed = true;
           processedCustomer.movingRight = true;
           processedCustomer.woozy = false;
@@ -188,7 +210,7 @@ export const updateCustomerPositions = (
       // Moving Left (Approaching)
       const speedMod = processedCustomer.hotHoneyAffected ? 0.5 : 1;
       const newPos = processedCustomer.position - (processedCustomer.speed * speedMod);
-      
+
       if (newPos <= GAME_CONFIG.CHEF_X_POSITION) {
         // Brian Reaches Chef -> Complains and Leaves (No Game Over)
         processedCustomer.position = newPos;
@@ -205,16 +227,66 @@ export const updateCustomerPositions = (
       return;
     }
 
+    // 6.5. Scumbag Steve Special Movement (Lane Changing)
+    if (processedCustomer.scumbagSteve && !isDeparting) {
+      // Check for lane change
+      const lastChange = processedCustomer.lastLaneChangeTime || 0;
+      if (now - lastChange >= SCUMBAG_STEVE.LANE_CHANGE_INTERVAL) {
+        if (Math.random() < SCUMBAG_STEVE.LANE_CHANGE_CHANCE) {
+          // Change to a random adjacent lane
+          const currentLane = processedCustomer.lane;
+          let newLane: number;
+          if (currentLane === 0) {
+            newLane = 1;
+          } else if (currentLane === GAME_CONFIG.LANE_COUNT - 1) {
+            newLane = GAME_CONFIG.LANE_COUNT - 2;
+          } else {
+            newLane = Math.random() < 0.5 ? currentLane - 1 : currentLane + 1;
+          }
+          processedCustomer.lane = newLane;
+        }
+        processedCustomer.lastLaneChangeTime = now;
+      }
+
+      // Steve moves (faster than normal, set in spawn)
+      if (processedCustomer.movingRight) {
+        processedCustomer.position += processedCustomer.speed;
+        nextCustomers.push(processedCustomer);
+        return;
+      }
+
+      const newPos = processedCustomer.position - processedCustomer.speed;
+      if (newPos <= GAME_CONFIG.CHEF_X_POSITION) {
+        // Steve reaches chef without enough pizza -> Disappointed
+        events.push({ type: 'LIFE_LOST', lane: processedCustomer.lane, position: newPos });
+        events.push({ type: 'STAR_LOST_NORMAL', lane: processedCustomer.lane, position: newPos });
+        events.push({ type: 'GAME_OVER' });
+
+        processedCustomer.disappointed = true;
+        processedCustomer.movingRight = true;
+        processedCustomer.position = newPos;
+        processedCustomer.textMessage = "I wanted more!";
+        processedCustomer.textMessageTime = now;
+        customerStreakReset = true;
+      } else {
+        processedCustomer.position = newPos;
+      }
+      nextCustomers.push(processedCustomer);
+      return;
+    }
+
     // 7. Standard Customer Movement (Approaching)
     const speedMod = processedCustomer.hotHoneyAffected ? 0.5 : 1;
     const newPos = processedCustomer.position - (processedCustomer.speed * speedMod);
 
     if (newPos <= GAME_CONFIG.CHEF_X_POSITION) {
       // Reached Chef -> Angry -> Life Lost
-      events.push('LIFE_LOST');
-      events.push(processedCustomer.critic ? 'STAR_LOST_CRITIC' : 'STAR_LOST_NORMAL');
-      events.push('GAME_OVER');
-      
+      events.push({ type: 'LIFE_LOST', lane: processedCustomer.lane, position: newPos });
+      events.push(getCustomerVariant(processedCustomer) === 'critic'
+        ? { type: 'STAR_LOST_CRITIC', lane: processedCustomer.lane, position: newPos }
+        : { type: 'STAR_LOST_NORMAL', lane: processedCustomer.lane, position: newPos });
+      events.push({ type: 'GAME_OVER' });
+
       processedCustomer.disappointed = true;
       processedCustomer.movingRight = true;
       processedCustomer.hotHoneyAffected = false;
@@ -223,7 +295,7 @@ export const updateCustomerPositions = (
     } else {
       processedCustomer.position = newPos;
     }
-    
+
     nextCustomers.push(processedCustomer);
   });
 
@@ -237,13 +309,40 @@ export const updateCustomerPositions = (
  */
 export const processCustomerHit = (
   customer: Customer,
-  now: number
+  now: number,
+  dogeActive: boolean = false
 ): CustomerHitResult => {
   const events: CustomerHitEvent[] = [];
   const newEntities: { droppedPlate?: DroppedPlate; emptyPlate?: EmptyPlate } = {};
-  
-  // 1. Bad Luck Brian (Fail State)
+
+  // 1. Bad Luck Brian
   if (customer.badLuckBrian) {
+    // Doge power-up lets Brian be served successfully!
+    if (dogeActive) {
+      events.push('SERVED_BRIAN_DOGE');
+      newEntities.emptyPlate = {
+        id: `plate-${now}-${customer.id}`,
+        lane: customer.lane,
+        position: customer.position,
+        speed: ENTITY_SPEEDS.PLATE
+      };
+      return {
+        updatedCustomer: {
+          ...customer,
+          served: true,
+          hasPlate: false,
+          flipped: false,
+          textMessage: "Such yum!",
+          textMessageTime: now,
+          frozen: false,
+          woozy: false
+        },
+        events,
+        newEntities
+      };
+    }
+
+    // Normal Brian behavior - drops the plate
     events.push('BRIAN_DROPPED_PLATE');
     const droppedPlate: DroppedPlate = {
       id: `dropped-${now}-${customer.id}`,
@@ -323,8 +422,74 @@ export const processCustomerHit = (
     }
   }
 
-  // 4. Normal / Hot Honey Customers (Standard Serve)
-  events.push(customer.critic ? 'SERVED_CRITIC' : 'SERVED_NORMAL');
+  // 4. Scumbag Steve (Two-Slice Requirement, Angled Plate, No Payment)
+  if (customer.scumbagSteve) {
+    const slicesReceived = (customer.slicesReceived || 0) + 1;
+
+    // Calculate target lane for angled throw (toward adjacent oven)
+    let targetLane: number;
+    if (customer.lane === 0) {
+      targetLane = 1; // Top lane throws to lane below
+    } else if (customer.lane === GAME_CONFIG.LANE_COUNT - 1) {
+      targetLane = GAME_CONFIG.LANE_COUNT - 2; // Bottom lane throws to lane above
+    } else {
+      // Middle lanes randomly throw up or down
+      targetLane = Math.random() < 0.5 ? customer.lane - 1 : customer.lane + 1;
+    }
+
+    if (slicesReceived < SCUMBAG_STEVE.SLICES_REQUIRED) {
+      // First slice - not satisfied yet
+      events.push('STEVE_FIRST_SLICE');
+      newEntities.emptyPlate = {
+        id: `plate-${now}-${customer.id}-first`,
+        lane: customer.lane, // Start at Steve's lane
+        position: customer.position,
+        speed: ENTITY_SPEEDS.PLATE,
+        // Angled throw properties
+        startLane: customer.lane,
+        startPosition: customer.position,
+        targetLane: targetLane
+      };
+      return {
+        updatedCustomer: {
+          ...customer,
+          slicesReceived,
+          textMessage: "I'm still hungry!",
+          textMessageTime: now
+        },
+        events,
+        newEntities
+      };
+    } else {
+      // Second slice - Steve is satisfied but doesn't pay
+      events.push('STEVE_SERVED');
+      newEntities.emptyPlate = {
+        id: `plate-${now}-${customer.id}`,
+        lane: customer.lane, // Start at Steve's lane
+        position: customer.position,
+        speed: ENTITY_SPEEDS.PLATE,
+        // Angled throw properties
+        startLane: customer.lane,
+        startPosition: customer.position,
+        targetLane: targetLane
+      };
+      return {
+        updatedCustomer: {
+          ...customer,
+          served: true,
+          hasPlate: false,
+          slicesReceived,
+          textMessage: "Thanks sucker!",
+          textMessageTime: now
+        },
+        events,
+        newEntities
+      };
+    }
+  }
+
+  // 5. Normal / Hot Honey Customers (Standard Serve)
+  events.push(getCustomerVariant(customer) === 'critic' ? 'SERVED_CRITIC' : 'SERVED_NORMAL');
   newEntities.emptyPlate = {
     id: `plate-${now}-${customer.id}`,
     lane: customer.lane,

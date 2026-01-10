@@ -82,7 +82,7 @@ export const checkLifeGain = (
   // HOWEVER, looking at legacy code:
   // "if (newState.happyCustomers % 8 === 0 ...)"
   // This implies we check the *accumulated* value.
-  if (!isCritic && happyCustomers > 0 && happyCustomers % 8 === 0) {
+  if (happyCustomers > 0 && happyCustomers % 8 === 0) {
     const stars = Math.min(dogeMultiplier, GAME_CONFIG.MAX_LIVES - currentLives);
     livesToAdd += stars;
   }

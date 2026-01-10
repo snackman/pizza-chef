@@ -70,6 +70,37 @@ export const initializeBossBattle = (now: number): BossBattle => {
     bossVulnerable: false,
     bossDefeated: false,
     bossPosition: BOSS_CONFIG.BOSS_POSITION,
+    bossLane: 1.5, // Start in the middle (between lanes 1 and 2)
+    bossLaneDirection: 1, // Start moving down
+  };
+};
+
+/**
+ * Update boss vertical position (moves up and down between lanes)
+ */
+export const updateBossLane = (bossBattle: BossBattle): BossBattle => {
+  if (!bossBattle.active || bossBattle.bossDefeated) return bossBattle;
+
+  const BOSS_LANE_SPEED = 0.02; // How fast the boss moves vertically
+  const MIN_LANE = 0.5;
+  const MAX_LANE = 2.5;
+
+  let newLane = bossBattle.bossLane + (BOSS_LANE_SPEED * bossBattle.bossLaneDirection);
+  let newDirection = bossBattle.bossLaneDirection;
+
+  // Bounce off top and bottom
+  if (newLane >= MAX_LANE) {
+    newLane = MAX_LANE;
+    newDirection = -1;
+  } else if (newLane <= MIN_LANE) {
+    newLane = MIN_LANE;
+    newDirection = 1;
+  }
+
+  return {
+    ...bossBattle,
+    bossLane: newLane,
+    bossLaneDirection: newDirection,
   };
 };
 
@@ -178,7 +209,11 @@ export const processSliceBossCollisions = (
   slices.forEach(slice => {
     if (alreadyConsumedIds.has(slice.id) || consumedSliceIds.has(slice.id)) return;
 
-    if (Math.abs(updatedBossBattle.bossPosition - slice.position) < 10) {
+    // Check both horizontal position AND vertical lane proximity
+    const horizontalHit = Math.abs(updatedBossBattle.bossPosition - slice.position) < 10;
+    const verticalHit = Math.abs(updatedBossBattle.bossLane - slice.lane) < 1.2; // Boss is roughly 1 lane tall
+
+    if (horizontalHit && verticalHit) {
       consumedSliceIds.add(slice.id);
       updatedBossBattle.bossHealth -= 1;
 
@@ -299,6 +334,9 @@ export const processBossTick = (
     ...bossBattle,
     minions: currentMinions,
   };
+
+  // 3.5. Update boss vertical movement
+  currentBossBattle = updateBossLane(currentBossBattle);
 
   // 4. Process slice-boss collisions (if vulnerable)
   const bossCollisionResult = processSliceBossCollisions(

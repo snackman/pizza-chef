@@ -5,8 +5,22 @@ interface EmptyPlateProps {
   plate: EmptyPlateType;
 }
 
+const OVEN_POSITION = 10; // Target X position (near the ovens)
+
 const EmptyPlate: React.FC<EmptyPlateProps> = ({ plate }) => {
-  const topPercent = plate.lane * 25 + 6;
+  // Calculate visual lane for angled throws
+  let visualLane = plate.lane;
+
+  if (plate.targetLane !== undefined && plate.startLane !== undefined && plate.startPosition !== undefined) {
+    // Interpolate lane based on horizontal progress
+    const totalDistance = plate.startPosition - OVEN_POSITION;
+    const traveled = plate.startPosition - plate.position;
+    const progress = Math.min(1, Math.max(0, traveled / totalDistance));
+
+    visualLane = plate.startLane + (plate.targetLane - plate.startLane) * progress;
+  }
+
+  const topPercent = visualLane * 25 + 6;
 
   return (
     <div

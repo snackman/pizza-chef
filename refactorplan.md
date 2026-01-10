@@ -342,13 +342,15 @@ export const NYAN_CONFIG = {
 
 ## Success Criteria
 
-- [ ] `useGameLogic.ts` under 400 lines (currently 923)
+- [ ] `useGameLogic.ts` under 400 lines (currently 883)
 - [ ] `updateGame` function under 100 lines (currently ~484)
-- [ ] No duplicate power-up effect logic
+- [x] No duplicate power-up effect logic
 - [ ] All magic numbers in constants
 - [x] Boss system fully extracted and tested
 - [x] Spawn system fully extracted and tested
 - [x] Plate system fully extracted and tested
+- [x] Integrated test suite covering core systems (32 tests passing)
+- [x] Customer type helpers implemented (Phase 3)
 
 ---
 
@@ -386,3 +388,59 @@ Extracting this would require a complex result object and careful handling of si
 - [x] Deleted unused `checkStarPowerAutoFeed()` function (-26 lines from powerUpSystem.ts)
 - [x] Consolidated `debugActivatePowerUp` to use `processPowerUpCollection` (-40 lines from useGameLogic.ts)
 - [x] Total reduction: **-66 lines**
+
+## Integrated Test Suite Created
+
+Added vitest test suite covering core game logic systems:
+
+### Test Files
+- `src/logic/customerSystem.test.ts` - 23 tests
+- `src/logic/powerUpSystem.test.ts` - 5 tests
+- `src/logic/nyanSystem.test.ts` - 4 tests
+
+### Coverage
+- **Customer Movement**: approaching, leaving, off-screen removal
+- **Customer Disappointment**: reaching chef, life loss events
+- **Frozen Effect (Ice Cream)**: freeze activation, Brian immunity, no movement when frozen
+- **Hot Honey Effect**: speed reduction, critic immunity ("Just plain, thanks."), Brian immunity ("I can't do spicy.")
+- **Woozy Movement**: bidirectional swaying
+- **processCustomerHit**: normal serve, critic serve, Brian drops, frozen unfreeze, woozy 2-step process
+- **Bad Luck Brian**: special movement, complaint on reaching chef (no life loss)
+- **Nyan Cat Effect**: customer push (brianNyaned)
+- **Power-Up Expiration**: removal and star power detection
+- **Power-Up Collection**: timed activation, star power effects, beer+woozy=vomit
+- **Nyan Sweep**: movement and collision detection
+
+### Configuration
+- vitest.config.ts with globals and node environment
+- Run with: `npx vitest run`
+
+## Phase 3 Customer Type Refactor Complete
+
+Added new customer state machine types and helper functions for cleaner code:
+
+### New Types Added (game.ts)
+```typescript
+export type CustomerState = 'approaching' | 'served' | 'disappointed' | 'leaving' | 'vomit';
+export type CustomerVariant = 'normal' | 'critic' | 'badLuckBrian';
+export type WoozyState = 'normal' | 'drooling' | 'satisfied';
+```
+
+### Helper Functions Added (game.ts)
+- `isCustomerLeaving(c)` - Check if customer is in any departure state
+- `isCustomerApproaching(c)` - Check if customer is still approaching
+- `getCustomerVariant(c)` - Get customer type: normal, critic, or badLuckBrian
+- `isCustomerAffectedByPowerUps(c)` - Check if customer can receive power-up effects
+
+### Files Updated
+- **customerSystem.ts**: Uses `isCustomerLeaving`, `isCustomerAffectedByPowerUps`, `getCustomerVariant`
+- **spawnSystem.ts**: Uses `CustomerVariant` type for cleaner customer creation
+- **useGameLogic.ts**: Uses `isCustomerLeaving`, `getCustomerVariant` for collision handling
+- **Customer.tsx**: Uses `getCustomerVariant` for cleaner display logic
+
+### Benefits
+- Single source of truth for state checks
+- Clearer code intent (e.g., `isCustomerLeaving(c)` vs `c.served || c.disappointed || ...`)
+- Type safety for customer variants
+- Foundation for future state machine migration
+- All 32 tests still passing

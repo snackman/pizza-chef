@@ -6,6 +6,7 @@ import DroppedPlate from './DroppedPlate';
 import PowerUp from './PowerUp';
 import PizzaSliceStack from './PizzaSliceStack';
 import FloatingScore from './FloatingScore';
+import FloatingStar from './FloatingStar';
 import Boss from './Boss';
 import { GameState } from '../types/game';
 import pizzaShopBg from '/pizza shop background v2.png';
@@ -22,6 +23,7 @@ interface GameBoardProps {
 const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
   const lanes = [0, 1, 2, 3];
   const [completedScores, setCompletedScores] = useState<Set<string>>(new Set());
+  const [completedStars, setCompletedStars] = useState<Set<string>>(new Set());
 
   // ✅ Measure board size (for px-based translate3d positioning)
   const boardRef = useRef<HTMLDivElement | null>(null);
@@ -46,6 +48,10 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
 
   const handleScoreComplete = useCallback((id: string) => {
     setCompletedScores(prev => new Set(prev).add(id));
+  }, []);
+
+  const handleStarComplete = useCallback((id: string) => {
+    setCompletedStars(prev => new Set(prev).add(id));
   }, []);
 
   const getOvenStatus = (lane: number) => {
@@ -130,7 +136,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
       })}
 
       {/* ✅ Chef (no scale(15), positioned directly on board) */}
-      {!gameState.nyanSweep?.active && (
+      {/* Hide chef when paused (but show game over chef) */}
+      {!gameState.nyanSweep?.active && (!gameState.paused || gameState.gameOver) && (
         <div
           className="absolute flex items-center justify-center"
           style={{
@@ -244,6 +251,19 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
           lane={floatingScore.lane}
           position={floatingScore.position}
           onComplete={handleScoreComplete}
+        />
+      ))}
+
+      {/* Floating star indicators */}
+      {gameState.floatingStars.filter(fs => !completedStars.has(fs.id)).map((floatingStar) => (
+        <FloatingStar
+          key={floatingStar.id}
+          id={floatingStar.id}
+          isGain={floatingStar.isGain}
+          count={floatingStar.count}
+          lane={floatingStar.lane}
+          position={floatingStar.position}
+          onComplete={handleStarComplete}
         />
       ))}
 

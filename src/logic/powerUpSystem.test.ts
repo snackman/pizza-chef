@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { processPowerUpCollection, processPowerUpExpirations, checkStarPowerAutoFeed } from './powerUpSystem';
+import { processPowerUpCollection, processPowerUpExpirations } from './powerUpSystem';
 import { GameState, Customer } from '../types/game';
 import { INITIAL_GAME_STATE } from '../lib/constants';
 
@@ -88,22 +88,4 @@ describe('powerUpSystem', () => {
         });
     });
 
-    describe('checkStarPowerAutoFeed', () => {
-        it('identifies customers in range', () => {
-            const customers: Customer[] = [
-                // In range (lane 1, pos 50, chef at 50)
-                { id: 'c1', lane: 1, position: 50, speed: 0, served: false, hasPlate: false, leaving: false, disappointed: false, woozy: false, vomit: false, movingRight: false, critic: false, badLuckBrian: false, flipped: false },
-                // Out of range (lane 1, pos 80)
-                { id: 'c2', lane: 1, position: 80, speed: 0, served: false, hasPlate: false, leaving: false, disappointed: false, woozy: false, vomit: false, movingRight: false, critic: false, badLuckBrian: false, flipped: false },
-                // Wrong lane
-                { id: 'c3', lane: 2, position: 50, speed: 0, served: false, hasPlate: false, leaving: false, disappointed: false, woozy: false, vomit: false, movingRight: false, critic: false, badLuckBrian: false, flipped: false }
-            ];
-
-            const result = checkStarPowerAutoFeed(customers, 1, 50, 10);
-
-            expect(result).toContain('c1');
-            expect(result).not.toContain('c2');
-            expect(result).not.toContain('c3');
-        });
-    });
 });

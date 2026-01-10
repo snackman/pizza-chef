@@ -49,6 +49,20 @@ export const checkChefPowerUpCollision = (
 };
 
 /**
+ * Calculates the visual lane for a plate (handles angled throws)
+ */
+const getPlateVisualLane = (plate: EmptyPlate): number => {
+    if (plate.targetLane !== undefined && plate.startLane !== undefined && plate.startPosition !== undefined) {
+        const OVEN_POSITION = 10;
+        const totalDistance = plate.startPosition - OVEN_POSITION;
+        const traveled = plate.startPosition - plate.position;
+        const progress = Math.min(1, Math.max(0, traveled / totalDistance));
+        return plate.startLane + (plate.targetLane - plate.startLane) * progress;
+    }
+    return plate.lane;
+};
+
+/**
  * Checks if the chef has caught an empty plate.
  */
 export const checkChefPlateCollision = (
@@ -56,7 +70,10 @@ export const checkChefPlateCollision = (
     plate: EmptyPlate,
     threshold: number = 10
 ): boolean => {
-    return plate.lane === chefLane && plate.position <= threshold;
+    const visualLane = getPlateVisualLane(plate);
+    // For angled plates, check if within 0.5 lane distance for more forgiving collision
+    const laneTolerance = plate.targetLane !== undefined ? 0.5 : 0;
+    return Math.abs(visualLane - chefLane) <= laneTolerance && plate.position <= threshold;
 };
 
 /**

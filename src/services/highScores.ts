@@ -97,6 +97,16 @@ export async function checkIfTopScore(score: number, limit: number = 10): Promis
   return score > lowestTopScore;
 }
 
+export async function checkIfNumberOneScore(score: number): Promise<boolean> {
+  const topScores = await getTopScores(1);
+
+  if (topScores.length === 0) {
+    return true; // No scores yet, this is #1
+  }
+
+  return score >= topScores[0].score;
+}
+
 export async function submitScore(playerName: string, score: number, gameSessionId?: string): Promise<boolean> {
   // Try Supabase first
   if (supabase) {
