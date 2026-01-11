@@ -45,7 +45,6 @@ const ControlsOverlay: React.FC<ControlsOverlayProps> = ({ onClose }) => {
           alt="Game Controls"
           className="w-full h-auto rounded-lg shadow-2xl"
         />
-        <p className="text-white text-xs mt-2 opacity-80">Press any key or click to close</p>
       </div>
     </div>
   );
