@@ -184,11 +184,14 @@ const processHelperAction = (
     return { updatedHelper, updatedOvens, newSlices, caughtPlateIds, events, statsUpdates, scoreGained };
   }
 
-  // Priority 3: Serve customers
+  // Priority 3: Serve customers (only if needed)
   const approachingCustomers = gameState.customers.filter(
     c => c.lane === currentLane && !c.served && !c.disappointed && !c.vomit && !c.leaving && c.position < 85
   );
-  if (approachingCustomers.length > 0 && updatedHelper.availableSlices > 0) {
+  // Count slices already heading to this lane
+  const slicesInLane = gameState.pizzaSlices.filter(s => s.lane === currentLane).length + newSlices.filter(s => s.lane === currentLane).length;
+  // Only throw if there are more customers than slices already in flight
+  if (approachingCustomers.length > slicesInLane && updatedHelper.availableSlices > 0) {
     const newSlice: PizzaSlice = {
       id: `${helper.id}-pizza-${now}-${currentLane}`,
       lane: currentLane,
