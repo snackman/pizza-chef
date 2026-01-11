@@ -209,15 +209,36 @@ function App() {
     // NOTE: you had [isMobile, gameState]; keeping it to preserve behavior, but it's heavier than needed.
   }, [isMobile, gameState]);
 
-  // Prevent space bar from triggering button clicks globally (browser default behavior)
+  // Track menu state for space bar blocking
+  const menuStateRef = useRef({ showSplash, showGameOver, showHighScores, showControlsOverlay, showPauseMenu, showStore: gameState.showStore });
   useEffect(() => {
-    const preventSpaceOnButtons = (event: KeyboardEvent) => {
-      if (event.key === ' ' && (event.target as HTMLElement)?.tagName === 'BUTTON') {
+    menuStateRef.current = { showSplash, showGameOver, showHighScores, showControlsOverlay, showPauseMenu, showStore: gameState.showStore };
+  }, [showSplash, showGameOver, showHighScores, showControlsOverlay, showPauseMenu, gameState.showStore]);
+
+  // Prevent space bar from triggering button clicks when menus are showing
+  useEffect(() => {
+    const preventSpaceInMenus = (event: KeyboardEvent) => {
+      if (event.key !== ' ') return;
+
+      // Skip if user is typing in an input
+      const target = event.target as HTMLElement;
+      if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      // Block space bar if any menu/overlay is showing
+      const { showSplash, showGameOver, showHighScores, showControlsOverlay, showPauseMenu, showStore } = menuStateRef.current;
+      if (showSplash || showGameOver || showHighScores || showControlsOverlay || showPauseMenu || showStore) {
         event.preventDefault();
+        event.stopPropagation();
       }
     };
-    window.addEventListener('keydown', preventSpaceOnButtons, { capture: true });
-    return () => window.removeEventListener('keydown', preventSpaceOnButtons, { capture: true });
+    document.addEventListener('keydown', preventSpaceInMenus, { capture: true });
+    document.addEventListener('keyup', preventSpaceInMenus, { capture: true });
+    return () => {
+      document.removeEventListener('keydown', preventSpaceInMenus, { capture: true });
+      document.removeEventListener('keyup', preventSpaceInMenus, { capture: true });
+    };
   }, []);
 
   // ✅ Stable keyboard listener (no re-bind every tick)
