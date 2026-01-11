@@ -86,7 +86,22 @@ export interface NyanSweep {
   startingLane: number;
 }
 
-export type PowerUpType = 'honey' | 'ice-cream' | 'beer' | 'star' | 'doge' | 'nyan' | 'moltobenny' | 'speed' | 'slow';
+export interface PepeHelper {
+  id: 'franco' | 'frank';
+  lane: number;
+  availableSlices: number;
+  lastActionTime: number;
+}
+
+export interface PepeHelpers {
+  active: boolean;
+  startTime: number;
+  endTime: number;
+  franco: PepeHelper;
+  frank: PepeHelper;
+}
+
+export type PowerUpType = 'honey' | 'ice-cream' | 'beer' | 'star' | 'doge' | 'nyan' | 'moltobenny' | 'pepe' | 'speed' | 'slow';
 
 export interface PowerUp {
   id: string;
@@ -156,6 +171,7 @@ export interface BossBattle {
   bossPosition: number;
   bossLane: number;
   bossLaneDirection: number; // 1 = moving down, -1 = moving up
+  bossXDirection: number; // 1 = moving right, -1 = moving left
   hitsReceived?: number; // Track hits for Papa John sprite changes
 }
 
@@ -175,6 +191,7 @@ export interface GameStats {
     doge: number;
     nyan: number;
     moltobenny: number;
+    pepe: number;
     speed: number;
     slow: number;
   };
@@ -220,6 +237,7 @@ export interface GameState {
   starPowerActive?: boolean;
   powerUpAlert?: { type: PowerUpType; endTime: number; chefLane: number };
   nyanSweep?: NyanSweep;
+  pepeHelpers?: PepeHelpers;
   stats: GameStats;
   bossBattle?: BossBattle;
   defeatedBossLevels: number[];

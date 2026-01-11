@@ -92,39 +92,67 @@ export const initializeBossBattle = (
     minions: isPapaJohn ? [] : createWaveMinions(1, now, config.MINIONS_PER_WAVE),
     bossVulnerable: isPapaJohn, // Papa John is immediately vulnerable
     bossDefeated: false,
-    bossPosition: BOSS_CONFIG.BOSS_POSITION,
+    bossPosition: isPapaJohn ? 50 : BOSS_CONFIG.BOSS_POSITION, // Papa John starts in the middle
     bossLane: 1.5, // Start in the middle (between lanes 1 and 2)
     bossLaneDirection: 1, // Start moving down
+    bossXDirection: -1, // Start moving left
     hitsReceived: 0, // Track hits for Papa John sprite changes
   };
 };
 
 /**
- * Update boss vertical position (moves up and down between lanes)
+ * Update boss position (moves around the board)
+ * Papa John runs all over, Dominos stays on the right
  */
 export const updateBossLane = (bossBattle: BossBattle): BossBattle => {
   if (!bossBattle.active || bossBattle.bossDefeated) return bossBattle;
 
-  const BOSS_LANE_SPEED = 0.02; // How fast the boss moves vertically
+  const isPapaJohn = bossBattle.bossType === 'papaJohn';
+
+  // Vertical movement (both bosses)
+  const BOSS_LANE_SPEED = isPapaJohn ? 0.04 : 0.02; // Papa John moves faster
   const MIN_LANE = 0.5;
   const MAX_LANE = 2.5;
 
   let newLane = bossBattle.bossLane + (BOSS_LANE_SPEED * bossBattle.bossLaneDirection);
-  let newDirection = bossBattle.bossLaneDirection;
+  let newLaneDirection = bossBattle.bossLaneDirection;
 
   // Bounce off top and bottom
   if (newLane >= MAX_LANE) {
     newLane = MAX_LANE;
-    newDirection = -1;
+    newLaneDirection = -1;
   } else if (newLane <= MIN_LANE) {
     newLane = MIN_LANE;
-    newDirection = 1;
+    newLaneDirection = 1;
+  }
+
+  // Horizontal movement (Papa John only - runs all over!)
+  let newPosition = bossBattle.bossPosition;
+  let newXDirection = bossBattle.bossXDirection;
+
+  if (isPapaJohn) {
+    const BOSS_X_SPEED = 0.3; // How fast Papa John runs horizontally
+    const MIN_X = 20; // Don't go too close to chef
+    const MAX_X = 85; // Right edge
+
+    newPosition = bossBattle.bossPosition + (BOSS_X_SPEED * bossBattle.bossXDirection);
+
+    // Bounce off left and right
+    if (newPosition >= MAX_X) {
+      newPosition = MAX_X;
+      newXDirection = -1;
+    } else if (newPosition <= MIN_X) {
+      newPosition = MIN_X;
+      newXDirection = 1;
+    }
   }
 
   return {
     ...bossBattle,
     bossLane: newLane,
-    bossLaneDirection: newDirection,
+    bossLaneDirection: newLaneDirection,
+    bossPosition: newPosition,
+    bossXDirection: newXDirection,
   };
 };
 

@@ -8,6 +8,7 @@ import PizzaSliceStack from './PizzaSliceStack';
 import FloatingScore from './FloatingScore';
 import FloatingStar from './FloatingStar';
 import Boss from './Boss';
+import PepeHelpers from './PepeHelpers';
 import { GameState } from '../types/game';
 import pizzaShopBg from '/pizza shop background v2.png';
 import { sprite } from '../lib/assets';
@@ -174,6 +175,9 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
           </div>
         </div>
       )}
+
+      {/* Pepe Helpers - Franco-Pepe and Frank-Pepe */}
+      <PepeHelpers helpers={gameState.pepeHelpers} />
 
       {/* Nyan Cat Chef - positioned directly on game board during sweep */}
       {gameState.nyanSweep?.active && (

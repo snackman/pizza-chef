@@ -118,9 +118,10 @@ export const DOMINOS_CONFIG = {
 export const POWERUPS = {
   DURATION: 5000, // ms
   DOGE_DURATION: 8750, // 75% longer than base duration
+  PEPE_DURATION: 8000, // 8 seconds
   ALERT_DURATION_DOGE: 8750,
   ALERT_DURATION_NYAN: 3000,
-  TYPES: ['honey', 'ice-cream', 'beer', 'doge', 'nyan', 'moltobenny'] as const,
+  TYPES: ['honey', 'ice-cream', 'beer', 'doge', 'nyan', 'moltobenny', 'pepe'] as const,
 };
 
 export const NYAN_CONFIG = {
@@ -128,6 +129,11 @@ export const NYAN_CONFIG = {
   DURATION: 2600,         // Total sweep duration in ms
   LANE_CHANGE_SPEED: 0.01, // Vertical movement speed
   DT_MAX: 100,            // Max delta time per frame
+};
+
+export const PEPE_CONFIG = {
+  ACTION_INTERVAL: 100,   // ms between helper actions (famous chefs are fast!)
+  STARTING_SLICES: 4,     // Famous chefs come prepared
 };
 
 export const TIMINGS = {
@@ -201,6 +207,7 @@ export const INITIAL_GAME_STATE = {
       doge: 0,
       nyan: 0,
       moltobenny: 0,
+      pepe: 0,
       speed: 0,
       slow: 0,
     },

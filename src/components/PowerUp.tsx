@@ -10,6 +10,7 @@ const dogeImg = sprite("doge.png");
 const nyanImg = sprite("nyan-cat.png");
 const moltobennyImg = sprite("molto-benny.png");
 const starImg = sprite("star.png");
+const pepeImg = sprite("pepe.png");
 
 interface PowerUpProps {
   powerUp: PowerUpType;
@@ -42,6 +43,8 @@ const PowerUp: React.FC<PowerUpProps> = ({ powerUp, boardWidth, boardHeight }) =
         return moltobennyImg;
       case 'star':
         return starImg;
+      case 'pepe':
+        return pepeImg;
       default:
         return null;
     }

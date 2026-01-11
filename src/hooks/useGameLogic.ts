@@ -75,6 +75,11 @@ import {
   processPlates
 } from '../logic/plateSystem';
 
+import {
+  processPepeHelperTick,
+  checkPepeHelpersExpired
+} from '../logic/pepeHelperSystem';
+
 // --- Store System (actions only) ---
 import {
   upgradeOven as upgradeOvenStore,
@@ -500,6 +505,40 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       if (newState.powerUpAlert && now >= newState.powerUpAlert.endTime) {
         if (newState.powerUpAlert.type !== 'doge' || !hasDoge) newState.powerUpAlert = undefined;
+      }
+
+      // --- 4b. PEPE HELPERS PROCESSING ---
+      if (newState.pepeHelpers?.active) {
+        // Check expiration first
+        if (checkPepeHelpersExpired(newState.pepeHelpers, now)) {
+          newState.pepeHelpers = undefined;
+        } else {
+          // Process helper actions
+          const pepeResult = processPepeHelperTick(newState, now);
+
+          // Apply state updates
+          if (pepeResult.updatedState.ovens) newState.ovens = pepeResult.updatedState.ovens;
+          if (pepeResult.updatedState.pizzaSlices) newState.pizzaSlices = pepeResult.updatedState.pizzaSlices;
+          if (pepeResult.updatedState.emptyPlates) newState.emptyPlates = pepeResult.updatedState.emptyPlates;
+          if (pepeResult.updatedState.pepeHelpers) newState.pepeHelpers = pepeResult.updatedState.pepeHelpers;
+          if (pepeResult.updatedState.stats) newState.stats = pepeResult.updatedState.stats;
+          if (pepeResult.updatedState.score !== undefined) newState.score = pepeResult.updatedState.score;
+
+          // Handle events (sounds)
+          pepeResult.events.forEach(event => {
+            if (event.type === 'OVEN_STARTED') soundManager.ovenStart();
+            if (event.type === 'PIZZA_PULLED') soundManager.servePizza();
+            if (event.type === 'CUSTOMER_SERVED') soundManager.servePizza();
+            if (event.type === 'PLATE_CAUGHT') soundManager.plateCaught();
+          });
+
+          // Add floating scores for plates caught by helpers
+          pepeResult.events.forEach(event => {
+            if (event.type === 'PLATE_CAUGHT') {
+              newState = addFloatingScore(50, event.lane, GAME_CONFIG.CHEF_X_POSITION, newState);
+            }
+          });
+        }
       }
 
       // --- 5. STAR POWER AUTO-REFILL SLICES ---

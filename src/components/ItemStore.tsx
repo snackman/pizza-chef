@@ -170,17 +170,29 @@ const ItemStore: React.FC<ItemStoreProps> = ({
           const col = current % 2;
 
           if (key === 'ArrowUp') {
-            // Try rows above, find first enabled in same column
+            // Try rows above, find first enabled in same column first
             for (let r = row - 1; r >= 0; r--) {
               const target = r * 2 + col;
+              if (!disabled(target)) return target;
+            }
+            // If none in same column, try the other column in rows above
+            const otherCol = col === 0 ? 1 : 0;
+            for (let r = row - 1; r >= 0; r--) {
+              const target = r * 2 + otherCol;
               if (!disabled(target)) return target;
             }
             return current; // Stay if none found
           }
           if (key === 'ArrowDown') {
-            // Try rows below, find first enabled in same column
+            // Try rows below, find first enabled in same column first
             for (let r = row + 1; r <= 3; r++) {
               const target = r * 2 + col;
+              if (!disabled(target)) return target;
+            }
+            // If none in same column, try the other column in rows below
+            const otherCol = col === 0 ? 1 : 0;
+            for (let r = row + 1; r <= 3; r++) {
+              const target = r * 2 + otherCol;
               if (!disabled(target)) return target;
             }
             return 12; // Go to Continue

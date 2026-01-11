@@ -2,6 +2,7 @@ import { GameState, PowerUp, StarLostReason, PowerUpType, ActivePowerUp, NyanSwe
 import { GAME_CONFIG, POWERUPS, SCORING } from '../lib/constants';
 import { checkChefPowerUpCollision } from './collisionSystem';
 import { calculatePowerUpScore } from './scoringSystem';
+import { initializePepeHelpers } from './pepeHelperSystem';
 
 // Result of collecting a power-up
 export interface PowerUpCollectionResult {
@@ -120,6 +121,10 @@ export const processPowerUpCollection = (
         newState.score += moltoScore;
         newState.bank += moltoMoney;
         scoresToAdd.push({ points: moltoScore, lane: newState.chefLane, position: GAME_CONFIG.CHEF_X_POSITION });
+    } else if (powerUp.type === 'pepe') {
+        // Initialize Pepe helpers - Franco-Pepe and Frank-Pepe assist the chef
+        newState.pepeHelpers = initializePepeHelpers(now, newState.chefLane);
+        newState.activePowerUps = [...newState.activePowerUps.filter(p => p.type !== 'pepe'), { type: 'pepe', endTime: now + POWERUPS.PEPE_DURATION }];
     } else {
         // Generic timed power-up addition
         newState.activePowerUps = [...newState.activePowerUps.filter(p => p.type !== powerUp.type), { type: powerUp.type, endTime: now + POWERUPS.DURATION }];
