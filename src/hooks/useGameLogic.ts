@@ -67,6 +67,8 @@ import {
   processBossTick
 } from '../logic/bossSystem';
 
+import { initializeBossMasks } from '../logic/bossCollisionMasks';
+
 import {
   processSpawning
 } from '../logic/spawnSystem';
@@ -111,6 +113,11 @@ export const useGameLogic = (gameStarted: boolean = true) => {
   const ovenSoundStatesRef = useRef<{ [key: number]: OvenSoundState }>({ ...DEFAULT_OVEN_SOUND_STATES });
 
   const prevShowStoreRef = useRef(false);
+
+  // Initialize boss collision masks (fire and forget)
+  useEffect(() => {
+    initializeBossMasks();
+  }, []);
 
   // --- 1. THE STABLE TICK REF ---
   const latestTickRef = useRef<() => void>(() => { });

@@ -1,6 +1,7 @@
 import { GameState, BossBattle, BossMinion, PizzaSlice, BossType } from '../types/game';
 import { BOSS_CONFIG, PAPA_JOHN_CONFIG, DOMINOS_CONFIG, POSITIONS, ENTITY_SPEEDS, SCORING } from '../lib/constants';
 import { checkSliceMinionCollision, checkMinionReachedChef } from './collisionSystem';
+import { getPapaJohnMask, checkMaskCollision } from './bossCollisionMasks';
 
 export type BossEvent =
   | { type: 'MINION_DEFEATED'; lane: number; position: number; points: number }
@@ -266,6 +267,22 @@ export const processSliceBossCollisions = (
     const verticalHit = Math.abs(updatedBossBattle.bossLane - slice.lane) < 1.2; // Boss is roughly 1 lane tall
 
     if (horizontalHit && verticalHit) {
+      // For Papa John, do pixel-perfect collision check
+      if (updatedBossBattle.bossType === 'papaJohn') {
+        const mask = getPapaJohnMask(updatedBossBattle.hitsReceived || 0);
+        if (mask) {
+          // Map game coords to sprite coords (0-1 range)
+          // Boss width is 24% of board, centered at bossPosition
+          const normalizedX = (slice.position - (updatedBossBattle.bossPosition - 12)) / 24;
+          // Boss height spans 1 lane, centered at bossLane
+          const normalizedY = (slice.lane - (updatedBossBattle.bossLane - 0.5)) / 1.0;
+
+          if (!checkMaskCollision(mask, normalizedX, normalizedY)) {
+            return; // Hit transparent area - skip this slice
+          }
+        }
+      }
+
       consumedSliceIds.add(slice.id);
       updatedBossBattle.bossHealth -= 1;
       updatedBossBattle.hitsReceived = (updatedBossBattle.hitsReceived || 0) + 1;
