@@ -263,7 +263,9 @@ export const processSliceBossCollisions = (
     if (alreadyConsumedIds.has(slice.id) || consumedSliceIds.has(slice.id)) return;
 
     // Check both horizontal position AND vertical lane proximity
-    const horizontalHit = Math.abs(updatedBossBattle.bossPosition - slice.position) < 10;
+    // bossPosition is left edge, boss is 24% wide, so center is at bossPosition + 12
+    const bossCenterX = updatedBossBattle.bossPosition + 12;
+    const horizontalHit = Math.abs(bossCenterX - slice.position) < 14; // 14 = half width (12) + some margin
     const verticalHit = Math.abs(updatedBossBattle.bossLane - slice.lane) < 1.2; // Boss is roughly 1 lane tall
 
     if (horizontalHit && verticalHit) {
