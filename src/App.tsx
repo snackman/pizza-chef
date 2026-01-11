@@ -209,6 +209,17 @@ function App() {
     // NOTE: you had [isMobile, gameState]; keeping it to preserve behavior, but it's heavier than needed.
   }, [isMobile, gameState]);
 
+  // Prevent space bar from triggering button clicks globally (browser default behavior)
+  useEffect(() => {
+    const preventSpaceOnButtons = (event: KeyboardEvent) => {
+      if (event.key === ' ' && (event.target as HTMLElement)?.tagName === 'BUTTON') {
+        event.preventDefault();
+      }
+    };
+    window.addEventListener('keydown', preventSpaceOnButtons, { capture: true });
+    return () => window.removeEventListener('keydown', preventSpaceOnButtons, { capture: true });
+  }, []);
+
   // ✅ Stable keyboard listener (no re-bind every tick)
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
