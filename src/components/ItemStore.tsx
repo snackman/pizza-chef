@@ -32,6 +32,23 @@ const ItemStore: React.FC<ItemStoreProps> = ({
   const bribeCost = 25;
   const powerUpCost = 5;
 
+  // Track if player made any purchase this session (for retirement joke)
+  const madePurchaseRef = useRef(false);
+  const [showRetirementQuip, setShowRetirementQuip] = useState(false);
+
+  // Custom close handler that shows retirement joke if no purchase was made
+  const handleClose = useCallback(() => {
+    if (!madePurchaseRef.current && gameState.bank > 0) {
+      setShowRetirementQuip(true);
+      setTimeout(() => {
+        setShowRetirementQuip(false);
+        onClose();
+      }, 2000);
+    } else {
+      onClose();
+    }
+  }, [gameState.bank, onClose]);
+
   const getOvenUpgradeLevel = (lane: number) => gameState.ovenUpgrades[lane] || 0;
   const getOvenSpeedUpgradeLevel = (lane: number) => gameState.ovenSpeedUpgrades[lane] || 0;
   const getLaneUpgradeCost = (lane: number) => getUpgradeCost(getOvenUpgradeLevel(lane));
@@ -61,20 +78,20 @@ const ItemStore: React.FC<ItemStoreProps> = ({
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const menuActions = useMemo(() => [
-    () => onUpgradeOvenSpeed(0),
-    () => onUpgradeOven(0),
-    () => onUpgradeOvenSpeed(1),
-    () => onUpgradeOven(1),
-    () => onUpgradeOvenSpeed(2),
-    () => onUpgradeOven(2),
-    () => onUpgradeOvenSpeed(3),
-    () => onUpgradeOven(3),
-    onBribeReviewer,
-    () => onBuyPowerUp('beer'),
-    () => onBuyPowerUp('ice-cream'),
-    () => onBuyPowerUp('honey'),
-    onClose,
-  ], [onUpgradeOvenSpeed, onUpgradeOven, onBribeReviewer, onBuyPowerUp, onClose]);
+    () => { madePurchaseRef.current = true; onUpgradeOvenSpeed(0); },
+    () => { madePurchaseRef.current = true; onUpgradeOven(0); },
+    () => { madePurchaseRef.current = true; onUpgradeOvenSpeed(1); },
+    () => { madePurchaseRef.current = true; onUpgradeOven(1); },
+    () => { madePurchaseRef.current = true; onUpgradeOvenSpeed(2); },
+    () => { madePurchaseRef.current = true; onUpgradeOven(2); },
+    () => { madePurchaseRef.current = true; onUpgradeOvenSpeed(3); },
+    () => { madePurchaseRef.current = true; onUpgradeOven(3); },
+    () => { madePurchaseRef.current = true; onBribeReviewer(); },
+    () => { madePurchaseRef.current = true; onBuyPowerUp('beer'); },
+    () => { madePurchaseRef.current = true; onBuyPowerUp('ice-cream'); },
+    () => { madePurchaseRef.current = true; onBuyPowerUp('honey'); },
+    handleClose,
+  ], [onUpgradeOvenSpeed, onUpgradeOven, onBribeReviewer, onBuyPowerUp, handleClose]);
 
   // Focus selected element
   useEffect(() => {
@@ -85,6 +102,7 @@ const ItemStore: React.FC<ItemStoreProps> = ({
   const selectedIndexRef = useRef(selectedIndex);
   const menuActionsRef = useRef(menuActions);
   const onCloseRef = useRef(onClose);
+  const handleCloseRef = useRef(handleClose);
   const gameStateRef = useRef(gameState);
 
   useEffect(() => {
@@ -98,6 +116,10 @@ const ItemStore: React.FC<ItemStoreProps> = ({
   useEffect(() => {
     onCloseRef.current = onClose;
   }, [onClose]);
+
+  useEffect(() => {
+    handleCloseRef.current = handleClose;
+  }, [handleClose]);
 
   useEffect(() => {
     gameStateRef.current = gameState;
@@ -143,7 +165,7 @@ const ItemStore: React.FC<ItemStoreProps> = ({
       e.stopPropagation();
 
       if (key === 'Escape') {
-        onCloseRef.current();
+        handleCloseRef.current();
         return;
       }
 
@@ -329,7 +351,7 @@ const ItemStore: React.FC<ItemStoreProps> = ({
 
         {/* Right: Close button */}
         <button
-          onClick={onClose}
+          onClick={handleClose}
           className="text-gray-400 hover:text-gray-600 transition-colors"
           aria-label="Close store"
         >
@@ -469,6 +491,17 @@ const ItemStore: React.FC<ItemStoreProps> = ({
       >
         Continue Playing
       </button>
+
+      {/* Retirement joke overlay */}
+      {showRetirementQuip && (
+        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg z-[110]">
+          <div className="bg-amber-100 border-4 border-amber-600 rounded-xl px-6 py-4 shadow-2xl animate-bounce">
+            <p className="text-lg sm:text-2xl font-bold text-amber-800 text-center">
+              Saving for retirement? 🤔
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
