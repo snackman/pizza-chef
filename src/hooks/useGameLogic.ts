@@ -369,6 +369,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 newState.cleanKitchenStartTime = now;
                 // Brian still pays $1 even when he drops the slice
                 newState.bank += SCORING.BASE_BANK_REWARD;
+                newState.stats.totalEarned += SCORING.BASE_BANK_REWARD;
               } else if (event === 'UNFROZEN_AND_SERVED') {
                 soundManager.customerUnfreeze();
 
@@ -380,6 +381,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 newState.bank += result.bankToAdd;
                 newState.happyCustomers = result.newHappyCustomers;
                 newState.stats = result.newStats;
+                newState.stats.totalEarned += result.bankToAdd;
                 customerScores.push(result.floatingScore);
 
                 if (result.livesToAdd > 0) {
@@ -397,6 +399,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
                 newState.score += result.scoreToAdd;
                 newState.bank += result.bankToAdd;
+                newState.stats.totalEarned += result.bankToAdd;
                 customerScores.push(result.floatingScore);
 
               } else if (event === 'STEVE_FIRST_SLICE') {
@@ -440,6 +443,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 newState.bank += result.bankToAdd;
                 newState.happyCustomers = result.newHappyCustomers;
                 newState.stats = result.newStats;
+                newState.stats.totalEarned += result.bankToAdd;
                 customerScores.push(result.floatingScore);
 
                 if (result.livesToAdd > 0) {
@@ -659,6 +663,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               newState.bank += result.bankToAdd;
               newState.happyCustomers = result.newHappyCustomers;
               newState.stats = result.newStats;
+              newState.stats.totalEarned += result.bankToAdd;
               nyanScores.push(result.floatingScore);
 
               if (result.livesToAdd > 0) {

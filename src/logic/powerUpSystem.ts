@@ -120,6 +120,7 @@ export const processPowerUpCollection = (
         const moltoMoney = SCORING.MOLTOBENNY_CASH * dogeMultiplier;
         newState.score += moltoScore;
         newState.bank += moltoMoney;
+        newState.stats = { ...newState.stats, totalEarned: newState.stats.totalEarned + moltoMoney };
         scoresToAdd.push({ points: moltoScore, lane: newState.chefLane, position: GAME_CONFIG.CHEF_X_POSITION });
     } else if (powerUp.type === 'pepe') {
         // Initialize Pepe helpers - Franco-Pepe and Frank-Pepe assist the chef

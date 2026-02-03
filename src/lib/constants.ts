@@ -212,6 +212,8 @@ export const INITIAL_GAME_STATE = {
       slow: 0,
     },
     ovenUpgradesMade: 0,
+    totalEarned: 0,
+    totalSpent: 0,
   },
   bossBattle: undefined,
   defeatedBossLevels: [],

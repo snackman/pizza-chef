@@ -196,6 +196,8 @@ export interface GameStats {
     slow: number;
   };
   ovenUpgradesMade: number;
+  totalEarned: number;
+  totalSpent: number;
 }
 
 export type StarLostReason =

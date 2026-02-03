@@ -11,6 +11,7 @@ interface GameOverScreenProps {
   stats: GameStats;
   score: number;
   level: number;
+  bank: number;
   lastStarLostReason?: StarLostReason;
   onSubmitted: (session: GameSession, playerName: string) => void;
   onPlayAgain: () => void;
@@ -86,7 +87,7 @@ function loadImage(src: string): Promise<HTMLImageElement | null> {
   });
 }
 
-export default function GameOverScreen({ stats, score, level, lastStarLostReason, onSubmitted, onPlayAgain }: GameOverScreenProps) {
+export default function GameOverScreen({ stats, score, level, bank, lastStarLostReason, onSubmitted, onPlayAgain }: GameOverScreenProps) {
   const [playerName, setPlayerName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -367,7 +368,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
     // --- STATISTICS ---
     ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
     ctx.beginPath();
-    ctx.roundRect(24 * scale, 301 * scale, size - 48 * scale, 145 * scale, 12 * scale);
+    ctx.roundRect(24 * scale, 301 * scale, size - 48 * scale, 207 * scale, 12 * scale);
     ctx.fill();
 
     ctx.fillStyle = '#ffffff';
@@ -383,6 +384,9 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
       { emoji: '\u{2B06}\u{FE0F}', label: 'Upgrades', value: stats.ovenUpgradesMade },
       { emoji: '\u{1F525}', label: 'Served Streak', value: stats.longestCustomerStreak },
       { emoji: '\u{1F4AB}', label: 'Plate Streak', value: stats.largestPlateStreak },
+      { emoji: '\u{1F4B0}', label: 'Balance', value: bank, isMoney: true },
+      { emoji: '\u{1F4C8}', label: 'Earned', value: stats.totalEarned, isMoney: true },
+      { emoji: '\u{1F6D2}', label: 'Spent', value: stats.totalSpent, isMoney: true },
     ];
 
     statsData.forEach((stat, index) => {
@@ -406,19 +410,20 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
       ctx.textAlign = 'left';
       ctx.fillText(stat.label, x + iconSize + 8 * scale, y + 12 * scale);
 
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = 'isMoney' in stat && stat.isMoney ? '#22c55e' : '#ffffff';
       ctx.font = `bold ${24 * scale}px system-ui, -apple-system, sans-serif`;
-      ctx.fillText(stat.value.toString(), x + iconSize + 8 * scale, y + 34 * scale);
+      const valueText = 'isMoney' in stat && stat.isMoney ? `$${stat.value}` : stat.value.toString();
+      ctx.fillText(valueText, x + iconSize + 8 * scale, y + 34 * scale);
     });
 
     // --- POWER-UPS COLLECTED ---
     // Make spacing between STATISTICS and POWER-UPS match other section gaps (~10 * scale).
-    // Stats box ends at (301 + 145) * scale = 446 * scale, so start power-ups at 446 + 10 = 456 * scale.
+    // Stats box ends at (301 + 207) * scale = 508 * scale, so start power-ups at 508 + 10 = 518 * scale.
     ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
     ctx.beginPath();
 
     const powerUpsBoxExtraBottomPadding = 16 * scale;
-    const powerUpsBoxY = 456 * scale;
+    const powerUpsBoxY = 518 * scale;
 
     ctx.roundRect(
       24 * scale,
@@ -477,7 +482,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
     ctx.font = `bold ${15 * scale}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('pizzachef.bolt.host', size / 2, footerY);
-  }, [stats, score, level, displayName, skillRating, gameId, formattedDate, formattedTime, lastStarLostReason]);
+  }, [stats, score, level, bank, displayName, skillRating, gameId, formattedDate, formattedTime, lastStarLostReason]);
 
   useEffect(() => {
     if (imagesLoaded) {
