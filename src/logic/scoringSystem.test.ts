@@ -1,35 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { applyCustomerScoring, calculateCustomerScore, checkLifeGain } from './scoringSystem';
-import { GameState, Customer } from '../types/game';
-import { INITIAL_GAME_STATE, SCORING, GAME_CONFIG } from '../lib/constants';
-
-const createMockGameState = (overrides: Partial<GameState> = {}): GameState => ({
-    ...INITIAL_GAME_STATE,
-    ...overrides
-} as GameState);
-
-const createMockCustomer = (overrides: Partial<Customer> = {}): Customer => ({
-    id: 'c1',
-    lane: 0,
-    position: 50,
-    speed: 1,
-    served: false,
-    hasPlate: true,
-    leaving: false,
-    disappointed: false,
-    woozy: false,
-    vomit: false,
-    movingRight: false,
-    critic: false,
-    badLuckBrian: false,
-    flipped: false,
-    ...overrides
-});
+import { SCORING, GAME_CONFIG } from '../lib/constants';
+import { createGameState, createCustomer } from '../test/factories';
 
 describe('scoringSystem', () => {
     describe('calculateCustomerScore', () => {
         it('calculates normal customer score', () => {
-            const customer = createMockCustomer();
+            const customer = createCustomer();
             const result = calculateCustomerScore(customer, 1, 1);
 
             expect(result.points).toBe(SCORING.CUSTOMER_NORMAL);
@@ -37,21 +14,21 @@ describe('scoringSystem', () => {
         });
 
         it('calculates critic score (double points)', () => {
-            const customer = createMockCustomer({ critic: true });
+            const customer = createCustomer({ critic: true });
             const result = calculateCustomerScore(customer, 1, 1);
 
             expect(result.points).toBe(SCORING.CUSTOMER_CRITIC);
         });
 
         it('calculates first slice score', () => {
-            const customer = createMockCustomer();
+            const customer = createCustomer();
             const result = calculateCustomerScore(customer, 1, 1, true);
 
             expect(result.points).toBe(SCORING.CUSTOMER_FIRST_SLICE);
         });
 
         it('applies doge multiplier to points and bank', () => {
-            const customer = createMockCustomer();
+            const customer = createCustomer();
             const dogeMultiplier = 2;
             const result = calculateCustomerScore(customer, dogeMultiplier, 1);
 
@@ -60,7 +37,7 @@ describe('scoringSystem', () => {
         });
 
         it('applies streak multiplier to points', () => {
-            const customer = createMockCustomer();
+            const customer = createCustomer();
             const streakMultiplier = 1.5;
             const result = calculateCustomerScore(customer, 1, streakMultiplier);
 
@@ -103,8 +80,8 @@ describe('scoringSystem', () => {
 
     describe('applyCustomerScoring', () => {
         it('applies full scoring with bank and stats for served customer', () => {
-            const customer = createMockCustomer({ lane: 1, position: 60 });
-            const state = createMockGameState({ happyCustomers: 0, lives: 3 });
+            const customer = createCustomer({ lane: 1, position: 60 });
+            const state = createGameState({ happyCustomers: 0, lives: 3 });
 
             const result = applyCustomerScoring(customer, state, 1, 1, {
                 includeBank: true,
@@ -121,8 +98,8 @@ describe('scoringSystem', () => {
         });
 
         it('excludes bank when includeBank is false (Scumbag Steve)', () => {
-            const customer = createMockCustomer();
-            const state = createMockGameState();
+            const customer = createCustomer();
+            const state = createGameState();
 
             const result = applyCustomerScoring(customer, state, 1, 1, {
                 includeBank: false,
@@ -136,8 +113,8 @@ describe('scoringSystem', () => {
         });
 
         it('does not increment happy customers when countsAsServed is false', () => {
-            const customer = createMockCustomer();
-            const state = createMockGameState({ happyCustomers: 5 });
+            const customer = createCustomer();
+            const state = createGameState({ happyCustomers: 5 });
 
             const result = applyCustomerScoring(customer, state, 1, 1, {
                 includeBank: true,
@@ -151,8 +128,8 @@ describe('scoringSystem', () => {
         });
 
         it('checks life gain when checkLifeGain is true', () => {
-            const customer = createMockCustomer({ lane: 2, position: 55 });
-            const state = createMockGameState({ happyCustomers: 7, lives: 3 }); // Will become 8
+            const customer = createCustomer({ lane: 2, position: 55 });
+            const state = createGameState({ happyCustomers: 7, lives: 3 }); // Will become 8
 
             const result = applyCustomerScoring(customer, state, 1, 1, {
                 includeBank: true,
@@ -167,8 +144,8 @@ describe('scoringSystem', () => {
         });
 
         it('returns correct floatingScore position', () => {
-            const customer = createMockCustomer({ lane: 2, position: 75 });
-            const state = createMockGameState();
+            const customer = createCustomer({ lane: 2, position: 75 });
+            const state = createGameState();
 
             const result = applyCustomerScoring(customer, state, 1, 1, {
                 includeBank: true,

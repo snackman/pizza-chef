@@ -1,19 +1,16 @@
 import { describe, it, expect } from 'vitest';
 import { processNyanSweepMovement, checkNyanSweepCollisions } from './nyanSystem';
-import { Customer, BossMinion, NyanSweep } from '../types/game';
-import { GAME_CONFIG } from '../lib/constants';
+import { createCustomer, createBossMinion, createNyanSweep } from '../test/factories';
 
 describe('nyanSystem', () => {
     describe('processNyanSweepMovement', () => {
         it('moves the nyan cat forward', () => {
-            const initialSweep: NyanSweep = {
-                active: true,
+            const initialSweep = createNyanSweep({
                 xPosition: 10,
-                laneDirection: 1,
                 startTime: 1000,
                 lastUpdateTime: 1000,
                 startingLane: 1
-            };
+            });
 
             // Advance time by 100ms
             const result = processNyanSweepMovement(initialSweep, 1, 1100);
@@ -24,14 +21,12 @@ describe('nyanSystem', () => {
         });
 
         it('completes the sweep when reaching MAX_X', () => {
-            const initialSweep: NyanSweep = {
-                active: true,
+            const initialSweep = createNyanSweep({
                 xPosition: 89, // Near end (90)
-                laneDirection: 1,
                 startTime: 1000,
                 lastUpdateTime: 1000,
                 startingLane: 1
-            };
+            });
 
             // Advance time significantly to ensure completion
             const result = processNyanSweepMovement(initialSweep, 1, 5000);
@@ -43,20 +38,18 @@ describe('nyanSystem', () => {
 
     describe('checkNyanSweepCollisions', () => {
         it('detects collisions with customers', () => {
-            const sweep: NyanSweep = {
-                active: true,
+            const sweep = createNyanSweep({
                 xPosition: 50,
-                laneDirection: 1,
                 startTime: 1000,
                 lastUpdateTime: 1000,
                 startingLane: 0
-            };
+            });
 
-            const customers: Customer[] = [
+            const customers = [
                 // Hit
-                { id: 'c1', lane: 0, position: 50, speed: 0, served: false, hasPlate: false, leaving: false, disappointed: false, woozy: false, vomit: false, movingRight: false, critic: false, badLuckBrian: false, flipped: false },
+                createCustomer({ id: 'c1', lane: 0, position: 50, speed: 0 }),
                 // Miss (wrong position)
-                { id: 'c2', lane: 0, position: 20, speed: 0, served: false, hasPlate: false, leaving: false, disappointed: false, woozy: false, vomit: false, movingRight: false, critic: false, badLuckBrian: false, flipped: false }
+                createCustomer({ id: 'c2', lane: 0, position: 20, speed: 0 })
             ];
 
             // Assuming newLane calculation placed it on lane 0
@@ -67,17 +60,15 @@ describe('nyanSystem', () => {
         });
 
         it('detects collisions with minions', () => {
-            const sweep: NyanSweep = {
-                active: true,
+            const sweep = createNyanSweep({
                 xPosition: 50,
-                laneDirection: 1,
                 startTime: 1000,
                 lastUpdateTime: 1000,
                 startingLane: 0
-            };
+            });
 
-            const minions: BossMinion[] = [
-                { id: 'm1', lane: 0, position: 50, speed: 0, defeated: false }
+            const minions = [
+                createBossMinion({ id: 'm1', lane: 0, position: 50, speed: 0 })
             ];
 
             const result = checkNyanSweepCollisions(sweep, 52, 0, [], minions);

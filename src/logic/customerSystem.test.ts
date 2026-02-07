@@ -1,24 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { updateCustomerPositions, processCustomerHit, CustomerUpdateResult, CustomerHitResult } from './customerSystem';
-import { Customer, ActivePowerUp } from '../types/game';
-
-// Helper to create a basic customer
-const createCustomer = (overrides: Partial<Customer> = {}): Customer => ({
-  id: 'test-customer-1',
-  lane: 0,
-  position: 80,
-  speed: 0.5,
-  served: false,
-  hasPlate: false,
-  leaving: false,
-  disappointed: false,
-  disappointedEmoji: '😢',
-  movingRight: false,
-  critic: false,
-  badLuckBrian: false,
-  flipped: false,
-  ...overrides,
-});
+import { updateCustomerPositions, processCustomerHit } from './customerSystem';
+import { ActivePowerUp } from '../types/game';
+import { createCustomer } from '../test/factories';
 
 describe('Customer System - Integrated Tests', () => {
   const now = Date.now();

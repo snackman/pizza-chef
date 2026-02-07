@@ -1,12 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { processPowerUpCollection, processPowerUpExpirations, processChefPowerUpCollisions } from './powerUpSystem';
-import { GameState, Customer, PowerUp } from '../types/game';
-import { INITIAL_GAME_STATE, GAME_CONFIG } from '../lib/constants';
-
-const createMockGameState = (overrides: Partial<GameState> = {}): GameState => ({
-    ...INITIAL_GAME_STATE,
-    ...overrides
-} as GameState);
+import { GAME_CONFIG } from '../lib/constants';
+import { createGameState, createCustomer, createPowerUp } from '../test/factories';
 
 describe('powerUpSystem', () => {
     describe('processPowerUpExpirations', () => {
@@ -34,11 +29,11 @@ describe('powerUpSystem', () => {
 
     describe('processPowerUpCollection', () => {
         it('activates timed power-ups', () => {
-            const state = createMockGameState({ chefLane: 0 });
+            const state = createGameState({ chefLane: 0 });
             const now = 1000;
             const result = processPowerUpCollection(
                 state,
-                { id: '1', type: 'speed', lane: 0, position: 0, speed: 0 },
+                createPowerUp({ id: '1', type: 'speed', lane: 0, position: 0, speed: 0 }),
                 1,
                 now
             );
@@ -48,11 +43,11 @@ describe('powerUpSystem', () => {
         });
 
         it('triggers star power effects', () => {
-            const state = createMockGameState({ availableSlices: 0 });
+            const state = createGameState({ availableSlices: 0 });
             const now = 1000;
             const result = processPowerUpCollection(
                 state,
-                { id: '1', type: 'star', lane: 0, position: 0, speed: 0 },
+                createPowerUp({ id: '1', type: 'star', lane: 0, position: 0, speed: 0 }),
                 1,
                 now
             );
@@ -63,20 +58,19 @@ describe('powerUpSystem', () => {
         });
 
         it('handles beer power-up lives lost', () => {
-            const woozyCustomer: Customer = {
-                id: 'c1', lane: 0, position: 50, speed: 0, served: false,
-                hasPlate: false, leaving: false, disappointed: false,
-                woozy: true, vomit: false, movingRight: false, critic: false, badLuckBrian: false, flipped: false
-            };
+            const woozyCustomer = createCustomer({
+                id: 'c1', lane: 0, position: 50, speed: 0,
+                woozy: true, vomit: false
+            });
 
-            const state = createMockGameState({
+            const state = createGameState({
                 lives: 3,
                 customers: [woozyCustomer]
             });
 
             const result = processPowerUpCollection(
                 state,
-                { id: '1', type: 'beer', lane: 0, position: 0, speed: 0 },
+                createPowerUp({ id: '1', type: 'beer', lane: 0, position: 0, speed: 0 }),
                 1,
                 1000
             );
@@ -88,11 +82,11 @@ describe('powerUpSystem', () => {
         });
 
         it('initializes nyan sweep and returns nyanSweepStarted flag', () => {
-            const state = createMockGameState({ chefLane: 1 });
+            const state = createGameState({ chefLane: 1 });
             const now = 1000;
             const result = processPowerUpCollection(
                 state,
-                { id: '1', type: 'nyan', lane: 0, position: 0, speed: 0 },
+                createPowerUp({ id: '1', type: 'nyan', lane: 0, position: 0, speed: 0 }),
                 1,
                 now
             );
@@ -104,7 +98,7 @@ describe('powerUpSystem', () => {
         });
 
         it('does not start nyan sweep if already active', () => {
-            const state = createMockGameState({
+            const state = createGameState({
                 chefLane: 1,
                 nyanSweep: {
                     active: true,
@@ -118,7 +112,7 @@ describe('powerUpSystem', () => {
             const now = 1000;
             const result = processPowerUpCollection(
                 state,
-                { id: '1', type: 'nyan', lane: 0, position: 0, speed: 0 },
+                createPowerUp({ id: '1', type: 'nyan', lane: 0, position: 0, speed: 0 }),
                 1,
                 now
             );
@@ -130,13 +124,9 @@ describe('powerUpSystem', () => {
     });
 
     describe('processChefPowerUpCollisions', () => {
-        const createPowerUp = (id: string, type: PowerUp['type'], lane: number, position: number): PowerUp => ({
-            id, type, lane, position, speed: 1
-        });
-
         it('detects collision when chef is on same lane and position', () => {
-            const powerUp = createPowerUp('p1', 'honey', 0, GAME_CONFIG.CHEF_X_POSITION);
-            const state = createMockGameState({ powerUps: [powerUp] });
+            const powerUp = createPowerUp({ id: 'p1', type: 'honey', lane: 0, position: GAME_CONFIG.CHEF_X_POSITION });
+            const state = createGameState({ powerUps: [powerUp] });
 
             const result = processChefPowerUpCollisions(
                 state,
@@ -151,8 +141,8 @@ describe('powerUpSystem', () => {
         });
 
         it('does not detect collision when chef is on different lane', () => {
-            const powerUp = createPowerUp('p1', 'honey', 2, GAME_CONFIG.CHEF_X_POSITION);
-            const state = createMockGameState({ powerUps: [powerUp] });
+            const powerUp = createPowerUp({ id: 'p1', type: 'honey', lane: 2, position: GAME_CONFIG.CHEF_X_POSITION });
+            const state = createGameState({ powerUps: [powerUp] });
 
             const result = processChefPowerUpCollisions(
                 state,
@@ -166,8 +156,8 @@ describe('powerUpSystem', () => {
         });
 
         it('skips collision detection during active nyan sweep', () => {
-            const powerUp = createPowerUp('p1', 'honey', 0, GAME_CONFIG.CHEF_X_POSITION);
-            const state = createMockGameState({
+            const powerUp = createPowerUp({ id: 'p1', type: 'honey', lane: 0, position: GAME_CONFIG.CHEF_X_POSITION });
+            const state = createGameState({
                 powerUps: [powerUp],
                 nyanSweep: {
                     active: true,
@@ -192,10 +182,10 @@ describe('powerUpSystem', () => {
 
         it('collects multiple power-ups in single pass', () => {
             const powerUps = [
-                createPowerUp('p1', 'honey', 0, GAME_CONFIG.CHEF_X_POSITION),
-                createPowerUp('p2', 'star', 0, GAME_CONFIG.CHEF_X_POSITION) // Same position
+                createPowerUp({ id: 'p1', type: 'honey', lane: 0, position: GAME_CONFIG.CHEF_X_POSITION }),
+                createPowerUp({ id: 'p2', type: 'star', lane: 0, position: GAME_CONFIG.CHEF_X_POSITION })
             ];
-            const state = createMockGameState({ powerUps });
+            const state = createGameState({ powerUps });
 
             const result = processChefPowerUpCollisions(
                 state,
@@ -209,8 +199,8 @@ describe('powerUpSystem', () => {
         });
 
         it('returns nyanSweepStarted when nyan power-up collected', () => {
-            const powerUp = createPowerUp('p1', 'nyan', 0, GAME_CONFIG.CHEF_X_POSITION);
-            const state = createMockGameState({ powerUps: [powerUp] });
+            const powerUp = createPowerUp({ id: 'p1', type: 'nyan', lane: 0, position: GAME_CONFIG.CHEF_X_POSITION });
+            const state = createGameState({ powerUps: [powerUp] });
 
             const result = processChefPowerUpCollisions(
                 state,
@@ -225,13 +215,12 @@ describe('powerUpSystem', () => {
         });
 
         it('aggregates lives lost from beer power-up', () => {
-            const woozyCustomer: Customer = {
-                id: 'c1', lane: 0, position: 50, speed: 0, served: false,
-                hasPlate: false, leaving: false, disappointed: false,
-                woozy: true, vomit: false, movingRight: false, critic: false, badLuckBrian: false, flipped: false
-            };
-            const powerUp = createPowerUp('p1', 'beer', 0, GAME_CONFIG.CHEF_X_POSITION);
-            const state = createMockGameState({
+            const woozyCustomer = createCustomer({
+                id: 'c1', lane: 0, position: 50, speed: 0,
+                woozy: true, vomit: false
+            });
+            const powerUp = createPowerUp({ id: 'p1', type: 'beer', lane: 0, position: GAME_CONFIG.CHEF_X_POSITION });
+            const state = createGameState({
                 powerUps: [powerUp],
                 customers: [woozyCustomer],
                 lives: 3
