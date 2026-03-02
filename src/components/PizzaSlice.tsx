@@ -31,4 +31,14 @@ const PizzaSlice: React.FC<PizzaSliceProps> = ({ slice }) => {
   );
 };
 
-export default PizzaSlice;
+function arePizzaSlicePropsEqual(prev: PizzaSliceProps, next: PizzaSliceProps): boolean {
+  const a = prev.slice;
+  const b = next.slice;
+  return (
+    a.id === b.id &&
+    a.position === b.position &&
+    a.lane === b.lane
+  );
+}
+
+export default React.memo(PizzaSlice, arePizzaSlicePropsEqual);

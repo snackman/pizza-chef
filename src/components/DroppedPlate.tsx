@@ -48,4 +48,15 @@ const DroppedPlate: React.FC<DroppedPlateProps> = ({ droppedPlate }) => {
   );
 };
 
-export default DroppedPlate;
+function areDroppedPlatePropsEqual(prev: DroppedPlateProps, next: DroppedPlateProps): boolean {
+  const a = prev.droppedPlate;
+  const b = next.droppedPlate;
+  return (
+    a.id === b.id &&
+    a.lane === b.lane &&
+    a.position === b.position &&
+    a.startTime === b.startTime
+  );
+}
+
+export default React.memo(DroppedPlate, areDroppedPlatePropsEqual);

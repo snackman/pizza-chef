@@ -44,4 +44,17 @@ const EmptyPlate: React.FC<EmptyPlateProps> = ({ plate }) => {
   );
 };
 
-export default EmptyPlate;
+function areEmptyPlatePropsEqual(prev: EmptyPlateProps, next: EmptyPlateProps): boolean {
+  const a = prev.plate;
+  const b = next.plate;
+  return (
+    a.id === b.id &&
+    a.position === b.position &&
+    a.lane === b.lane &&
+    a.targetLane === b.targetLane &&
+    a.startLane === b.startLane &&
+    a.startPosition === b.startPosition
+  );
+}
+
+export default React.memo(EmptyPlate, areEmptyPlatePropsEqual);

@@ -25,4 +25,4 @@ const PizzaSliceStack: React.FC<PizzaSliceStackProps> = ({ sliceCount }) => {
   );
 };
 
-export default PizzaSliceStack;
+export default React.memo(PizzaSliceStack);

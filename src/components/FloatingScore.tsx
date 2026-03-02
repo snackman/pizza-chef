@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface FloatingScoreProps {
   id: string;
@@ -8,7 +8,7 @@ interface FloatingScoreProps {
   onComplete: (id: string) => void;
 }
 
-export default function FloatingScore({ id, points, lane, position, onComplete }: FloatingScoreProps) {
+function FloatingScore({ id, points, lane, position, onComplete }: FloatingScoreProps) {
   const [yOffset, setYOffset] = useState(0);
   const [opacity, setOpacity] = useState(1);
 
@@ -55,3 +55,5 @@ export default function FloatingScore({ id, points, lane, position, onComplete }
     </div>
   );
 }
+
+export default React.memo(FloatingScore);

@@ -134,4 +134,31 @@ const Customer: React.FC<CustomerProps> = ({ customer, boardWidth, boardHeight }
   );
 };
 
-export default Customer;
+function areCustomerPropsEqual(prev: CustomerProps, next: CustomerProps): boolean {
+  const a = prev.customer;
+  const b = next.customer;
+  return (
+    a.id === b.id &&
+    a.position === b.position &&
+    a.lane === b.lane &&
+    a.served === b.served &&
+    a.disappointed === b.disappointed &&
+    a.disappointedEmoji === b.disappointedEmoji &&
+    a.frozen === b.frozen &&
+    a.vomit === b.vomit &&
+    a.woozy === b.woozy &&
+    a.woozyState === b.woozyState &&
+    a.hotHoneyAffected === b.hotHoneyAffected &&
+    a.flipped === b.flipped &&
+    a.brianNyaned === b.brianNyaned &&
+    a.textMessage === b.textMessage &&
+    a.badLuckBrian === b.badLuckBrian &&
+    a.scumbagSteve === b.scumbagSteve &&
+    a.critic === b.critic &&
+    a.leaving === b.leaving &&
+    prev.boardWidth === next.boardWidth &&
+    prev.boardHeight === next.boardHeight
+  );
+}
+
+export default React.memo(Customer, areCustomerPropsEqual);

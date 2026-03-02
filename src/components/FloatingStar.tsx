@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Star } from 'lucide-react';
 
 interface FloatingStarProps {
@@ -10,7 +10,7 @@ interface FloatingStarProps {
   onComplete: (id: string) => void;
 }
 
-export default function FloatingStar({ id, isGain, count = 1, lane, position, onComplete }: FloatingStarProps) {
+function FloatingStar({ id, isGain, count = 1, lane, position, onComplete }: FloatingStarProps) {
   const [yOffset, setYOffset] = useState(0);
   const [opacity, setOpacity] = useState(1);
 
@@ -59,3 +59,5 @@ export default function FloatingStar({ id, isGain, count = 1, lane, position, on
     </div>
   );
 }
+
+export default React.memo(FloatingStar);

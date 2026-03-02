@@ -81,4 +81,17 @@ const PowerUp: React.FC<PowerUpProps> = ({ powerUp, boardWidth, boardHeight }) =
   );
 };
 
-export default PowerUp;
+function arePowerUpPropsEqual(prev: PowerUpProps, next: PowerUpProps): boolean {
+  const a = prev.powerUp;
+  const b = next.powerUp;
+  return (
+    a.id === b.id &&
+    a.position === b.position &&
+    a.lane === b.lane &&
+    a.type === b.type &&
+    prev.boardWidth === next.boardWidth &&
+    prev.boardHeight === next.boardHeight
+  );
+}
+
+export default React.memo(PowerUp, arePowerUpPropsEqual);

@@ -100,4 +100,35 @@ const Boss: React.FC<BossProps> = ({ bossBattle }) => {
   );
 };
 
-export default Boss;
+function areBossPropsEqual(prev: BossProps, next: BossProps): boolean {
+  const a = prev.bossBattle;
+  const b = next.bossBattle;
+
+  if (
+    a.active !== b.active ||
+    a.bossType !== b.bossType ||
+    a.bossHealth !== b.bossHealth ||
+    a.currentWave !== b.currentWave ||
+    a.bossVulnerable !== b.bossVulnerable ||
+    a.bossDefeated !== b.bossDefeated ||
+    a.bossPosition !== b.bossPosition ||
+    a.bossLane !== b.bossLane ||
+    a.hitsReceived !== b.hitsReceived ||
+    a.minions.length !== b.minions.length
+  ) {
+    return false;
+  }
+
+  // Compare minions
+  return a.minions.every((m, i) => {
+    const n = b.minions[i];
+    return (
+      m.id === n.id &&
+      m.position === n.position &&
+      m.lane === n.lane &&
+      m.defeated === n.defeated
+    );
+  });
+}
+
+export default React.memo(Boss, areBossPropsEqual);
