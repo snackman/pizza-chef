@@ -1090,13 +1090,47 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     latestTickRef.current = tick;
   }, [tick]);
 
-  // --- 4. THE STABLE INTERVAL LOOP ---
+  // --- 4. THE STABLE rAF LOOP (fixed-timestep accumulator) ---
   useEffect(() => {
     if (!gameStarted) return;
-    const gameLoop = setInterval(() => {
-      latestTickRef.current();
-    }, GAME_CONFIG.GAME_LOOP_INTERVAL);
-    return () => clearInterval(gameLoop);
+
+    let rafId: number;
+    let lastTimestamp: number | null = null;
+    let accumulator = 0;
+    const TICK_MS = GAME_CONFIG.GAME_LOOP_INTERVAL;
+    const MAX_FRAME_TIME = GAME_CONFIG.MAX_FRAME_TIME ?? 200;
+
+    const loop = (timestamp: DOMHighResTimeStamp) => {
+      if (lastTimestamp === null) {
+        lastTimestamp = timestamp;
+        rafId = requestAnimationFrame(loop);
+        return;
+      }
+      const deltaTime = Math.min(timestamp - lastTimestamp, MAX_FRAME_TIME);
+      lastTimestamp = timestamp;
+      accumulator += deltaTime;
+
+      while (accumulator >= TICK_MS) {
+        latestTickRef.current();
+        accumulator -= TICK_MS;
+      }
+      rafId = requestAnimationFrame(loop);
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        lastTimestamp = null;
+        accumulator = 0;
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    rafId = requestAnimationFrame(loop);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [gameStarted]);
 
   return {
