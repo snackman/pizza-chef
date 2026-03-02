@@ -1,6 +1,10 @@
 class SoundManager {
   private audioContext: AudioContext | null = null;
   private isMuted: boolean = false;
+  private nyanTimeouts: number[] = [];
+  private nyanPausedAt: number = 0;
+  private nyanRemainingNotes: Array<{ frequency: number; delay: number; duration: number; type?: OscillatorType; volume?: number }> = [];
+  private nyanStartTime: number = 0;
 
   private getAudioContext(): AudioContext {
     if (!this.audioContext) {
@@ -196,35 +200,80 @@ ovenReady() {
     ]);
   }
 
+  private nyanNotes: Array<{ frequency: number; delay: number; duration: number; type: OscillatorType; volume: number }> = [
+    { frequency: 1046.5, delay: 0,    duration: 0.188, type: 'square', volume: 0.22 },
+    { frequency: 1174.7, delay: 188,  duration: 0.095, type: 'square', volume: 0.22 },
+    { frequency: 784.0,  delay: 377,  duration: 0.095, type: 'square', volume: 0.22 },
+    { frequency: 880.0,  delay: 472,  duration: 0.188, type: 'square', volume: 0.22 },
+    { frequency: 698.5,  delay: 660,  duration: 0.047, type: 'square', volume: 0.22 },
+    { frequency: 830.6,  delay: 755,  duration: 0.095, type: 'square', volume: 0.22 },
+    { frequency: 784.0,  delay: 848,  duration: 0.095, type: 'square', volume: 0.22 },
+    { frequency: 698.5,  delay: 943,  duration: 0.095, type: 'square', volume: 0.22 },
+    { frequency: 698.5,  delay: 1132, duration: 0.095, type: 'square', volume: 0.22 },
+    { frequency: 784.0,  delay: 1320, duration: 0.188, type: 'square', volume: 0.22 },
+    { frequency: 830.6,  delay: 1508, duration: 0.095, type: 'square', volume: 0.22 },
+    { frequency: 830.6,  delay: 1697, duration: 0.047, type: 'square', volume: 0.22 },
+    { frequency: 784.0,  delay: 1792, duration: 0.047, type: 'square', volume: 0.22 },
+    { frequency: 698.5,  delay: 1885, duration: 0.095, type: 'square', volume: 0.22 },
+    { frequency: 784.0,  delay: 1980, duration: 0.095, type: 'square', volume: 0.22 },
+    { frequency: 880.0,  delay: 2075, duration: 0.095, type: 'square', volume: 0.22 },
+    { frequency: 1046.5, delay: 2168, duration: 0.095, type: 'square', volume: 0.22 },
+    { frequency: 1174.7, delay: 2263, duration: 0.095, type: 'square', volume: 0.22 },
+    { frequency: 880.0,  delay: 2357, duration: 0.095, type: 'square', volume: 0.22 },
+    { frequency: 1046.5, delay: 2452, duration: 0.095, type: 'square', volume: 0.22 },
+    { frequency: 784.0,  delay: 2545, duration: 0.095, type: 'square', volume: 0.22 },
+    { frequency: 830.6,  delay: 2640, duration: 0.095, type: 'square', volume: 0.22 },
+    { frequency: 698.5,  delay: 2735, duration: 0.095, type: 'square', volume: 0.22 },
+  ];
+
   nyanCatPowerUp() {
-  this.playMultiTone([
-  { frequency: 1046.5, delay: 0,    duration: 0.188, type: 'square', volume: 0.22 },
-  { frequency: 1174.7, delay: 188,  duration: 0.095, type: 'square', volume: 0.22 },
-  { frequency: 784.0,  delay: 377,  duration: 0.095, type: 'square', volume: 0.22 },
-  { frequency: 880.0,  delay: 472,  duration: 0.188, type: 'square', volume: 0.22 },
-  { frequency: 698.5,  delay: 660,  duration: 0.047, type: 'square', volume: 0.22 },
+    this.stopNyan(); // Clear any existing nyan playback
+    this.nyanStartTime = Date.now();
+    this.nyanRemainingNotes = [...this.nyanNotes];
+    this.playNyanNotes(this.nyanNotes);
+  }
 
-  { frequency: 830.6,  delay: 755,  duration: 0.095, type: 'square', volume: 0.22 },
-  { frequency: 784.0,  delay: 848,  duration: 0.095, type: 'square', volume: 0.22 },
-  { frequency: 698.5,  delay: 943,  duration: 0.095, type: 'square', volume: 0.22 },
-  { frequency: 698.5,  delay: 1132, duration: 0.095, type: 'square', volume: 0.22 },
+  private playNyanNotes(notes: Array<{ frequency: number; delay: number; duration: number; type?: OscillatorType; volume?: number }>) {
+    notes.forEach(note => {
+      const timeoutId = window.setTimeout(() => {
+        this.playTone(note.frequency, note.duration, note.type || 'sine', note.volume || 0.3);
+      }, note.delay);
+      this.nyanTimeouts.push(timeoutId);
+    });
+  }
 
-  { frequency: 784.0,  delay: 1320, duration: 0.188, type: 'square', volume: 0.22 },
-  { frequency: 830.6,  delay: 1508, duration: 0.095, type: 'square', volume: 0.22 },
-  { frequency: 830.6,  delay: 1697, duration: 0.047, type: 'square', volume: 0.22 },
-  { frequency: 784.0,  delay: 1792, duration: 0.047, type: 'square', volume: 0.22 },
+  pauseNyan() {
+    if (this.nyanTimeouts.length === 0) return;
 
-  { frequency: 698.5,  delay: 1885, duration: 0.095, type: 'square', volume: 0.22 },
-  { frequency: 784.0,  delay: 1980, duration: 0.095, type: 'square', volume: 0.22 },
-  { frequency: 880.0,  delay: 2075, duration: 0.095, type: 'square', volume: 0.22 },
-  { frequency: 1046.5, delay: 2168, duration: 0.095, type: 'square', volume: 0.22 },
-  { frequency: 1174.7, delay: 2263, duration: 0.095, type: 'square', volume: 0.22 },
-  { frequency: 880.0,  delay: 2357, duration: 0.095, type: 'square', volume: 0.22 },
-  { frequency: 1046.5, delay: 2452, duration: 0.095, type: 'square', volume: 0.22 },
-  { frequency: 784.0,  delay: 2545, duration: 0.095, type: 'square', volume: 0.22 },
-  { frequency: 830.6,  delay: 2640, duration: 0.095, type: 'square', volume: 0.22 },
-  { frequency: 698.5,  delay: 2735, duration: 0.095, type: 'square', volume: 0.22 },
-]);
+    // Clear all pending timeouts
+    this.nyanTimeouts.forEach(id => window.clearTimeout(id));
+    this.nyanTimeouts = [];
+
+    // Calculate how much time has elapsed
+    this.nyanPausedAt = Date.now() - this.nyanStartTime;
+
+    // Store remaining notes (notes that haven't played yet)
+    this.nyanRemainingNotes = this.nyanNotes.filter(note => note.delay > this.nyanPausedAt);
+  }
+
+  resumeNyan() {
+    if (this.nyanRemainingNotes.length === 0) return;
+
+    // Adjust delays based on elapsed time
+    const adjustedNotes = this.nyanRemainingNotes.map(note => ({
+      ...note,
+      delay: note.delay - this.nyanPausedAt
+    }));
+
+    this.nyanStartTime = Date.now() - this.nyanPausedAt;
+    this.playNyanNotes(adjustedNotes);
+  }
+
+  stopNyan() {
+    this.nyanTimeouts.forEach(id => window.clearTimeout(id));
+    this.nyanTimeouts = [];
+    this.nyanRemainingNotes = [];
+    this.nyanPausedAt = 0;
   }
 
   setMuted(muted: boolean) {
@@ -235,8 +284,9 @@ ovenReady() {
     return this.isMuted;
   }
 
-  toggleMute(): void {
+  toggleMute(): boolean {
     this.isMuted = !this.isMuted;
+    return this.isMuted;
   }
 
   checkMuted(): boolean {

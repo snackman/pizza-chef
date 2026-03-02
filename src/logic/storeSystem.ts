@@ -9,9 +9,18 @@ export type StoreResult = {
   events: StoreEvent[];
 };
 
+// Calculate cumulative upgrade cost: $10 for 1st, $20 for 2nd, $30 for 3rd, etc.
+export const getUpgradeCost = (currentLevel: number): number => {
+  return COSTS.OVEN_UPGRADE * (currentLevel + 1);
+};
+
+export const getSpeedUpgradeCost = (currentLevel: number): number => {
+  return COSTS.OVEN_SPEED_UPGRADE * (currentLevel + 1);
+};
+
 export const upgradeOven = (prev: GameState, lane: number): GameState => {
-  const upgradeCost = COSTS.OVEN_UPGRADE;
   const currentUpgrade = prev.ovenUpgrades[lane] || 0;
+  const upgradeCost = getUpgradeCost(currentUpgrade);
 
   if (prev.bank >= upgradeCost && currentUpgrade < OVEN_CONFIG.MAX_UPGRADE_LEVEL) {
     return {
@@ -25,8 +34,8 @@ export const upgradeOven = (prev: GameState, lane: number): GameState => {
 };
 
 export const upgradeOvenSpeed = (prev: GameState, lane: number): GameState => {
-  const speedUpgradeCost = COSTS.OVEN_SPEED_UPGRADE;
   const currentSpeedUpgrade = prev.ovenSpeedUpgrades[lane] || 0;
+  const speedUpgradeCost = getSpeedUpgradeCost(currentSpeedUpgrade);
 
   if (prev.bank >= speedUpgradeCost && currentSpeedUpgrade < OVEN_CONFIG.MAX_SPEED_LEVEL) {
     return {

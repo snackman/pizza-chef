@@ -1,6 +1,6 @@
 // src/components/Customer.tsx
 import React from 'react';
-import { Customer as CustomerType } from '../types/game';
+import { Customer as CustomerType, getCustomerVariant } from '../types/game';
 import { sprite } from '../lib/assets';
 
 // Sprites (all hosted on Cloudflare)
@@ -13,6 +13,7 @@ const criticImg = sprite("critic.png");
 const badLuckBrianImg = sprite("bad-luck-brian.png");
 const badLuckBrianPukeImg = sprite("bad-luck-brian-puke.png");
 const rainbowBrian = sprite("rainbow-brian.png");
+const scumbagSteveImg = sprite("scumbag-steve.png");
 
 interface CustomerProps {
   customer: CustomerType;
@@ -40,13 +41,27 @@ const Customer: React.FC<CustomerProps> = ({ customer, boardWidth, boardHeight }
   const textYPx = ((customer.lane * 25 + textYOffset) / 100) * boardHeight;
 
   const getDisplay = () => {
-    // 🌈 Rainbow Brian (nyan hit) — override everything else
+    const variant = getCustomerVariant(customer);
+    const isSpecialCustomer = variant === 'badLuckBrian' || variant === 'scumbagSteve';
+
+    // 🌈 Rainbow Brian (nyan hit) — special behavior override
     if (customer.brianNyaned) {
       return { type: 'image', value: rainbowBrian, alt: 'rainbow-brian' };
     }
 
+    // Brian puke — special behavior override
+    if (customer.vomit && variant === 'badLuckBrian') {
+      return { type: 'image', value: badLuckBrianPukeImg, alt: 'brian-puke' };
+    }
+
+    // Special customers keep their base image (no powerup/status effects)
+    if (isSpecialCustomer) {
+      if (variant === 'badLuckBrian') return { type: 'image', value: badLuckBrianImg, alt: 'badluckbrian' };
+      if (variant === 'scumbagSteve') return { type: 'image', value: scumbagSteveImg, alt: 'scumbagsteve' };
+    }
+
+    // Status effects for normal customers and critics
     if (customer.frozen) return { type: 'image', value: frozenfaceImg, alt: 'frozen' };
-    if (customer.vomit && customer.badLuckBrian) return { type: 'image', value: badLuckBrianPukeImg, alt: 'brian-puke' };
     if (customer.vomit) return { type: 'emoji', value: '🤮' };
     if (customer.woozy) {
       if (customer.woozyState === 'drooling') return { type: 'image', value: droolfaceImg, alt: 'drooling' };
@@ -55,8 +70,9 @@ const Customer: React.FC<CustomerProps> = ({ customer, boardWidth, boardHeight }
     if (customer.served) return { type: 'image', value: yumfaceImg, alt: 'yum' };
     if (customer.disappointed) return { type: 'emoji', value: customer.disappointedEmoji || '😢' };
     if (customer.hotHoneyAffected) return { type: 'image', value: spicyfaceImg, alt: 'spicy' };
-    if (customer.badLuckBrian) return { type: 'image', value: badLuckBrianImg, alt: 'badluckbrian' };
-    if (customer.critic) return { type: 'image', value: criticImg, alt: 'critic' };
+
+    // Base appearance by variant
+    if (variant === 'critic') return { type: 'image', value: criticImg, alt: 'critic' };
     return { type: 'image', value: droolfaceImg, alt: 'drool' };
   };
 

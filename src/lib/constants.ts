@@ -4,14 +4,14 @@ export const GAME_CONFIG = {
   STARTING_LIVES: 3,
   LEVEL_THRESHOLD: 500, // Score needed to level up
   GAME_LOOP_INTERVAL: 50, // ms
-  
+
   // Store Settings
   STORE_LEVEL_INTERVAL: 10,
-  
+
   // Chef & Player
   MAX_SLICES: 8,
   CHEF_X_POSITION: 15, // The "catch/serve" zone (approx 15%)
-  
+
   // Lanes
   LANE_COUNT: 4,
   LANE_TOP: 0,
@@ -23,7 +23,7 @@ export const OVEN_CONFIG = {
   WARNING_TIME: 7000, // Pizza starts warning
   BURN_TIME: 8000,    // Pizza burns (total time)
   CLEANING_TIME: 3000,
-  
+
   // Upgrade Timings (based on speedUpgrade level 0-3)
   COOK_TIMES: [3000, 2500, 2000, 1500],
   MAX_UPGRADE_LEVEL: 7,
@@ -51,7 +51,15 @@ export const SPAWN_RATES = {
 export const PROBABILITIES = {
   CRITIC_CHANCE: 0.15,
   BAD_LUCK_BRIAN_CHANCE: 0.1, // If not critic
+  SCUMBAG_STEVE_CHANCE: 0.08, // If not critic or brian
   POWERUP_STAR_CHANCE: 0.1,
+};
+
+export const SCUMBAG_STEVE = {
+  SPEED_MULTIPLIER: 1.4, // 40% faster than normal
+  SLICES_REQUIRED: 2,
+  LANE_CHANGE_INTERVAL: 1500, // ms between possible lane changes
+  LANE_CHANGE_CHANCE: 0.3, // 30% chance to change lane each interval
 };
 
 export const SCORING = {
@@ -59,22 +67,28 @@ export const SCORING = {
   CUSTOMER_NORMAL: 150,
   CUSTOMER_CRITIC: 300,
   CUSTOMER_FIRST_SLICE: 50, // "Drooling" state
-  
+
   // Actions
   PLATE_CAUGHT: 50,
   POWERUP_COLLECTED: 100,
-  
+  DOGE_COLLECTED: 420,
+  NYAN_COLLECTED: 777,
+
   // Boss
   MINION_DEFEAT: 100,
   BOSS_HIT: 100,
   BOSS_DEFEAT: 5000,
-  
+
   // Special
   MOLTOBENNY_POINTS: 10000,
   MOLTOBENNY_CASH: 69,
-  
+
   // Bank
   BASE_BANK_REWARD: 1,
+
+  // Clean Kitchen Bonus
+  CLEAN_KITCHEN_BONUS: 1000,
+  CLEAN_KITCHEN_TIME: 30000, // 30 seconds
 };
 
 export const COSTS = {
@@ -85,24 +99,50 @@ export const COSTS = {
 };
 
 export const BOSS_CONFIG = {
-  TRIGGER_LEVELS: [30],
+  DOMINOS_LEVEL: 30,
+  PAPA_JOHN_LEVEL: 10, // Single appearance at level 10
+  BOSS_POSITION: 85,
+};
+
+export const PAPA_JOHN_CONFIG = {
+  HEALTH: 40, // 40 slices to defeat, changes image every 8 hits
+  WAVES: 3,
+  MINIONS_PER_WAVE: 4,
+  HITS_PER_IMAGE: 8, // Change sprite every 8 hits
+};
+
+export const DOMINOS_CONFIG = {
   HEALTH: 24,
   WAVES: 3,
   MINIONS_PER_WAVE: 4,
-  BOSS_POSITION: 85,
 };
 
 export const POWERUPS = {
   DURATION: 5000, // ms
-  ALERT_DURATION_DOGE: 5000,
+  DOGE_DURATION: 8750, // 75% longer than base duration
+  PEPE_DURATION: 8000, // 8 seconds
+  ALERT_DURATION_DOGE: 8750,
   ALERT_DURATION_NYAN: 3000,
-  TYPES: ['honey', 'ice-cream', 'beer', 'doge', 'nyan', 'moltobenny'] as const,
+  TYPES: ['honey', 'ice-cream', 'beer', 'doge', 'nyan', 'moltobenny', 'pepe'] as const,
+};
+
+export const NYAN_CONFIG = {
+  MAX_X: 90,              // End position of sweep
+  DURATION: 2600,         // Total sweep duration in ms
+  LANE_CHANGE_SPEED: 0.01, // Vertical movement speed
+  DT_MAX: 100,            // Max delta time per frame
+};
+
+export const PEPE_CONFIG = {
+  ACTION_INTERVAL: 100,   // ms between helper actions (famous chefs are fast!)
+  STARTING_SLICES: 4,     // Famous chefs come prepared
 };
 
 export const TIMINGS = {
   FLOATING_SCORE_LIFETIME: 1000,
   DROPPED_PLATE_LIFETIME: 1000,
   TEXT_MESSAGE_LIFETIME: 3000,
+  WARNING_BLINK_INTERVAL: 250, // ms between warning blinks
 };
 
 export const POSITIONS = {
@@ -113,6 +153,12 @@ export const POSITIONS = {
   TURN_AROUND_POINT: 90, // For woozy customers
 };
 
+// Lane positioning (percentage-based layout)
+export const LAYOUT = {
+  LANE_HEIGHT_PERCENT: 25,  // Each lane is 25% of board height
+  LANE_Y_OFFSET: 6,         // Vertical offset within lane (%)
+};
+
 export const INITIAL_GAME_STATE = {
   customers: [],
   pizzaSlices: [],
@@ -120,6 +166,7 @@ export const INITIAL_GAME_STATE = {
   powerUps: [],
   activePowerUps: [],
   floatingScores: [],
+  floatingStars: [],
   droppedPlates: [],
   chefLane: 0,
   score: 0,
@@ -162,9 +209,15 @@ export const INITIAL_GAME_STATE = {
       doge: 0,
       nyan: 0,
       moltobenny: 0,
+      pepe: 0,
+      speed: 0,
+      slow: 0,
     },
     ovenUpgradesMade: 0,
   },
   bossBattle: undefined,
-  defeatedBossLevels:[],
+  defeatedBossLevels: [],
+  cleanKitchenStartTime: undefined,
+  lastCleanKitchenBonusTime: undefined,
+  cleanKitchenBonusAlert: undefined,
 };

@@ -5,9 +5,10 @@ import ScorecardImageView from './ScorecardImageView';
 
 interface HighScoresProps {
   userScore?: { name: string; score: number };
+  refreshKey?: number; // Increment to trigger refresh
 }
 
-const HighScores: React.FC<HighScoresProps> = ({ userScore }) => {
+const HighScores: React.FC<HighScoresProps> = ({ userScore, refreshKey = 0 }) => {
   const [scores, setScores] = useState<HighScore[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
@@ -16,7 +17,7 @@ const HighScores: React.FC<HighScoresProps> = ({ userScore }) => {
 
   useEffect(() => {
     loadScores();
-  }, []);
+  }, [refreshKey]);
 
   const loadScores = async () => {
     setLoading(true);

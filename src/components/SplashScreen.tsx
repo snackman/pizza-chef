@@ -1,19 +1,37 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { sprite } from '../lib/assets';
 
 const chefImg = sprite("chef.png");
 
 interface SplashScreenProps {
   onStart: () => void;
+  isLoading?: boolean;
+  loadingProgress?: number;
 }
 
-const SplashScreen: React.FC<SplashScreenProps> = ({ onStart }) => {
+const SplashScreen: React.FC<SplashScreenProps> = ({
+  onStart,
+  isLoading = false,
+  loadingProgress = 100
+}) => {
+  // Allow Enter key to start the game (only when not loading)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && !isLoading) {
+        e.preventDefault();
+        onStart();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onStart, isLoading]);
+
   return (
     <div className="fixed inset-0 bg-red-600 flex items-center justify-center z-50">
       <div className="text-center space-y-3 p-8 relative">
         <img
-          src={"https://i.imgur.com/EPCSa79.png"}
-          alt="PizzaDAO Logo"
+          src={chefImg}
+          alt="Chef"
           className="w-48 h-auto mx-auto mb-5"
         />
 
@@ -27,11 +45,31 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onStart }) => {
           className="w-48 h-auto mx-auto"
         />
 
+        {/* Loading progress bar */}
+        {isLoading && (
+          <div className="w-64 mx-auto">
+            <div className="bg-red-800 rounded-full h-4 overflow-hidden">
+              <div
+                className="bg-green-500 h-full transition-all duration-200"
+                style={{ width: `${loadingProgress}%` }}
+              />
+            </div>
+            <p className="text-white text-sm mt-2">
+              Loading... {loadingProgress}%
+            </p>
+          </div>
+        )}
+
         <button
           onClick={onStart}
-          className="px-12 py-4 bg-green-600 text-white text-2xl font-bold rounded-lg hover:bg-green-700 transition-all transform hover:scale-105 shadow-lg"
+          disabled={isLoading}
+          className={`px-12 py-4 text-white text-2xl font-bold rounded-lg transition-all transform shadow-lg ${
+            isLoading
+              ? 'bg-gray-500 cursor-not-allowed'
+              : 'bg-green-600 hover:bg-green-700 hover:scale-105'
+          }`}
         >
-          Start Game
+          {isLoading ? 'Loading...' : 'Start Game'}
         </button>
       </div>
 

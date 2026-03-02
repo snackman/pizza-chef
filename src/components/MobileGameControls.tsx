@@ -1,5 +1,6 @@
 import React from 'react';
 import { sprite } from '../lib/assets';
+import { getOvenDisplayStatus } from '../logic/ovenSystem';
 
 const pizzaPanImg = sprite("pizzapan.png");
 
@@ -25,6 +26,7 @@ interface MobileGameControlsProps {
     };
   };
   ovenSpeedUpgrades: { [key: number]: number };
+  isLandscape?: boolean;
 }
 
 const MobileGameControls: React.FC<MobileGameControlsProps> = ({
@@ -40,6 +42,7 @@ const MobileGameControls: React.FC<MobileGameControlsProps> = ({
   availableSlices,
   ovens,
   ovenSpeedUpgrades,
+  isLandscape = false,
 }) => {
   const safeLane = Math.round(currentLane);
   const isDisabled = gameOver || paused || nyanSweepActive;
@@ -47,23 +50,8 @@ const MobileGameControls: React.FC<MobileGameControlsProps> = ({
   const getOvenStatus = () => {
     const oven = ovens[safeLane];
     if (!oven) return 'empty';
-    if (oven.burned) return 'burned';
-    if (!oven.cooking) return 'empty';
-
-    const elapsed = oven.pausedElapsed !== undefined ? oven.pausedElapsed : Date.now() - oven.startTime;
-
     const speedUpgrade = ovenSpeedUpgrades[safeLane] || 0;
-    const cookingTime = speedUpgrade === 0 ? 3000 :
-                        speedUpgrade === 1 ? 2000 :
-                        speedUpgrade === 2 ? 1000 : 500;
-
-    const warningTime = 7000;
-    const burnTime = 8000;
-
-    if (elapsed >= burnTime) return 'burning';
-    if (elapsed >= warningTime) return 'warning';
-    if (elapsed >= cookingTime) return 'ready';
-    return 'cooking';
+    return getOvenDisplayStatus(oven, speedUpgrade);
   };
 
   const handleOvenAction = () => {
@@ -79,6 +67,85 @@ const MobileGameControls: React.FC<MobileGameControlsProps> = ({
   const ovenStatus = getOvenStatus();
   const currentOven = ovens[safeLane];
 
+  // Landscape layout - controls on left and right edges
+  if (isLandscape) {
+    return (
+      <>
+        {/* Left side - Movement Controls */}
+        <div className="fixed left-0 top-0 bottom-0 w-[12%] flex flex-col items-center justify-center z-40 pointer-events-auto bg-gradient-to-r from-black/40 to-transparent">
+          <button
+            onClick={onMoveUp}
+            disabled={isDisabled || safeLane === 0}
+            className="w-16 h-20 bg-gray-600 text-white rounded-xl hover:bg-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95 active:bg-gray-700 flex items-center justify-center text-2xl font-bold shadow-lg mb-4"
+          >
+            ↑
+          </button>
+          <button
+            onClick={onMoveDown}
+            disabled={isDisabled || safeLane === 3}
+            className="w-16 h-20 bg-gray-600 text-white rounded-xl hover:bg-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95 active:bg-gray-700 flex items-center justify-center text-2xl font-bold shadow-lg"
+          >
+            ↓
+          </button>
+        </div>
+
+        {/* Right side - Oven and Serve Controls */}
+        <div className="fixed right-0 top-0 bottom-0 w-[12%] flex flex-col items-center justify-center z-40 pointer-events-auto bg-gradient-to-l from-black/40 to-transparent">
+          {/* Serve Pizza Control */}
+          <button
+            onClick={onServePizza}
+            disabled={isDisabled || availableSlices === 0}
+            className="relative w-16 h-16 bg-white rounded-full border-4 border-gray-400 shadow-xl transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center mb-4"
+          >
+            <div className="text-3xl">
+              🍕
+            </div>
+            {availableSlices > 0 && (
+              <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 bg-green-600 text-white rounded-full px-2 py-0.5 text-xs font-bold shadow-lg">
+                {availableSlices}
+              </div>
+            )}
+          </button>
+
+          {/* Oven Control */}
+          <button
+            onClick={handleOvenAction}
+            disabled={isDisabled}
+            className={`relative w-16 h-16 rounded-lg border-4 shadow-xl transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed
+              ${ovenStatus === 'burned' || ovenStatus === 'burning' ? 'bg-gray-900 border-gray-600 animate-pulse' :
+                ovenStatus === 'warning' ? 'bg-orange-300 border-orange-600 animate-pulse' :
+                ovenStatus === 'ready' ? 'bg-yellow-200 border-yellow-500' :
+                ovenStatus === 'cooking' ? 'bg-orange-200 border-orange-400' :
+                'bg-gray-700 border-gray-500'}`}
+          >
+            <img src={pizzaPanImg} alt="oven" className="w-full h-full object-contain" />
+            {currentOven && currentOven.sliceCount > 0 && (
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-xl">
+                🍕
+              </div>
+            )}
+            {ovenStatus === 'burned' && (
+              <div className="absolute inset-0 flex items-center justify-center text-2xl">
+                💀
+              </div>
+            )}
+            {ovenStatus === 'burning' && (
+              <div className="absolute inset-0 flex items-center justify-center text-2xl">
+                🔥
+              </div>
+            )}
+            {ovenStatus === 'ready' && (
+              <div className="absolute -top-1 -right-1 text-lg animate-bounce">
+                ✓
+              </div>
+            )}
+          </button>
+        </div>
+      </>
+    );
+  }
+
+  // Portrait layout - controls at bottom
   return (
     <div className="fixed bottom-0 left-0 right-0 h-[45vh] pointer-events-none z-40">
 

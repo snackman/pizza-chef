@@ -6,12 +6,18 @@ import DroppedPlate from './DroppedPlate';
 import PowerUp from './PowerUp';
 import PizzaSliceStack from './PizzaSliceStack';
 import FloatingScore from './FloatingScore';
+import FloatingStar from './FloatingStar';
 import Boss from './Boss';
+import PepeHelpers from './PepeHelpers';
 import { GameState } from '../types/game';
 import pizzaShopBg from '/pizza shop background v2.png';
 import { sprite } from '../lib/assets';
+import { getOvenDisplayStatus } from '../logic/ovenSystem';
+import { OVEN_CONFIG, TIMINGS } from '../lib/constants';
 
 const chefImg = sprite("chef.png");
+const sadChefImg = sprite("sad-chef.png");
+const nyanChefImg = sprite("nyan-chef.png");
 
 interface GameBoardProps {
   gameState: GameState;
@@ -19,8 +25,8 @@ interface GameBoardProps {
 
 const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
   const lanes = [0, 1, 2, 3];
-  const [, forceUpdate] = React.useReducer(x => x + 1, 0);
   const [completedScores, setCompletedScores] = useState<Set<string>>(new Set());
+  const [completedStars, setCompletedStars] = useState<Set<string>>(new Set());
 
   // ✅ Measure board size (for px-based translate3d positioning)
   const boardRef = useRef<HTMLDivElement | null>(null);
@@ -47,53 +53,31 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
     setCompletedScores(prev => new Set(prev).add(id));
   }, []);
 
-  React.useEffect(() => {
-    const interval = setInterval(forceUpdate, 100);
-    return () => clearInterval(interval);
+  const handleStarComplete = useCallback((id: string) => {
+    setCompletedStars(prev => new Set(prev).add(id));
   }, []);
 
   const getOvenStatus = (lane: number) => {
     const oven = gameState.ovens[lane];
+    const speedUpgrade = gameState.ovenSpeedUpgrades[lane] || 0;
+    const baseStatus = getOvenDisplayStatus(oven, speedUpgrade);
 
-    if (oven.burned) {
-      if (oven.cleaningStartTime > 0) {
-        const cleaningElapsed = Date.now() - oven.cleaningStartTime;
-        const halfCleaning = 1500; // 1.5 seconds (half of 3 second cleaning time)
-        if (cleaningElapsed < halfCleaning) {
-          return 'extinguishing';
-        }
-        return 'sweeping';
-      }
-      return 'burned';
+    // Add visual enhancements for GameBoard display
+    if (baseStatus === 'cleaning') {
+      const cleaningElapsed = Date.now() - oven.cleaningStartTime;
+      const halfCleaning = OVEN_CONFIG.CLEANING_TIME / 2;
+      return cleaningElapsed < halfCleaning ? 'extinguishing' : 'sweeping';
     }
 
-    if (!oven.cooking) return 'empty';
-
-    // Use pausedElapsed if game is paused, otherwise calculate from startTime
-    const elapsed = oven.pausedElapsed !== undefined ? oven.pausedElapsed : Date.now() - oven.startTime;
-
-    // Calculate cook time based on speed upgrades
-    const speedUpgrade = gameState.ovenSpeedUpgrades[lane] || 0;
-    const cookingTime =
-      speedUpgrade === 0 ? 3000 :
-      speedUpgrade === 1 ? 2500 :
-      speedUpgrade === 2 ? 2000 : 1500;
-
-    const warningTime = 7000; // 7 seconds (start blinking)
-    const burnTime = 8000; // 8 seconds total
-    const blinkInterval = 250; // 0.25 seconds
-
-    if (elapsed >= burnTime) return 'burning';
-
-    // Blinking phase (between 7-8 seconds)
-    if (elapsed >= warningTime) {
-      const warningElapsed = elapsed - warningTime;
-      const blinkCycle = Math.floor(warningElapsed / blinkInterval);
+    if (baseStatus === 'warning') {
+      // Blinking effect for warning state
+      const elapsed = oven.pausedElapsed !== undefined ? oven.pausedElapsed : Date.now() - oven.startTime;
+      const warningElapsed = elapsed - OVEN_CONFIG.WARNING_TIME;
+      const blinkCycle = Math.floor(warningElapsed / TIMINGS.WARNING_BLINK_INTERVAL);
       return blinkCycle % 2 === 0 ? 'warning-fire' : 'warning-pizza';
     }
 
-    if (elapsed >= cookingTime) return 'ready';
-    return 'cooking';
+    return baseStatus;
   };
 
   return (
@@ -154,7 +138,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
       })}
 
       {/* ✅ Chef (no scale(15), positioned directly on board) */}
-      {!gameState.nyanSweep?.active && (
+      {/* Hide chef when paused (but show game over chef) */}
+      {!gameState.nyanSweep?.active && (!gameState.paused || gameState.gameOver) && (
         <div
           className="absolute flex items-center justify-center"
           style={{
@@ -168,7 +153,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
           }}
         >
           <img
-            src={gameState.gameOver ? "https://i.imgur.com/PwRdw0u.png" : "https://i.imgur.com/EPCSa79.png"}
+            src={gameState.gameOver ? sadChefImg : chefImg}
             alt={gameState.gameOver ? "game over" : "chef"}
             className="w-full h-full object-contain"
             style={{ transform: 'none' }}
@@ -191,6 +176,9 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
         </div>
       )}
 
+      {/* Pepe Helpers - Franco-Pepe and Frank-Pepe */}
+      <PepeHelpers helpers={gameState.pepeHelpers} />
+
       {/* Nyan Cat Chef - positioned directly on game board during sweep */}
       {gameState.nyanSweep?.active && (
         <div
@@ -202,7 +190,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
           }}
         >
           <img
-            src="https://i.imgur.com/fGPU4Pu.png"
+            src={nyanChefImg}
             alt="nyan chef"
             className="w-full h-full object-contain"
             style={{ transform: 'scale(1.5)' }}
@@ -268,6 +256,19 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
           lane={floatingScore.lane}
           position={floatingScore.position}
           onComplete={handleScoreComplete}
+        />
+      ))}
+
+      {/* Floating star indicators */}
+      {gameState.floatingStars.filter(fs => !completedStars.has(fs.id)).map((floatingStar) => (
+        <FloatingStar
+          key={floatingStar.id}
+          id={floatingStar.id}
+          isGain={floatingStar.isGain}
+          count={floatingStar.count}
+          lane={floatingStar.lane}
+          position={floatingStar.position}
+          onComplete={handleStarComplete}
         />
       ))}
 

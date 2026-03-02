@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { Send, Trophy, Download, Share2, Check, Copy as CopyIcon, ArrowLeft, RotateCcw } from 'lucide-react';
-import { submitScore, createGameSession, GameSession, uploadScorecardImage, updateGameSessionImage } from '../services/highScores';
+import { Send, Trophy, Download, Check, Copy as CopyIcon, ArrowLeft, RotateCcw } from 'lucide-react';
+import { submitScore, createGameSession, GameSession, uploadScorecardImage, updateGameSessionImage, checkIfTopScore, checkIfNumberOneScore } from '../services/highScores';
 import { GameStats, StarLostReason } from '../types/game';
 import HighScores from './HighScores';
+import PizzaConfetti from './PizzaConfetti';
 import { sprite, ui } from '../lib/assets';
+import { useMenuKeyboardNav } from '../hooks/useMenuKeyboardNav';
 
 interface GameOverScreenProps {
   stats: GameStats;
@@ -97,6 +99,9 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
   const [submittedName, setSubmittedName] = useState('');
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [isNumberOne, setIsNumberOne] = useState(false);
+  const [leaderboardRefreshKey, setLeaderboardRefreshKey] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imagesRef = useRef<LoadedImages>({
     splashLogo: null,
@@ -117,6 +122,53 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
   const skillRating = calculateSkillRating(stats, score, level);
   const gameId = useMemo(() => crypto.randomUUID(), []);
   const timestamp = new Date();
+
+  // Keyboard navigation for main scorecard view
+  // 0: Submit Score, 1: Leaderboard, 2: Play Again
+  const mainMenuActions = useMemo(() => [
+    () => { /* form submit handled by form */ },
+    () => setShowLeaderboard(true),
+    onPlayAgain,
+  ], [onPlayAgain]);
+
+  const handleMainMenuSelect = useCallback((index: number) => {
+    if (index === 0) {
+      // Trigger form submit programmatically
+      const form = document.querySelector('form');
+      if (form) form.requestSubmit();
+    } else {
+      mainMenuActions[index]?.();
+    }
+  }, [mainMenuActions]);
+
+  const { selectedIndex: mainSelectedIndex, getItemProps: getMainItemProps } = useMenuKeyboardNav({
+    itemCount: 3,
+    columns: 2,
+    onSelect: handleMainMenuSelect,
+    isActive: !showLeaderboard && !scoreSubmitted,
+    initialIndex: 0,
+  });
+
+  // Keyboard navigation for leaderboard view (after submission)
+  // 0: Back, 1: Play Again
+  const leaderboardMenuActions = useMemo(() => [
+    () => setShowLeaderboard(false),
+    onPlayAgain,
+  ], [onPlayAgain]);
+
+  const handleLeaderboardMenuSelect = useCallback((index: number) => {
+    leaderboardMenuActions[index]?.();
+  }, [leaderboardMenuActions]);
+
+  const { selectedIndex: leaderboardSelectedIndex, getItemProps: getLeaderboardItemProps } = useMenuKeyboardNav({
+    itemCount: 2,
+    columns: 2,
+    onSelect: handleLeaderboardMenuSelect,
+    isActive: showLeaderboard && scoreSubmitted,
+    initialIndex: 1, // Start on Play Again
+  });
+
+  const selectedRing = "ring-2 ring-white ring-opacity-80";
   const formattedDate = timestamp.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const formattedTime = timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
@@ -469,6 +521,16 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
       setScoreSubmitted(true);
       setShowLeaderboard(true);
       setSubmitting(false);
+
+      // Check if score made it to top 10 and show confetti
+      const isTopScore = await checkIfTopScore(score);
+      if (isTopScore) {
+        const isNumOne = await checkIfNumberOneScore(score);
+        setIsNumberOne(isNumOne);
+        setShowConfetti(true);
+        setLeaderboardRefreshKey(prev => prev + 1);
+      }
+
       onSubmitted(session, nameToSubmit);
     } else if (scoreSuccess) {
       const fallbackSession: GameSession = {
@@ -489,6 +551,16 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
       setScoreSubmitted(true);
       setShowLeaderboard(true);
       setSubmitting(false);
+
+      // Check if score made it to top 10 and show confetti
+      const isTopScore = await checkIfTopScore(score);
+      if (isTopScore) {
+        const isNumOne = await checkIfNumberOneScore(score);
+        setIsNumberOne(isNumOne);
+        setShowConfetti(true);
+        setLeaderboardRefreshKey(prev => prev + 1);
+      }
+
       onSubmitted(fallbackSession, nameToSubmit);
     } else {
       setError('Failed to submit score. Please try again.');
@@ -585,24 +657,27 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
 
     return (
       <div className="flex flex-col items-center gap-4 w-full max-w-4xl mx-auto">
-        <HighScores userScore={{ name: displayNameForScore, score }} />
+        <PizzaConfetti active={showConfetti} isNumberOne={isNumberOne} />
+        <HighScores userScore={{ name: displayNameForScore, score }} refreshKey={leaderboardRefreshKey} />
 
         {scoreSubmitted ? (
-          <div className="flex gap-3 w-full">
-            <button
-              onClick={() => setShowLeaderboard(false)}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-semibold"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              Back
-            </button>
-            <button
-              onClick={onPlayAgain}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
-            >
-              <RotateCcw className="w-5 h-5" />
-              Play Again
-            </button>
+          <div className="flex flex-col gap-2 w-full">
+            <div className="flex gap-3 w-full">
+              <button
+                {...getLeaderboardItemProps(0)}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-semibold ${leaderboardSelectedIndex === 0 ? selectedRing : ''}`}
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Back
+              </button>
+              <button
+                {...getLeaderboardItemProps(1)}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold ${leaderboardSelectedIndex === 1 ? selectedRing : ''}`}
+              >
+                <RotateCcw className="w-5 h-5" />
+                Play Again
+              </button>
+            </div>
           </div>
         ) : (
           <div className="w-full space-y-3">
@@ -625,7 +700,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
 
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || !playerName.trim()}
                   className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all font-semibold disabled:opacity-50"
                 >
                   {submitting ? '...' : (
@@ -724,8 +799,9 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="submit"
-                disabled={submitting}
-                className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all font-semibold disabled:opacity-50"
+                {...getMainItemProps(0)}
+                disabled={submitting || !playerName.trim()}
+                className={`flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all font-semibold disabled:opacity-50 ${mainSelectedIndex === 0 ? selectedRing : ''}`}
               >
                 {submitting ? '...' : (
                   <>
@@ -736,9 +812,9 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
               </button>
               <button
                 type="button"
-                onClick={() => setShowLeaderboard(true)}
+                {...getMainItemProps(1)}
                 disabled={submitting}
-                className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-semibold disabled:opacity-50"
+                className={`flex items-center justify-center gap-2 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-semibold disabled:opacity-50 ${mainSelectedIndex === 1 ? selectedRing : ''}`}
               >
                 <Trophy className="w-5 h-5" />
                 Leaderboard
@@ -760,12 +836,14 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
 
         <button
           type="button"
-          onClick={onPlayAgain}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+          {...getMainItemProps(2)}
+          className={`w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold ${mainSelectedIndex === 2 ? selectedRing : ''}`}
         >
           <RotateCcw className="w-5 h-5" />
           Play Again
         </button>
+
+        <p className="text-[10px] text-gray-500 text-center">Use arrow keys + Enter to navigate</p>
 
         {/* SHARE SCORE CARD BUTTON REMOVED */}
       </form>

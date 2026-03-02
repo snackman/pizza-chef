@@ -1,44 +1,29 @@
 import React from 'react';
 import { EmptyPlate as EmptyPlateType } from '../types/game';
+import { sprite } from '../lib/assets';
+
+const paperPlateImg = sprite("paperplate.png");
 
 interface EmptyPlateProps {
   plate: EmptyPlateType;
 }
 
-const LANDSCAPE_LANE_POSITIONS = [20, 40, 60, 80]; // match LandscapeCustomer & PizzaSlice
+const OVEN_POSITION = 10; // Target X position (near the ovens)
 
 const EmptyPlate: React.FC<EmptyPlateProps> = ({ plate }) => {
-  // Safe helpers (SSR-friendly)
-  const getIsLandscape = () =>
-    typeof window !== 'undefined' ? window.innerWidth > window.innerHeight : true;
+  // Calculate visual lane for angled throws
+  let visualLane = plate.lane;
 
-  const getIsMobile = () =>
-    typeof navigator !== 'undefined'
-      ? /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
-        (navigator as any).maxTouchPoints > 1
-      : false;
+  if (plate.targetLane !== undefined && plate.startLane !== undefined && plate.startPosition !== undefined) {
+    // Interpolate lane based on horizontal progress
+    const totalDistance = plate.startPosition - OVEN_POSITION;
+    const traveled = plate.startPosition - plate.position;
+    const progress = Math.min(1, Math.max(0, traveled / totalDistance));
 
-  const [isLandscape, setIsLandscape] = React.useState(getIsLandscape);
-  const [isMobile, setIsMobile] = React.useState(getIsMobile);
+    visualLane = plate.startLane + (plate.targetLane - plate.startLane) * progress;
+  }
 
-  React.useEffect(() => {
-    const handleResize = () => {
-      setIsLandscape(getIsLandscape());
-      setIsMobile(getIsMobile());
-    };
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('orientationchange', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('orientationchange', handleResize);
-    };
-  }, []);
-
-  // Match PizzaSlice logic exactly
-  const topPercent =
-    isMobile && isLandscape
-      ? LANDSCAPE_LANE_POSITIONS[plate.lane]
-      : plate.lane * 25 + 6;
+  const topPercent = visualLane * 25 + 6;
 
   return (
     <div
@@ -50,7 +35,7 @@ const EmptyPlate: React.FC<EmptyPlateProps> = ({ plate }) => {
     >
       {/* Empty plate image */}
       <img
-        src="https://i.imgur.com/vUT4nnz.png"
+        src={paperPlateImg}
         alt="empty plate"
         className="absolute inset-0 w-[80%] h-[80%] object-contain"
         style={{ zIndex: 1 }}

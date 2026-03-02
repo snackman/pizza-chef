@@ -25,6 +25,37 @@ export interface OvenInteractionResult {
   newState?: Partial<GameState>; // Only the parts that changed
 }
 
+export type OvenDisplayStatus = 'empty' | 'cooking' | 'ready' | 'warning' | 'burning' | 'burned' | 'cleaning';
+
+/**
+ * Get the display status of an oven for UI rendering
+ * Single source of truth for oven status calculation
+ */
+export const getOvenDisplayStatus = (
+  oven: OvenState,
+  speedUpgrade: number,
+  now: number = Date.now()
+): OvenDisplayStatus => {
+  if (oven.burned) {
+    if (oven.cleaningStartTime > 0) {
+      return 'cleaning';
+    }
+    return 'burned';
+  }
+
+  if (!oven.cooking) {
+    return 'empty';
+  }
+
+  const elapsed = oven.pausedElapsed !== undefined ? oven.pausedElapsed : now - oven.startTime;
+  const cookTime = OVEN_CONFIG.COOK_TIMES[speedUpgrade] || OVEN_CONFIG.COOK_TIMES[0];
+
+  if (elapsed >= OVEN_CONFIG.BURN_TIME) return 'burning';
+  if (elapsed >= OVEN_CONFIG.WARNING_TIME) return 'warning';
+  if (elapsed >= cookTime) return 'ready';
+  return 'cooking';
+};
+
 /**
  * Calculates the status of all ovens for a single game tick
  */
@@ -110,10 +141,11 @@ export const processOvenTick = (
 export const tryInteractWithOven = (
   gameState: GameState,
   lane: number,
-  now: number
+  now: number,
+  starPowerActive: boolean = false
 ): OvenInteractionResult => {
   const currentOven = gameState.ovens[lane];
-  
+
   if (currentOven.burned) return { action: 'NONE' };
 
   // A. Start Cooking
@@ -124,40 +156,62 @@ export const tryInteractWithOven = (
       newState: {
         ovens: {
           ...gameState.ovens,
-          [lane]: { 
-            cooking: true, 
-            startTime: now, 
-            burned: false, 
-            cleaningStartTime: 0, 
-            sliceCount: slicesProduced 
+          [lane]: {
+            cooking: true,
+            startTime: now,
+            burned: false,
+            cleaningStartTime: 0,
+            sliceCount: slicesProduced
           }
         }
       }
     };
-  } 
-  
+  }
+
   // B. Serve Pizza
   const speedUpgrade = gameState.ovenSpeedUpgrades[lane] || 0;
   const cookTime = OVEN_CONFIG.COOK_TIMES[speedUpgrade];
-  
+
   // Check if cooked enough but not burned
   if (now - currentOven.startTime >= cookTime && now - currentOven.startTime < OVEN_CONFIG.BURN_TIME) {
     const slicesProduced = currentOven.sliceCount;
     const newTotal = gameState.availableSlices + slicesProduced;
 
     if (newTotal <= GAME_CONFIG.MAX_SLICES) {
+      // Has room - serve normally
       return {
         action: 'SERVED',
         newState: {
           availableSlices: newTotal,
           ovens: {
             ...gameState.ovens,
-            [lane]: { 
-              cooking: false, 
-              startTime: 0, 
-              burned: false, 
-              cleaningStartTime: 0, 
-              sliceCount: 0 
+            [lane]: {
+              cooking: false,
+              startTime: 0,
+              burned: false,
+              cleaningStartTime: 0,
+              sliceCount: 0
+            }
+          },
+          stats: {
+            ...gameState.stats,
+            slicesBaked: gameState.stats.slicesBaked + slicesProduced,
+          }
+        }
+      };
+    } else if (starPowerActive) {
+      // No room but star power active - just empty the oven (don't add slices)
+      return {
+        action: 'SERVED',
+        newState: {
+          ovens: {
+            ...gameState.ovens,
+            [lane]: {
+              cooking: false,
+              startTime: 0,
+              burned: false,
+              cleaningStartTime: 0,
+              sliceCount: 0
             }
           },
           stats: {
@@ -167,6 +221,7 @@ export const tryInteractWithOven = (
         }
       };
     }
+    // No room and no star power - do nothing
   }
 
   return { action: 'NONE' };
