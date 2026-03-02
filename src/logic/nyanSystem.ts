@@ -1,6 +1,7 @@
 import { GameState, Customer, BossMinion, NyanSweep } from '../types/game';
 import { GAME_CONFIG, NYAN_CONFIG } from '../lib/constants';
 import { checkNyanSweepCollision } from './collisionSystem';
+import { LaneBuckets, getEntitiesInAdjacentLanes, buildLaneBuckets } from './laneBuckets';
 
 export interface NyanSweepResult {
     nextSweep?: NyanSweep;
@@ -71,38 +72,49 @@ export const processNyanSweepMovement = (
 };
 
 /**
- * Checks for collisions during Nyan Sweep
+ * Checks for collisions during Nyan Sweep.
+ * Uses lane-bucketed lookups to only check entities in adjacent lanes (tolerance 0.8),
+ * reducing checks from all entities to ~2 lanes worth.
+ *
+ * Accepts optional pre-built lane buckets. If not provided, builds them on the fly.
  */
 export const checkNyanSweepCollisions = (
     sweep: NyanSweep,
     newXPosition: number,
     newLane: number,
     customers: Customer[],
-    minions?: BossMinion[]
+    minions?: BossMinion[],
+    customerBuckets?: LaneBuckets<Customer>,
+    minionBuckets?: LaneBuckets<BossMinion>
 ): NyanCollisionResult => {
     const hitCustomerIds: string[] = [];
     const hitMinionIds: string[] = [];
 
     const oldX = sweep.xPosition;
+    const NYAN_LANE_TOLERANCE = 0.8;
 
-    // Check Customers
-    customers.forEach(customer => {
+    // Use pre-built buckets or build on the fly
+    const custBuckets = customerBuckets || buildLaneBuckets(customers);
+
+    // Only check customers in adjacent lanes (within tolerance 0.8)
+    const nearbyCustomers = getEntitiesInAdjacentLanes(custBuckets, newLane, NYAN_LANE_TOLERANCE);
+
+    nearbyCustomers.forEach(customer => {
         if (customer.served || customer.disappointed || customer.vomit) return;
 
-        // Using the extracted collision logic
         if (checkNyanSweepCollision(newLane, oldX, newXPosition, customer)) {
             hitCustomerIds.push(customer.id);
         }
     });
 
-    // Check Boss Minions
+    // Check Boss Minions in adjacent lanes
     if (minions) {
-        minions.forEach(minion => {
+        const minBuckets = minionBuckets || buildLaneBuckets(minions);
+        const nearbyMinions = getEntitiesInAdjacentLanes(minBuckets, newLane, NYAN_LANE_TOLERANCE);
+
+        nearbyMinions.forEach(minion => {
             if (minion.defeated) return;
 
-            // Inline check or reuse logic. Since checkNyanSweepCollision takes {lane, position}, it works for minions too.
-            // Replicating the specific tolerance used in the original code for minions if different
-            // Original code used 0.8 tolerance for minions, same as default in checkNyanSweepCollision
             if (checkNyanSweepCollision(newLane, oldX, newXPosition, minion)) {
                 hitMinionIds.push(minion.id);
             }
