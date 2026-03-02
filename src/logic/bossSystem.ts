@@ -2,6 +2,7 @@ import { GameState, BossBattle, BossMinion, PizzaSlice, BossType } from '../type
 import { BOSS_CONFIG, PAPA_JOHN_CONFIG, DOMINOS_CONFIG, POSITIONS, ENTITY_SPEEDS, SCORING } from '../lib/constants';
 import { checkSliceMinionCollision, checkMinionReachedChef } from './collisionSystem';
 import { getPapaJohnMask, checkMaskCollision } from './bossCollisionMasks';
+import { buildLaneBuckets, getEntitiesInLane, LaneBuckets } from './laneBuckets';
 
 export type BossEvent =
   | { type: 'MINION_DEFEATED'; lane: number; position: number; points: number }
@@ -186,7 +187,8 @@ export const checkMinionsReachedChef = (
 };
 
 /**
- * Process slice-minion collisions
+ * Process slice-minion collisions.
+ * Uses lane-bucketed lookups so each slice only checks minions in its lane.
  */
 export const processSliceMinionCollisions = (
   slices: PizzaSlice[],
@@ -201,16 +203,21 @@ export const processSliceMinionCollisions = (
   const events: BossEvent[] = [];
   let scoreGained = 0;
 
-  let updatedMinions = [...minions];
+  // Track defeated minions by ID for sequential ordering
+  const defeatedMinionIds = new Set<string>();
 
   slices.forEach(slice => {
     if (consumedSliceIds.has(slice.id)) return;
 
-    updatedMinions = updatedMinions.map(minion => {
-      if (minion.defeated || consumedSliceIds.has(slice.id)) return minion;
+    // Only check minions in the same lane as this slice
+    for (const minion of minions) {
+      if (minion.lane !== slice.lane) continue;
+      if (minion.defeated || defeatedMinionIds.has(minion.id)) continue;
+      if (consumedSliceIds.has(slice.id)) break;
 
       if (checkSliceMinionCollision(slice, minion, 8)) {
         consumedSliceIds.add(slice.id);
+        defeatedMinionIds.add(minion.id);
         const points = SCORING.MINION_DEFEAT;
         scoreGained += points;
         events.push({
@@ -219,11 +226,14 @@ export const processSliceMinionCollisions = (
           position: minion.position,
           points,
         });
-        return { ...minion, defeated: true };
       }
-      return minion;
-    });
+    }
   });
+
+  // Build final updated minions array
+  const updatedMinions = minions.map(minion =>
+    defeatedMinionIds.has(minion.id) ? { ...minion, defeated: true } : minion
+  );
 
   return { updatedMinions, consumedSliceIds, events, scoreGained };
 };
