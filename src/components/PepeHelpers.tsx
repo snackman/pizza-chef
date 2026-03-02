@@ -90,4 +90,21 @@ const PepeHelpers: React.FC<PepeHelpersProps> = ({ helpers }) => {
   );
 };
 
-export default PepeHelpers;
+function arePepeHelpersPropsEqual(prev: PepeHelpersProps, next: PepeHelpersProps): boolean {
+  const a = prev.helpers;
+  const b = next.helpers;
+
+  // Both undefined or both falsy
+  if (!a && !b) return true;
+  if (!a || !b) return false;
+
+  return (
+    a.active === b.active &&
+    a.franco.lane === b.franco.lane &&
+    a.franco.availableSlices === b.franco.availableSlices &&
+    a.frank.lane === b.frank.lane &&
+    a.frank.availableSlices === b.frank.availableSlices
+  );
+}
+
+export default React.memo(PepeHelpers, arePepeHelpersPropsEqual);

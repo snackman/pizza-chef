@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import Customer from './Customer';
 import PizzaSlice from './PizzaSlice';
 import EmptyPlate from './EmptyPlate';
@@ -56,6 +56,16 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
   const handleStarComplete = useCallback((id: string) => {
     setCompletedStars(prev => new Set(prev).add(id));
   }, []);
+
+  const activeFloatingScores = useMemo(
+    () => gameState.floatingScores.filter(fs => !completedScores.has(fs.id)),
+    [gameState.floatingScores, completedScores]
+  );
+
+  const activeFloatingStars = useMemo(
+    () => gameState.floatingStars.filter(fs => !completedStars.has(fs.id)),
+    [gameState.floatingStars, completedStars]
+  );
 
   const getOvenStatus = (lane: number) => {
     const oven = gameState.ovens[lane];
@@ -248,7 +258,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
       )}
 
       {/* Floating score indicators */}
-      {gameState.floatingScores.filter(fs => !completedScores.has(fs.id)).map((floatingScore) => (
+      {activeFloatingScores.map((floatingScore) => (
         <FloatingScore
           key={floatingScore.id}
           id={floatingScore.id}
@@ -260,7 +270,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
       ))}
 
       {/* Floating star indicators */}
-      {gameState.floatingStars.filter(fs => !completedStars.has(fs.id)).map((floatingStar) => (
+      {activeFloatingStars.map((floatingStar) => (
         <FloatingStar
           key={floatingStar.id}
           id={floatingStar.id}
