@@ -28,9 +28,7 @@
       "Bash(grep:*)",
       "Bash(npx vitest run src/logic/customerSystem.test.ts)",
       "Bash(npx vitest:*)",
-      "Bash(timeout 5 npm run dev:*)",
-      "Bash(cd /c/Users/samgo/OneDrive/Documents/PizzaDAO/Code/pizza-chef-all/pizza-chef && vercel env ls --scope=pizza-dao 2>&1)",
-      "Bash(cd /c/Users/samgo/OneDrive/Documents/PizzaDAO/Code/pizza-chef-all/pizza-chef && printf \"https://eskyfpmlvlvxavrrfcpv.supabase.co\" | vercel env add VITE_SUPABASE_URL production preview development --scope=pizza-dao 2>&1)"
+      "Bash(timeout 5 npm run dev:*)"
     ]
   }
 }
