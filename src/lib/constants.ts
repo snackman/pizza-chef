@@ -4,6 +4,7 @@ export const GAME_CONFIG = {
   STARTING_LIVES: 3,
   LEVEL_THRESHOLD: 500, // Score needed to level up
   GAME_LOOP_INTERVAL: 50, // ms
+  MAX_FRAME_TIME: 200, // Cap delta to prevent spiral of death
 
   // Store Settings
   STORE_LEVEL_INTERVAL: 10,
