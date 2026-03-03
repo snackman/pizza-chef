@@ -8,7 +8,6 @@ import PizzaSliceStack from './PizzaSliceStack';
 import FloatingScore from './FloatingScore';
 import Boss from './Boss';
 import { GameState } from '../types/game';
-import landscapeBg from '../assets/landscape version pizza chef.png';
 import { sprite } from '../lib/assets';
 
 const chefImg = sprite("chef.png");

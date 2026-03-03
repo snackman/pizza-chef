@@ -17,7 +17,7 @@ import ControlsOverlay from './components/ControlsOverlay';
 import { useGameLogic } from './hooks/useGameLogic';
 import { bg } from './lib/assets';
 
-const counterImg = bg('counter.png');
+const counterImg = bg('counter.webp');
 
 function App() {
   const [showGameOver, setShowGameOver] = useState(false);

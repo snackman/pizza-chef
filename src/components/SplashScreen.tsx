@@ -1,5 +1,6 @@
 import React from 'react';
 import { sprite } from '../lib/assets';
+import { useAssetPreloader } from '../hooks/useAssetPreloader';
 
 const chefImg = sprite("chef.png");
 
@@ -8,6 +9,8 @@ interface SplashScreenProps {
 }
 
 const SplashScreen: React.FC<SplashScreenProps> = ({ onStart }) => {
+  const { progress, done } = useAssetPreloader();
+
   return (
     <div className="fixed inset-0 bg-red-600 flex items-center justify-center z-50">
       <div className="text-center space-y-3 p-8 relative">
@@ -27,11 +30,29 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onStart }) => {
           className="w-48 h-auto mx-auto"
         />
 
+        {/* Loading bar */}
+        {!done && (
+          <div className="w-64 mx-auto">
+            <div className="bg-red-800 rounded-full h-3 overflow-hidden">
+              <div
+                className="bg-green-400 h-full rounded-full transition-all duration-300"
+                style={{ width: `${Math.round(progress * 100)}%` }}
+              />
+            </div>
+            <p className="text-red-200 text-sm mt-1">Loading assets...</p>
+          </div>
+        )}
+
         <button
           onClick={onStart}
-          className="px-12 py-4 bg-green-600 text-white text-2xl font-bold rounded-lg hover:bg-green-700 transition-all transform hover:scale-105 shadow-lg"
+          disabled={!done}
+          className={`px-12 py-4 text-white text-2xl font-bold rounded-lg transition-all transform shadow-lg ${
+            done
+              ? 'bg-green-600 hover:bg-green-700 hover:scale-105 cursor-pointer'
+              : 'bg-gray-500 cursor-not-allowed opacity-60'
+          }`}
         >
-          Start Game
+          {done ? 'Start Game' : 'Loading...'}
         </button>
       </div>
 

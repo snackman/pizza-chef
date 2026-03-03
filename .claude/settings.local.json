@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npm run dev:*)",
+      "Bash(timeout 3:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run build:*)",
+      "Bash(find:*)",
+      "Bash(xargs -I {} bash -c 'echo \"\"=== {} ===\"\" && grep -c \"\"React.memo\\\\|useMemo\\\\|useCallback\"\" {} || echo \"\"0\"\"')",
+      "Bash(gh repo create:*)",
+      "Bash(where.exe:*)",
+      "Bash(dir \"C:\\\\Program Files\\\\GitHub CLI\"\" 2>&1 || dir \"%LOCALAPPDATA%ProgramsGitHub CLI\"\")",
+      "Bash(cmd.exe /c \"where gh\")",
+      "Bash(powershell.exe -Command \"& {$env:Path = [System.Environment]::GetEnvironmentVariable\\(''Path'',''Machine''\\) + '';'' + [System.Environment]::GetEnvironmentVariable\\(''Path'',''User''\\); gh repo create PizzaDAO/pizza-chef --public --description ''Pizza Chef game''}\")",
+      "Bash(git remote add:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)",
+      "Bash(wc:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm test:*)",
+      "Bash(python:*)",
+      "Bash(magick:*)",
+      "Bash(pip install:*)",
+      "Bash(grep:*)",
+      "Bash(npx vitest run src/logic/customerSystem.test.ts)",
+      "Bash(npx vitest:*)",
+      "Bash(timeout 5 npm run dev:*)",
+      "Bash(cd /c/Users/samgo/OneDrive/Documents/PizzaDAO/Code/pizza-chef-all/pizza-chef && vercel env ls --scope=pizza-dao 2>&1)",
+      "Bash(cd /c/Users/samgo/OneDrive/Documents/PizzaDAO/Code/pizza-chef-all/pizza-chef && printf \"https://eskyfpmlvlvxavrrfcpv.supabase.co\" | vercel env add VITE_SUPABASE_URL production preview development --scope=pizza-dao 2>&1)"
+    ]
+  }
+}
