@@ -1,6 +1,7 @@
 import { GameState, PepeHelpers, PepeHelper, PizzaSlice, Customer } from '../types/game';
 import { POWERUPS, PEPE_CONFIG, GAME_CONFIG, ENTITY_SPEEDS, OVEN_CONFIG } from '../lib/constants';
 import { getOvenDisplayStatus } from './ovenSystem';
+import { buildLaneBuckets, getEntitiesInLane, LaneBuckets } from './laneBuckets';
 
 /**
  * Initialize pepe helpers when power-up is collected
@@ -44,14 +45,17 @@ export type PepeHelperEvent =
   | { type: 'HELPER_MOVED'; lane: number; helper: 'franco' | 'frank' };
 
 /**
- * Evaluate what action a helper should take
+ * Evaluate what action a helper should take.
+ * Accepts pre-built lane buckets to avoid re-filtering arrays per lane.
  */
 const evaluateLanePriority = (
   lane: number,
   gameState: GameState,
   helper: PepeHelper,
   otherHelperLane: number,
-  chefLane: number
+  chefLane: number,
+  customerBuckets: LaneBuckets<Customer>,
+  plateBuckets: LaneBuckets<typeof gameState.emptyPlates[0]>
 ): number => {
   let priority = 0;
   const oven = gameState.ovens[lane];
@@ -69,8 +73,9 @@ const evaluateLanePriority = (
   }
 
   // High priority: Approaching customers in this lane (if we have slices)
-  const approachingInLane = gameState.customers.filter(
-    c => c.lane === lane && !c.served && !c.disappointed && !c.vomit && !c.leaving && c.position < 80
+  const laneCustomers = getEntitiesInLane(customerBuckets, lane);
+  const approachingInLane = laneCustomers.filter(
+    c => !c.served && !c.disappointed && !c.vomit && !c.leaving && c.position < 80
   );
   if (approachingInLane.length > 0 && helper.availableSlices > 0) {
     // Closer customers = higher priority
@@ -79,7 +84,8 @@ const evaluateLanePriority = (
   }
 
   // Medium priority: Plates returning in this lane
-  const platesInLane = gameState.emptyPlates.filter(p => p.lane === lane && p.position < 30);
+  const lanePlates = getEntitiesInLane(plateBuckets, lane);
+  const platesInLane = lanePlates.filter(p => p.position < 30);
   if (platesInLane.length > 0) {
     priority += 60;
   }
@@ -92,14 +98,18 @@ const evaluateLanePriority = (
 };
 
 /**
- * Process a single helper's actions
+ * Process a single helper's actions.
+ * Accepts pre-built lane buckets to avoid redundant filtering.
  */
 const processHelperAction = (
   helper: PepeHelper,
   gameState: GameState,
   otherHelperLane: number,
   chefLane: number,
-  now: number
+  now: number,
+  customerBuckets: LaneBuckets<Customer>,
+  plateBuckets: LaneBuckets<typeof gameState.emptyPlates[0]>,
+  sliceBuckets: LaneBuckets<PizzaSlice>
 ): {
   updatedHelper: PepeHelper;
   updatedOvens: typeof gameState.ovens;
@@ -122,10 +132,10 @@ const processHelperAction = (
     return { updatedHelper, updatedOvens, newSlices, caughtPlateIds, events, statsUpdates, scoreGained };
   }
 
-  // Evaluate best lane
+  // Evaluate best lane using pre-built buckets
   const lanePriorities = [0, 1, 2, 3].map(lane => ({
     lane,
-    priority: evaluateLanePriority(lane, gameState, helper, otherHelperLane, chefLane),
+    priority: evaluateLanePriority(lane, gameState, helper, otherHelperLane, chefLane, customerBuckets, plateBuckets),
   }));
   lanePriorities.sort((a, b) => b.priority - a.priority);
 
@@ -145,10 +155,9 @@ const processHelperAction = (
   const speedUpgrade = gameState.ovenSpeedUpgrades[currentLane] || 0;
   const status = getOvenDisplayStatus(oven, speedUpgrade);
 
-  // Priority 1: Catch plates
-  const platesInLane = gameState.emptyPlates.filter(
-    p => p.lane === currentLane && p.position < 20
-  );
+  // Priority 1: Catch plates (using lane buckets)
+  const lanePlates = getEntitiesInLane(plateBuckets, currentLane);
+  const platesInLane = lanePlates.filter(p => p.position < 20);
   if (platesInLane.length > 0) {
     const plate = platesInLane[0];
     caughtPlateIds.push(plate.id);
@@ -184,12 +193,13 @@ const processHelperAction = (
     return { updatedHelper, updatedOvens, newSlices, caughtPlateIds, events, statsUpdates, scoreGained };
   }
 
-  // Priority 3: Serve customers (only if needed)
-  const approachingCustomers = gameState.customers.filter(
-    c => c.lane === currentLane && !c.served && !c.disappointed && !c.vomit && !c.leaving && c.position < 85
+  // Priority 3: Serve customers (only if needed) - using lane buckets
+  const laneCustomers = getEntitiesInLane(customerBuckets, currentLane);
+  const approachingCustomers = laneCustomers.filter(
+    c => !c.served && !c.disappointed && !c.vomit && !c.leaving && c.position < 85
   );
-  // Count slices already heading to this lane
-  const slicesInLane = gameState.pizzaSlices.filter(s => s.lane === currentLane).length + newSlices.filter(s => s.lane === currentLane).length;
+  // Count slices already heading to this lane (using lane buckets)
+  const slicesInLane = getEntitiesInLane(sliceBuckets, currentLane).length + newSlices.filter(s => s.lane === currentLane).length;
   // Only throw if there are more customers than slices already in flight
   if (approachingCustomers.length > slicesInLane && updatedHelper.availableSlices > 0) {
     const newSlice: PizzaSlice = {
@@ -244,13 +254,21 @@ export const processPepeHelperTick = (
   let totalScore = 0;
   let statsUpdates: Partial<typeof gameState.stats> = {};
 
+  // Build lane buckets once for both helpers
+  const customerBuckets = buildLaneBuckets(gameState.customers);
+  const sliceBuckets = buildLaneBuckets(gameState.pizzaSlices);
+  let plateBuckets = buildLaneBuckets(currentPlates);
+
   // Process Franco
   const francoResult = processHelperAction(
     helpers.franco,
     { ...gameState, ovens: currentOvens, emptyPlates: currentPlates },
     helpers.frank.lane,
     gameState.chefLane,
-    now
+    now,
+    customerBuckets,
+    plateBuckets,
+    sliceBuckets
   );
   currentOvens = francoResult.updatedOvens;
   currentPlates = currentPlates.filter(p => !francoResult.caughtPlateIds.includes(p.id));
@@ -259,13 +277,21 @@ export const processPepeHelperTick = (
   totalScore += francoResult.scoreGained;
   statsUpdates = { ...statsUpdates, ...francoResult.statsUpdates };
 
+  // Rebuild plate buckets after Franco may have caught plates
+  if (francoResult.caughtPlateIds.length > 0) {
+    plateBuckets = buildLaneBuckets(currentPlates);
+  }
+
   // Process Frank
   const frankResult = processHelperAction(
     helpers.frank,
     { ...gameState, ovens: currentOvens, emptyPlates: currentPlates },
     francoResult.updatedHelper.lane,
     gameState.chefLane,
-    now
+    now,
+    customerBuckets,
+    plateBuckets,
+    sliceBuckets
   );
   currentOvens = frankResult.updatedOvens;
   currentPlates = currentPlates.filter(p => !frankResult.caughtPlateIds.includes(p.id));

@@ -51,6 +51,11 @@ import {
 } from '../logic/collisionSystem';
 
 import {
+  buildLaneBuckets,
+  getEntitiesInLane
+} from '../logic/laneBuckets';
+
+import {
   processChefPowerUpCollisions,
   processPowerUpCollection,
   processPowerUpExpirations
@@ -334,7 +339,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         }
       });
 
-      // 3. COLLISION LOOP (Slices vs Customers)
+      // 3. COLLISION LOOP (Slices vs Customers) — lane-bucketed for perf
       newState.pizzaSlices = newState.pizzaSlices.map(slice => ({ ...slice, position: slice.position + slice.speed }));
 
       const remainingSlices: PizzaSlice[] = [];
@@ -344,18 +349,37 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       const starGainsToAdd: Array<{ lane: number; position: number }> = [];
       let sliceWentOffScreen = false;
 
+      // Build a customer lookup Map for O(1) updates that preserve sequential ordering.
+      // When slice N serves a customer, slice N+1 sees the updated customer state.
+      const customerMap = new Map<string, typeof newState.customers[0]>();
+      for (const c of newState.customers) customerMap.set(c.id, c);
+
+      // Track which customer IDs have been "consumed" (served/hit) so later slices skip them
+      const consumedCustomerIds = new Set<string>();
+
+      // Build power-up lane buckets (read-only during slice loop)
+      const powerUpBuckets = buildLaneBuckets(newState.powerUps);
+
       newState.pizzaSlices.forEach(slice => {
         let consumed = false;
 
-        newState.customers = newState.customers.map(customer => {
-          if (consumed || isCustomerLeaving(customer)) return customer;
+        // Only check customers in the same lane as this slice
+        // We iterate the full customer list to preserve ordering, but skip non-matching lanes early
+        for (const customer of newState.customers) {
+          if (consumed) break;
+          // Fast lane check — skip customers not in this slice's lane
+          if (customer.lane !== slice.lane) continue;
 
-          const isHit = checkSliceCustomerCollision(slice, customer);
+          // Get the latest version of this customer (may have been updated by a prior slice)
+          const currentCustomer = customerMap.get(customer.id)!;
+          if (isCustomerLeaving(currentCustomer)) continue;
+
+          const isHit = checkSliceCustomerCollision(slice, currentCustomer);
 
           if (isHit) {
             consumed = true;
 
-            const hitResult = processCustomerHit(customer, now, hasDoge);
+            const hitResult = processCustomerHit(currentCustomer, now, hasDoge);
 
             if (hitResult.newEntities.droppedPlate) newState.droppedPlates = [...newState.droppedPlates, hitResult.newEntities.droppedPlate];
             if (hitResult.newEntities.emptyPlate) newState.emptyPlates = [...newState.emptyPlates, hitResult.newEntities.emptyPlate];
@@ -372,7 +396,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               } else if (event === 'UNFROZEN_AND_SERVED') {
                 soundManager.customerUnfreeze();
 
-                const result = applyCustomerScoring(customer, newState, dogeMultiplier,
+                const result = applyCustomerScoring(currentCustomer, newState, dogeMultiplier,
                   getStreakMultiplier(newState.stats.currentCustomerStreak),
                   { includeBank: true, countsAsServed: true, isFirstSlice: false, checkLifeGain: true });
 
@@ -391,7 +415,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               } else if (event === 'WOOZY_STEP_1') {
                 soundManager.woozyServed();
 
-                const result = applyCustomerScoring(customer, newState, dogeMultiplier,
+                const result = applyCustomerScoring(currentCustomer, newState, dogeMultiplier,
                   getStreakMultiplier(newState.stats.currentCustomerStreak),
                   { includeBank: true, countsAsServed: false, isFirstSlice: true, checkLifeGain: false });
 
@@ -403,7 +427,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 // Steve got his first slice but wants more - NO PAYMENT
                 soundManager.woozyServed();
 
-                const result = applyCustomerScoring(customer, newState, dogeMultiplier,
+                const result = applyCustomerScoring(currentCustomer, newState, dogeMultiplier,
                   getStreakMultiplier(newState.stats.currentCustomerStreak),
                   { includeBank: false, countsAsServed: false, isFirstSlice: true, checkLifeGain: false });
 
@@ -414,7 +438,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 // Steve is satisfied - NO PAYMENT but counts as served
                 soundManager.customerServed();
 
-                const result = applyCustomerScoring(customer, newState, dogeMultiplier,
+                const result = applyCustomerScoring(currentCustomer, newState, dogeMultiplier,
                   getStreakMultiplier(newState.stats.currentCustomerStreak),
                   { includeBank: false, countsAsServed: true, isFirstSlice: false, checkLifeGain: true });
 
@@ -432,7 +456,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               } else if (event === 'WOOZY_STEP_2' || event === 'SERVED_NORMAL' || event === 'SERVED_CRITIC' || event === 'SERVED_BRIAN_DOGE') {
                 soundManager.customerServed();
 
-                const result = applyCustomerScoring(customer, newState, dogeMultiplier,
+                const result = applyCustomerScoring(currentCustomer, newState, dogeMultiplier,
                   getStreakMultiplier(newState.stats.currentCustomerStreak),
                   { includeBank: true, countsAsServed: true, isFirstSlice: false, checkLifeGain: true });
 
@@ -451,15 +475,17 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             });
 
             platesFromSlices.add(slice.id);
-            return hitResult.updatedCustomer;
+            // Update the customer map so subsequent slices see this customer as served/updated
+            customerMap.set(currentCustomer.id, hitResult.updatedCustomer);
+            consumedCustomerIds.add(currentCustomer.id);
           }
-
-          return customer;
-        });
+        }
 
         if (!consumed && slice.position < POSITIONS.OFF_SCREEN_RIGHT) {
           remainingSlices.push(slice);
-          newState.powerUps.forEach(powerUp => {
+          // Only check power-ups in the same lane as this slice
+          const lanePowerUps = getEntitiesInLane(powerUpBuckets, slice.lane);
+          lanePowerUps.forEach(powerUp => {
             if (checkSlicePowerUpCollision(slice, powerUp)) {
               soundManager.pizzaDestroyed();
               destroyedPowerUpIds.add(powerUp.id);
@@ -469,6 +495,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           sliceWentOffScreen = true;
         }
       });
+
+      // Reconstruct the customers array from the map (preserving original order)
+      newState.customers = newState.customers.map(c => customerMap.get(c.id) || c);
 
       const finalSlices = remainingSlices.filter(slice => {
         if (platesFromSlices.has(slice.id)) return true;
@@ -627,15 +656,23 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
         const newLane = sweepResult.nextChefLane;
 
-        // 2. Check Collisions
+        // 2. Check Collisions (with lane-bucketed lookups)
         const nyanScores: Array<{ points: number; lane: number; position: number }> = [];
+
+        // Build lane buckets for nyan sweep collision checks
+        const nyanCustomerBuckets = buildLaneBuckets(newState.customers);
+        const nyanMinionBuckets = newState.bossBattle?.active && !newState.bossBattle.bossDefeated
+          ? buildLaneBuckets(newState.bossBattle.minions)
+          : undefined;
 
         const collisionResult = checkNyanSweepCollisions(
           newState.nyanSweep,
           sweepResult.newXPosition,
           newLane,
           newState.customers,
-          newState.bossBattle?.active && !newState.bossBattle.bossDefeated ? newState.bossBattle.minions : undefined
+          newState.bossBattle?.active && !newState.bossBattle.bossDefeated ? newState.bossBattle.minions : undefined,
+          nyanCustomerBuckets,
+          nyanMinionBuckets
         );
 
         // 3. Process Customer Hits
