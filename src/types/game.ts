@@ -157,6 +157,7 @@ export interface OvenState {
   cleaningStartTime: number;
   pausedElapsed?: number;
   sliceCount: number;
+  slimeDisabledUntil?: number;
 }
 
 export interface BossMinion {
@@ -165,9 +166,11 @@ export interface BossMinion {
   position: number;
   speed: number;
   defeated: boolean;
+  sprite?: string;
+  slime?: boolean;
 }
 
-export type BossType = 'dominos' | 'papaJohn';
+export type BossType = 'dominos' | 'papaJohn' | 'pizzaTheHut';
 
 export interface BossBattle {
   active: boolean;
@@ -258,4 +261,5 @@ export interface GameState {
   lastCleanKitchenBonusTime?: number;
   cleanKitchenBonusAlert?: { endTime: number };
   lastPauseTime?: number; // Track when game was paused for timer adjustments
+  chefSlowedUntil?: number;
 }

@@ -1,9 +1,11 @@
 import React from 'react';
 import { BossBattle } from '../types/game';
 import { sprite } from '../lib/assets';
-import { PAPA_JOHN_CONFIG, DOMINOS_CONFIG } from '../lib/constants';
+import { PAPA_JOHN_CONFIG, DOMINOS_CONFIG, PIZZA_THE_HUT_CONFIG } from '../lib/constants';
 
 const dominosBossImg = sprite("dominos-boss.png");
+const pizzaTheHutImg = sprite("pizza-the-hut.png");
+const cheeseSlimeImg = sprite("cheese-slime.png");
 const papaJohnSprites = [
   sprite("papa-john.png"),    // Encounter 1 (level 10)
   sprite("papa-john-2.png"),  // Encounter 2 (level 20)
@@ -17,6 +19,9 @@ const getBossSprite = (bossBattle: BossBattle): string => {
   if (bossBattle.bossType === 'dominos') {
     return dominosBossImg;
   }
+  if (bossBattle.bossType === 'pizzaTheHut') {
+    return pizzaTheHutImg;
+  }
   // Papa John - select based on hits received (changes every 8 hits)
   const hits = bossBattle.hitsReceived || 0;
   const spriteIndex = Math.min(Math.floor(hits / 8), papaJohnSprites.length - 1);
@@ -24,7 +29,9 @@ const getBossSprite = (bossBattle: BossBattle): string => {
 };
 
 const getBossConfig = (bossBattle: BossBattle) => {
-  return bossBattle.bossType === 'papaJohn' ? PAPA_JOHN_CONFIG : DOMINOS_CONFIG;
+  if (bossBattle.bossType === 'papaJohn') return PAPA_JOHN_CONFIG;
+  if (bossBattle.bossType === 'pizzaTheHut') return PIZZA_THE_HUT_CONFIG;
+  return DOMINOS_CONFIG;
 };
 
 interface BossProps {
@@ -89,8 +96,8 @@ const Boss: React.FC<BossProps> = ({ bossBattle }) => {
             }}
           >
             <img
-              src={bossSprite}
-              alt="minion"
+              src={minion.slime ? cheeseSlimeImg : (minion.sprite || bossSprite)}
+              alt={minion.slime ? "cheese slime" : "minion"}
               className="w-full h-full object-contain"
             />
           </div>
@@ -126,7 +133,9 @@ function areBossPropsEqual(prev: BossProps, next: BossProps): boolean {
       m.id === n.id &&
       m.position === n.position &&
       m.lane === n.lane &&
-      m.defeated === n.defeated
+      m.defeated === n.defeated &&
+      m.sprite === n.sprite &&
+      m.slime === n.slime
     );
   });
 }

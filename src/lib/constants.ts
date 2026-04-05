@@ -115,6 +115,7 @@ export const WORKER_CONFIG = {
 export const BOSS_CONFIG = {
   DOMINOS_LEVEL: 30,
   PAPA_JOHN_LEVEL: 10, // Single appearance at level 10
+  PIZZA_THE_HUT_LEVEL: 40,
   BOSS_POSITION: 85,
 };
 
@@ -123,6 +124,15 @@ export const PAPA_JOHN_CONFIG = {
   WAVES: 3,
   MINIONS_PER_WAVE: 4,
   HITS_PER_IMAGE: 8, // Change sprite every 8 hits
+};
+
+export const PIZZA_THE_HUT_CONFIG = {
+  HEALTH: 30,
+  WAVES: 3,
+  MINIONS_PER_WAVE: 6,
+  SLIME_SPEED: 0.25,
+  OVEN_DISABLE_DURATION: 5000,
+  CHEF_SLOW_DURATION: 3000,
 };
 
 export const DOMINOS_CONFIG = {

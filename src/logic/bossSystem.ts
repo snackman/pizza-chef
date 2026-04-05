@@ -1,5 +1,5 @@
 import { GameState, BossBattle, BossMinion, PizzaSlice, BossType } from '../types/game';
-import { BOSS_CONFIG, PAPA_JOHN_CONFIG, DOMINOS_CONFIG, POSITIONS, ENTITY_SPEEDS, SCORING } from '../lib/constants';
+import { BOSS_CONFIG, PAPA_JOHN_CONFIG, DOMINOS_CONFIG, PIZZA_THE_HUT_CONFIG, POSITIONS, ENTITY_SPEEDS, SCORING, GAME_CONFIG } from '../lib/constants';
 import { checkSliceMinionCollision, checkMinionReachedChef } from './collisionSystem';
 import { getPapaJohnMask, checkMaskCollision } from './bossCollisionMasks';
 import { buildLaneBuckets, getEntitiesInLane, LaneBuckets } from './laneBuckets';
@@ -10,7 +10,9 @@ export type BossEvent =
   | { type: 'BOSS_DEFEATED'; lane: number; position: number; points: number }
   | { type: 'MINION_REACHED_CHEF' }
   | { type: 'WAVE_COMPLETE'; nextWave: number }
-  | { type: 'BOSS_VULNERABLE' };
+  | { type: 'BOSS_VULNERABLE' }
+  | { type: 'SLIME_HIT_OVEN'; lane: number }
+  | { type: 'SLIME_HIT_CHEF'; lane: number };
 
 export interface BossTickResult {
   nextBossBattle: BossBattle;
@@ -19,6 +21,8 @@ export interface BossTickResult {
   scoreGained: number;
   events: BossEvent[];
   defeatedBossLevel?: number;
+  ovenDisables?: { lane: number; until: number }[];
+  chefSlowUntil?: number;
 }
 
 export interface BossTriggerResult {
@@ -46,6 +50,12 @@ export const checkBossTrigger = (
     return { type: 'dominos', level: BOSS_CONFIG.DOMINOS_LEVEL };
   }
 
+  // Check Pizza the Hut (level 40)
+  if (oldLevel < BOSS_CONFIG.PIZZA_THE_HUT_LEVEL && newLevel >= BOSS_CONFIG.PIZZA_THE_HUT_LEVEL &&
+      !defeatedBossLevels.includes(BOSS_CONFIG.PIZZA_THE_HUT_LEVEL)) {
+    return { type: 'pizzaTheHut', level: BOSS_CONFIG.PIZZA_THE_HUT_LEVEL };
+  }
+
   return null;
 };
 
@@ -67,10 +77,31 @@ export const createWaveMinions = (waveNumber: number, now: number, minionsPerWav
 };
 
 /**
+ * Create a wave of cheese slime for Pizza the Hut
+ */
+export const createSlimeWave = (waveNumber: number, now: number): BossMinion[] => {
+  const count = PIZZA_THE_HUT_CONFIG.MINIONS_PER_WAVE + (waveNumber - 1) * 2;
+  const slimes: BossMinion[] = [];
+  for (let i = 0; i < count; i++) {
+    slimes.push({
+      id: `slime-${now}-${waveNumber}-${i}`,
+      lane: i % 4,
+      position: POSITIONS.SPAWN_X + (Math.floor(i / 4) * 20),
+      speed: PIZZA_THE_HUT_CONFIG.SLIME_SPEED,
+      defeated: false,
+      slime: true,
+    });
+  }
+  return slimes;
+};
+
+/**
  * Get boss config based on boss type
  */
 const getBossConfig = (bossType: BossType) => {
-  return bossType === 'papaJohn' ? PAPA_JOHN_CONFIG : DOMINOS_CONFIG;
+  if (bossType === 'papaJohn') return PAPA_JOHN_CONFIG;
+  if (bossType === 'pizzaTheHut') return PIZZA_THE_HUT_CONFIG;
+  return DOMINOS_CONFIG;
 };
 
 /**
@@ -88,7 +119,7 @@ export const initializeBossBattle = (
     bossType,
     bossHealth: config.HEALTH,
     currentWave: isPapaJohn ? config.WAVES : 1, // Skip waves for Papa John
-    minions: isPapaJohn ? [] : createWaveMinions(1, now, config.MINIONS_PER_WAVE),
+    minions: isPapaJohn ? [] : (bossType === 'pizzaTheHut' ? createSlimeWave(1, now) : createWaveMinions(1, now, config.MINIONS_PER_WAVE)),
     bossVulnerable: isPapaJohn, // Papa John is immediately vulnerable
     bossDefeated: false,
     bossPosition: isPapaJohn ? 50 : BOSS_CONFIG.BOSS_POSITION, // Papa John starts in the middle
@@ -173,7 +204,7 @@ export const checkMinionsReachedChef = (
 ): { updatedMinions: BossMinion[]; livesLost: number } => {
   let livesLost = 0;
   const updatedMinions = minions.map(minion => {
-    if (minion.defeated) return minion;
+    if (minion.defeated || minion.slime) return minion; // slime handled separately
     if (checkMinionReachedChef(minion)) {
       livesLost++;
       return { ...minion, defeated: true };
@@ -215,7 +246,7 @@ export const processSliceMinionCollisions = (
       if (checkSliceMinionCollision(slice, minion, 8)) {
         consumedSliceIds.add(slice.id);
         defeatedMinionIds.add(minion.id);
-        const points = SCORING.MINION_DEFEAT;
+        const points = minion.slime ? Math.floor(SCORING.MINION_DEFEAT / 2) : SCORING.MINION_DEFEAT;
         scoreGained += points;
         events.push({
           type: 'MINION_DEFEATED',
@@ -323,6 +354,8 @@ export const processSliceBossCollisions = (
         let currentBossLevel: number | undefined;
         if (updatedBossBattle.bossType === 'papaJohn') {
           currentBossLevel = currentLevel >= BOSS_CONFIG.PAPA_JOHN_LEVEL ? BOSS_CONFIG.PAPA_JOHN_LEVEL : undefined;
+        } else if (updatedBossBattle.bossType === 'pizzaTheHut') {
+          currentBossLevel = currentLevel >= BOSS_CONFIG.PIZZA_THE_HUT_LEVEL ? BOSS_CONFIG.PIZZA_THE_HUT_LEVEL : undefined;
         } else {
           currentBossLevel = currentLevel >= BOSS_CONFIG.DOMINOS_LEVEL ? BOSS_CONFIG.DOMINOS_LEVEL : undefined;
         }
@@ -357,7 +390,9 @@ export const checkWaveCompletion = (
   if (bossBattle.currentWave < config.WAVES) {
     const nextWave = bossBattle.currentWave + 1;
     updatedBossBattle.currentWave = nextWave;
-    updatedBossBattle.minions = createWaveMinions(nextWave, now, config.MINIONS_PER_WAVE);
+    updatedBossBattle.minions = bossBattle.bossType === 'pizzaTheHut'
+      ? createSlimeWave(nextWave, now)
+      : createWaveMinions(nextWave, now, config.MINIONS_PER_WAVE);
     events.push({ type: 'WAVE_COMPLETE', nextWave });
   } else if (!bossBattle.bossVulnerable) {
     updatedBossBattle.bossVulnerable = true;
@@ -369,6 +404,56 @@ export const checkWaveCompletion = (
 };
 
 /**
+ * Process cheese slime effects for Pizza the Hut
+ */
+export const processSlimeEffects = (
+  minions: BossMinion[],
+  chefLane: number,
+  now: number
+): {
+  updatedMinions: BossMinion[];
+  ovenDisables: { lane: number; until: number }[];
+  chefSlowUntil?: number;
+  events: BossEvent[];
+} => {
+  const OVEN_X = 10;
+  const CHEF_X = GAME_CONFIG.CHEF_X_POSITION;
+  const ovenDisables: { lane: number; until: number }[] = [];
+  let chefSlowUntil: number | undefined;
+  const events: BossEvent[] = [];
+
+  const updatedMinions = minions.map(minion => {
+    if (!minion.slime || minion.defeated) return minion;
+
+    // Check oven collision (slime reaches oven area)
+    if (minion.position <= OVEN_X && minion.position > OVEN_X - 3) {
+      ovenDisables.push({
+        lane: minion.lane,
+        until: now + PIZZA_THE_HUT_CONFIG.OVEN_DISABLE_DURATION,
+      });
+      events.push({ type: 'SLIME_HIT_OVEN', lane: minion.lane });
+      return { ...minion, defeated: true }; // Consumed by oven
+    }
+
+    // Check chef collision (slime reaches chef and matches lane)
+    if (minion.position <= CHEF_X && minion.lane === chefLane) {
+      chefSlowUntil = now + PIZZA_THE_HUT_CONFIG.CHEF_SLOW_DURATION;
+      events.push({ type: 'SLIME_HIT_CHEF', lane: minion.lane });
+      return { ...minion, defeated: true };
+    }
+
+    // Off-screen
+    if (minion.position <= POSITIONS.OFF_SCREEN_LEFT) {
+      return { ...minion, defeated: true };
+    }
+
+    return minion;
+  });
+
+  return { updatedMinions, ovenDisables, chefSlowUntil, events };
+};
+
+/**
  * Process a full boss battle tick
  */
 export const processBossTick = (
@@ -376,7 +461,8 @@ export const processBossTick = (
   slices: PizzaSlice[],
   currentLevel: number,
   defeatedBossLevels: number[],
-  now: number
+  now: number,
+  chefLane?: number
 ): BossTickResult => {
   if (!bossBattle.active || bossBattle.bossDefeated) {
     return {
@@ -404,6 +490,17 @@ export const processBossTick = (
     for (let i = 0; i < reachResult.livesLost; i++) {
       allEvents.push({ type: 'MINION_REACHED_CHEF' });
     }
+  }
+
+  // 2.5. Process slime effects (Pizza the Hut only)
+  let ovenDisables: { lane: number; until: number }[] | undefined;
+  let chefSlowUntil: number | undefined;
+  if (bossBattle.bossType === 'pizzaTheHut' && chefLane !== undefined) {
+    const slimeResult = processSlimeEffects(currentMinions, chefLane, now);
+    currentMinions = slimeResult.updatedMinions;
+    ovenDisables = slimeResult.ovenDisables.length > 0 ? slimeResult.ovenDisables : undefined;
+    chefSlowUntil = slimeResult.chefSlowUntil;
+    allEvents.push(...slimeResult.events);
   }
 
   // 3. Process slice-minion collisions
@@ -448,5 +545,7 @@ export const processBossTick = (
     scoreGained: totalScore,
     events: allEvents,
     defeatedBossLevel: bossCollisionResult.defeatedBossLevel,
+    ovenDisables,
+    chefSlowUntil,
   };
 };

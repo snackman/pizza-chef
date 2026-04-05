@@ -133,7 +133,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
               </div>
             )}
             <div className="relative" style={{ zIndex: 10 }}>
-              {ovenStatus === 'burned' ? '💀' :
+              {oven.slimeDisabledUntil && Date.now() < oven.slimeDisabledUntil ? '🧀' :
+               ovenStatus === 'burned' ? '💀' :
                ovenStatus === 'extinguishing' ? '🧯' :
                ovenStatus === 'sweeping' ? '🧹' :
                ovenStatus === 'burning' ? '💀' :
@@ -161,6 +162,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
             zIndex: gameState.gameOver ? 19 : 10,
             willChange: 'transform',
             transition: 'top 10ms ease-out',
+            filter: (gameState.chefSlowedUntil && Date.now() < gameState.chefSlowedUntil) ? 'saturate(0.3) brightness(0.7)' : undefined,
           }}
         >
           <img

@@ -209,6 +209,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
   const moveChef = useCallback((direction: 'up' | 'down') => {
     if (gameState.gameOver || gameState.paused || gameState.nyanSweep?.active) return;
     setGameState(prev => {
+      // Chef slow: block movement while slowed by cheese slime
+      if (prev.chefSlowedUntil && Date.now() < prev.chefSlowedUntil) return prev;
       let newLane = prev.chefLane;
       if (direction === 'up' && newLane > GAME_CONFIG.LANE_TOP) newLane -= 1;
       else if (direction === 'down' && newLane < GAME_CONFIG.LANE_BOTTOM) newLane += 1;
@@ -850,7 +852,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           newState.pizzaSlices,
           newState.level,
           newState.defeatedBossLevels,
-          now
+          now,
+          newState.chefLane
         );
 
         newState.bossBattle = bossResult.nextBossBattle;
@@ -877,6 +880,32 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           if (newState.pendingBossTrigger) {
             newState.bossBattle = initializeBossBattle(now, newState.pendingBossTrigger.type);
             newState.pendingBossTrigger = undefined;
+          }
+        }
+
+        // Apply slime effects
+        if (bossResult.ovenDisables) {
+          bossResult.ovenDisables.forEach(({ lane, until }) => {
+            const oven = newState.ovens[lane];
+            if (!oven.slimeDisabledUntil || until > oven.slimeDisabledUntil) {
+              newState.ovens = { ...newState.ovens, [lane]: { ...oven, slimeDisabledUntil: until } };
+            }
+          });
+        }
+        if (bossResult.chefSlowUntil) {
+          if (!newState.chefSlowedUntil || bossResult.chefSlowUntil > newState.chefSlowedUntil) {
+            newState.chefSlowedUntil = bossResult.chefSlowUntil;
+          }
+        }
+
+        // Clear expired slime effects
+        if (newState.chefSlowedUntil && now >= newState.chefSlowedUntil) {
+          newState.chefSlowedUntil = undefined;
+        }
+        for (let lane = 0; lane < 4; lane++) {
+          const oven = newState.ovens[lane];
+          if (oven.slimeDisabledUntil && now >= oven.slimeDisabledUntil) {
+            newState.ovens = { ...newState.ovens, [lane]: { ...oven, slimeDisabledUntil: undefined } };
           }
         }
 
