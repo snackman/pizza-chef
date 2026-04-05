@@ -6,7 +6,8 @@ import {
   POSITIONS,
   ENTITY_SPEEDS,
   POWERUPS,
-  SCUMBAG_STEVE
+  SCUMBAG_STEVE,
+  HEALTH_INSPECTOR
 } from '../lib/constants';
 
 export interface SpawnResult<T> {
@@ -63,11 +64,14 @@ export const trySpawnCustomer = (
     Math.random() < PROBABILITIES.CRITIC_CHANCE ? 'critic' :
     Math.random() < PROBABILITIES.BAD_LUCK_BRIAN_CHANCE ? 'badLuckBrian' :
     Math.random() < PROBABILITIES.SCUMBAG_STEVE_CHANCE ? 'scumbagSteve' :
+    (level >= HEALTH_INSPECTOR.MIN_LEVEL && Math.random() < HEALTH_INSPECTOR.CHANCE) ? 'healthInspector' :
     'normal';
 
-  // Calculate speed (Steve is faster)
+  // Calculate speed (Steve is faster, Health Inspector is slower)
   const speed = variant === 'scumbagSteve'
     ? ENTITY_SPEEDS.CUSTOMER_BASE * SCUMBAG_STEVE.SPEED_MULTIPLIER
+    : variant === 'healthInspector'
+    ? ENTITY_SPEEDS.CUSTOMER_BASE * HEALTH_INSPECTOR.SPEED_MULTIPLIER
     : ENTITY_SPEEDS.CUSTOMER_BASE;
 
   // Create customer in 'approaching' state
@@ -87,6 +91,7 @@ export const trySpawnCustomer = (
     critic: variant === 'critic',
     badLuckBrian: variant === 'badLuckBrian',
     scumbagSteve: variant === 'scumbagSteve',
+    healthInspector: variant === 'healthInspector',
     slicesReceived: variant === 'scumbagSteve' ? 0 : undefined,
     lastLaneChangeTime: variant === 'scumbagSteve' ? now : undefined,
     flipped: variant === 'badLuckBrian', // Brian spawns flipped, Steve spawns normal

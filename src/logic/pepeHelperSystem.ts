@@ -38,17 +38,17 @@ export interface PepeHelperTickResult {
 }
 
 export type PepeHelperEvent =
-  | { type: 'OVEN_STARTED'; lane: number; helper: 'franco' | 'frank' }
-  | { type: 'PIZZA_PULLED'; lane: number; slices: number; helper: 'franco' | 'frank' }
-  | { type: 'CUSTOMER_SERVED'; lane: number; helper: 'franco' | 'frank' }
-  | { type: 'PLATE_CAUGHT'; lane: number; helper: 'franco' | 'frank' }
-  | { type: 'HELPER_MOVED'; lane: number; helper: 'franco' | 'frank' };
+  | { type: 'OVEN_STARTED'; lane: number; helper: 'franco' | 'frank' | 'worker' }
+  | { type: 'PIZZA_PULLED'; lane: number; slices: number; helper: 'franco' | 'frank' | 'worker' }
+  | { type: 'CUSTOMER_SERVED'; lane: number; helper: 'franco' | 'frank' | 'worker' }
+  | { type: 'PLATE_CAUGHT'; lane: number; helper: 'franco' | 'frank' | 'worker' }
+  | { type: 'HELPER_MOVED'; lane: number; helper: 'franco' | 'frank' | 'worker' };
 
 /**
  * Evaluate what action a helper should take.
  * Accepts pre-built lane buckets to avoid re-filtering arrays per lane.
  */
-const evaluateLanePriority = (
+export const evaluateLanePriority = (
   lane: number,
   gameState: GameState,
   helper: PepeHelper,
@@ -75,7 +75,7 @@ const evaluateLanePriority = (
   // High priority: Approaching customers in this lane (if we have slices)
   const laneCustomers = getEntitiesInLane(customerBuckets, lane);
   const approachingInLane = laneCustomers.filter(
-    c => !c.served && !c.disappointed && !c.vomit && !c.leaving && c.position < 80
+    c => !c.served && !c.disappointed && !c.vomit && !c.leaving && !c.healthInspector && c.position < 80
   );
   if (approachingInLane.length > 0 && helper.availableSlices > 0) {
     // Closer customers = higher priority
@@ -101,7 +101,7 @@ const evaluateLanePriority = (
  * Process a single helper's actions.
  * Accepts pre-built lane buckets to avoid redundant filtering.
  */
-const processHelperAction = (
+export const processHelperAction = (
   helper: PepeHelper,
   gameState: GameState,
   otherHelperLane: number,
@@ -196,7 +196,7 @@ const processHelperAction = (
   // Priority 3: Serve customers (only if needed) - using lane buckets
   const laneCustomers = getEntitiesInLane(customerBuckets, currentLane);
   const approachingCustomers = laneCustomers.filter(
-    c => !c.served && !c.disappointed && !c.vomit && !c.leaving && c.position < 85
+    c => !c.served && !c.disappointed && !c.vomit && !c.leaving && !c.healthInspector && c.position < 85
   );
   // Count slices already heading to this lane (using lane buckets)
   const slicesInLane = getEntitiesInLane(sliceBuckets, currentLane).length + newSlices.filter(s => s.lane === currentLane).length;

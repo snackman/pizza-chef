@@ -87,13 +87,19 @@ import {
   checkPepeHelpersExpired
 } from '../logic/pepeHelperSystem';
 
+import {
+  processWorkerTick
+} from '../logic/workerSystem';
+
 // --- Store System (actions only) ---
 import {
   upgradeOven as upgradeOvenStore,
   upgradeOvenSpeed as upgradeOvenSpeedStore,
   closeStore as closeStoreStore,
   bribeReviewer as bribeReviewerStore,
-  buyPowerUp as buyPowerUpStore
+  buyPowerUp as buyPowerUpStore,
+  hireWorker as hireWorkerStore,
+  processWorkerRetention
 } from '../logic/storeSystem';
 
 const DEFAULT_OVEN_SOUND_STATES: { [key: number]: OvenSoundState } = {
@@ -311,7 +317,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       });
 
       // 2. PROCESS CUSTOMERS (Movement & AI from customerSystem)
-      const customerUpdate = updateCustomerPositions(newState.customers, newState.activePowerUps, now);
+      const customerUpdate = updateCustomerPositions(newState.customers, newState.activePowerUps, now, newState.ovens);
       newState.customers = customerUpdate.nextCustomers;
 
       if (customerUpdate.statsUpdate.customerStreakReset) {
@@ -336,6 +342,29 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         }
         if (event.type === 'GAME_OVER' && newState.lives === 0) {
           newState = triggerGameOver(newState, now);
+        }
+        if (event.type === 'HEALTH_INSPECTOR_PASSED') {
+          // Inspector found clean kitchen - show text on the inspector (already set as leaving)
+          newState.customers = newState.customers.map(c =>
+            c.healthInspector && c.leaving && c.lane === event.lane
+              ? { ...c, textMessage: "Seems okay.", textMessageTime: now }
+              : c
+          );
+        }
+        if (event.type === 'HEALTH_INSPECTOR_FAILED') {
+          // Inspector found burnt oven - lose a star
+          soundManager.lifeLost();
+          newState.lives = Math.max(0, newState.lives - 1);
+          newState.lastStarLostReason = 'health_inspector_failed';
+          newState = addFloatingStar(false, event.lane, event.position, newState);
+          newState.customers = newState.customers.map(c =>
+            c.healthInspector && c.leaving && c.lane === event.lane
+              ? { ...c, textMessage: "Smells like smoke!", textMessageTime: now }
+              : c
+          );
+          if (newState.lives === 0) {
+            newState = triggerGameOver(newState, now);
+          }
         }
       });
 
@@ -385,7 +414,16 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             if (hitResult.newEntities.emptyPlate) newState.emptyPlates = [...newState.emptyPlates, hitResult.newEntities.emptyPlate];
 
             hitResult.events.forEach(event => {
-              if (event === 'BRIAN_DROPPED_PLATE') {
+              if (event === 'HEALTH_INSPECTOR_BRIBED') {
+                // Lose a star for trying to bribe the inspector
+                soundManager.lifeLost();
+                newState.lives = Math.max(0, newState.lives - 1);
+                newState.lastStarLostReason = 'health_inspector_bribed';
+                newState = addFloatingStar(false, currentCustomer.lane, currentCustomer.position, newState);
+                if (newState.lives === 0) {
+                  newState = triggerGameOver(newState, now);
+                }
+              } else if (event === 'BRIAN_DROPPED_PLATE') {
                 soundManager.plateDropped();
                 newState.stats.currentCustomerStreak = 0;
                 newState.stats.currentPlateStreak = 0;
@@ -477,7 +515,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             platesFromSlices.add(slice.id);
             // Update the customer map so subsequent slices see this customer as served/updated
             customerMap.set(currentCustomer.id, hitResult.updatedCustomer);
-            consumedCustomerIds.add(currentCustomer.id);
+            // Health inspector is NOT consumed (stays on screen) — only the pizza disappears
+            if (!currentCustomer.healthInspector) {
+              consumedCustomerIds.add(currentCustomer.id);
+            }
           }
         }
 
@@ -575,6 +616,33 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             }
           });
         }
+      }
+
+      // --- 4c. HIRED WORKER PROCESSING ---
+      if (newState.hiredWorker?.active) {
+        const workerResult = processWorkerTick(newState, now);
+
+        if (workerResult.updatedState.ovens) newState.ovens = workerResult.updatedState.ovens;
+        if (workerResult.updatedState.pizzaSlices) newState.pizzaSlices = workerResult.updatedState.pizzaSlices;
+        if (workerResult.updatedState.emptyPlates) newState.emptyPlates = workerResult.updatedState.emptyPlates;
+        if (workerResult.updatedState.hiredWorker !== undefined) newState.hiredWorker = workerResult.updatedState.hiredWorker;
+        if (workerResult.updatedState.stats) newState.stats = workerResult.updatedState.stats;
+        if (workerResult.updatedState.score !== undefined) newState.score = workerResult.updatedState.score;
+
+        // Handle events (sounds)
+        workerResult.events.forEach(event => {
+          if (event.type === 'OVEN_STARTED') soundManager.ovenStart();
+          if (event.type === 'PIZZA_PULLED') soundManager.servePizza();
+          if (event.type === 'CUSTOMER_SERVED') soundManager.servePizza();
+          if (event.type === 'PLATE_CAUGHT') soundManager.plateCaught();
+        });
+
+        // Add floating scores for plates caught by worker
+        workerResult.events.forEach(event => {
+          if (event.type === 'PLATE_CAUGHT') {
+            newState = addFloatingScore(50, event.lane, GAME_CONFIG.CHEF_X_POSITION, newState);
+          }
+        });
       }
 
       // --- 5. STAR POWER AUTO-REFILL SLICES ---
@@ -877,6 +945,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     setGameState(prev => buyPowerUpStore(prev, type, Date.now()));
   }, []);
 
+  const hireWorker = useCallback(() => {
+    setGameState(prev => hireWorkerStore(prev, prev.chefLane));
+  }, []);
+
   const debugActivatePowerUp = useCallback((type: PowerUpType) => {
     setGameState(prev => {
       if (prev.gameOver) return prev;
@@ -960,13 +1032,16 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     const now = Date.now();
 
     if (!prevShowStore && currentShowStore) {
-      // Store opening - pause game
-      setGameState(prev => ({
-        ...prev,
-        paused: true,
-        ovens: calculateOvenPauseState(prev.ovens, true, now),
-        lastPauseTime: now, // Track pause time for clean kitchen timer
-      }));
+      // Store opening - pause game and process worker retention
+      setGameState(prev => {
+        const withRetention = processWorkerRetention(prev);
+        return {
+          ...withRetention,
+          paused: true,
+          ovens: calculateOvenPauseState(withRetention.ovens, true, now),
+          lastPauseTime: now, // Track pause time for clean kitchen timer
+        };
+      });
     }
     if (prevShowStore && !currentShowStore) {
       // Store closing - unpause game
@@ -1086,6 +1161,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     closeStore,
     bribeReviewer,
     buyPowerUp,
+    hireWorker,
     debugActivatePowerUp,
   };
 };

@@ -1,6 +1,7 @@
 // src/logic/storeSystem.ts
 import { GameState, PowerUp } from '../types/game';
 import { COSTS, ENTITY_SPEEDS, POSITIONS, GAME_CONFIG, OVEN_CONFIG } from '../lib/constants';
+import { initializeHiredWorker } from './workerSystem';
 
 export type StoreEvent = { type: 'LIFE_GAINED' };
 
@@ -87,5 +88,34 @@ export const buyPowerUp = (
     ...prev,
     bank: prev.bank - powerUpCost,
     powerUps: [...prev.powerUps, newPowerUp],
+  };
+};
+
+export const hireWorker = (prev: GameState, chefLane: number): GameState => {
+  const hireCost = COSTS.HIRE_WORKER;
+  if (prev.bank < hireCost || prev.hiredWorker?.active) return prev;
+
+  return {
+    ...prev,
+    bank: prev.bank - hireCost,
+    hiredWorker: initializeHiredWorker(chefLane),
+  };
+};
+
+export const processWorkerRetention = (prev: GameState): GameState => {
+  if (!prev.hiredWorker?.active) return prev;
+
+  const retentionCost = COSTS.WORKER_RETENTION;
+  if (prev.bank >= retentionCost) {
+    return {
+      ...prev,
+      bank: prev.bank - retentionCost,
+    };
+  }
+
+  // Can't afford retention — worker quits
+  return {
+    ...prev,
+    hiredWorker: undefined,
   };
 };

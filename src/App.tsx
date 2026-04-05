@@ -56,6 +56,7 @@ function App() {
     closeStore,
     bribeReviewer,
     buyPowerUp,
+    hireWorker,
     debugActivatePowerUp,
   } = useGameLogic(gameStarted);
 
@@ -375,6 +376,7 @@ function App() {
                     onUpgradeOvenSpeed={upgradeOvenSpeed}
                     onBribeReviewer={bribeReviewer}
                     onBuyPowerUp={buyPowerUp}
+                    onHireWorker={hireWorker}
                     onClose={closeStore}
                   />
                 </div>
@@ -492,6 +494,7 @@ function App() {
                   onUpgradeOvenSpeed={upgradeOvenSpeed}
                   onBribeReviewer={bribeReviewer}
                   onBuyPowerUp={buyPowerUp}
+                  onHireWorker={hireWorker}
                   onClose={closeStore}
                 />
               </div>

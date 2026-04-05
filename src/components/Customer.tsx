@@ -14,6 +14,7 @@ const badLuckBrianImg = sprite("bad-luck-brian.png");
 const badLuckBrianPukeImg = sprite("bad-luck-brian-puke.png");
 const rainbowBrian = sprite("rainbow-brian.png");
 const scumbagSteveImg = sprite("scumbag-steve.png");
+const healthInspectorImg = sprite("health-inspector.png");
 
 interface CustomerProps {
   customer: CustomerType;
@@ -42,7 +43,7 @@ const Customer: React.FC<CustomerProps> = ({ customer, boardWidth, boardHeight }
 
   const getDisplay = () => {
     const variant = getCustomerVariant(customer);
-    const isSpecialCustomer = variant === 'badLuckBrian' || variant === 'scumbagSteve';
+    const isSpecialCustomer = variant === 'badLuckBrian' || variant === 'scumbagSteve' || variant === 'healthInspector';
 
     // 🌈 Rainbow Brian (nyan hit) — special behavior override
     if (customer.brianNyaned) {
@@ -58,6 +59,7 @@ const Customer: React.FC<CustomerProps> = ({ customer, boardWidth, boardHeight }
     if (isSpecialCustomer) {
       if (variant === 'badLuckBrian') return { type: 'image', value: badLuckBrianImg, alt: 'badluckbrian' };
       if (variant === 'scumbagSteve') return { type: 'image', value: scumbagSteveImg, alt: 'scumbagsteve' };
+      if (variant === 'healthInspector') return { type: 'image', value: healthInspectorImg, alt: 'health-inspector' };
     }
 
     // Status effects for normal customers and critics
@@ -154,6 +156,7 @@ function areCustomerPropsEqual(prev: CustomerProps, next: CustomerProps): boolea
     a.textMessage === b.textMessage &&
     a.badLuckBrian === b.badLuckBrian &&
     a.scumbagSteve === b.scumbagSteve &&
+    a.healthInspector === b.healthInspector &&
     a.critic === b.critic &&
     a.leaving === b.leaving &&
     prev.boardWidth === next.boardWidth &&

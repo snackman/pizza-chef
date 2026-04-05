@@ -58,6 +58,9 @@ export const processPowerUpCollection = (
         let lastReason: StarLostReason | undefined;
 
         newState.customers = newState.customers.map(customer => {
+            // Health Inspector is immune to all power-ups
+            if (customer.healthInspector) return customer;
+
             // Impact on Critic
             if (customer.critic) {
                 if (customer.woozy) return { ...customer, woozy: false, woozyState: undefined, frozen: false, hotHoneyAffected: false, textMessage: "I prefer wine", textMessageTime: now };
@@ -132,6 +135,7 @@ export const processPowerUpCollection = (
         // Immediate effects for Honey
         if (powerUp.type === 'honey') {
             newState.customers = newState.customers.map(c => {
+                if (c.healthInspector) return c; // Health Inspector immune
                 if (c.served || c.disappointed || c.vomit || c.leaving) return c;
                 if (c.critic) return { ...c, shouldBeHotHoneyAffected: false, hotHoneyAffected: false, textMessage: "Just plain, thanks.", textMessageTime: now };
                 if (c.badLuckBrian) return { ...c, shouldBeHotHoneyAffected: false, hotHoneyAffected: false, frozen: false, woozy: false, woozyState: undefined, textMessage: "I can't do spicy.", textMessageTime: now };
@@ -142,6 +146,7 @@ export const processPowerUpCollection = (
         // Immediate effects for Ice Cream
         if (powerUp.type === 'ice-cream') {
             newState.customers = newState.customers.map(c => {
+                if (c.healthInspector) return c; // Health Inspector immune
                 if (!c.served && !c.disappointed && !c.vomit) {
                     if (c.badLuckBrian) return { ...c, textMessage: "I'm lactose intolerant", textMessageTime: now };
                     return { ...c, shouldBeFrozenByIceCream: true, frozen: true, hotHoneyAffected: false, woozy: false, woozyState: undefined };

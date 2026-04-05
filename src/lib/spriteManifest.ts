@@ -18,6 +18,7 @@ export const PRELOAD_SPRITES = [
   'bad-luck-brian-puke.png',
   'scumbag-steve.png',
   'rainbow-brian.png',
+  'health-inspector.png',
 
   // Food
   'slice-plate.png',

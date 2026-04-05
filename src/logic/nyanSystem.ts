@@ -100,7 +100,7 @@ export const checkNyanSweepCollisions = (
     const nearbyCustomers = getEntitiesInAdjacentLanes(custBuckets, newLane, NYAN_LANE_TOLERANCE);
 
     nearbyCustomers.forEach(customer => {
-        if (customer.served || customer.disappointed || customer.vomit) return;
+        if (customer.served || customer.disappointed || customer.vomit || customer.healthInspector) return;
 
         if (checkNyanSweepCollision(newLane, oldX, newXPosition, customer)) {
             hitCustomerIds.push(customer.id);

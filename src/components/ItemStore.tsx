@@ -4,6 +4,7 @@ import { Store, DollarSign, X } from 'lucide-react';
 import PizzaSliceStack from './PizzaSliceStack';
 import { sprite } from '../lib/assets';
 import { getUpgradeCost, getSpeedUpgradeCost } from '../logic/storeSystem';
+import { COSTS } from '../lib/constants';
 
 // Power-up images (served from Cloudflare)
 const beerImg = sprite("beer.png");
@@ -16,6 +17,7 @@ interface ItemStoreProps {
   onUpgradeOvenSpeed: (lane: number) => void;
   onBribeReviewer: () => void;
   onBuyPowerUp: (type: 'beer' | 'ice-cream' | 'honey') => void;
+  onHireWorker: () => void;
   onClose: () => void;
 }
 
@@ -25,6 +27,7 @@ const ItemStore: React.FC<ItemStoreProps> = ({
   onUpgradeOvenSpeed,
   onBribeReviewer,
   onBuyPowerUp,
+  onHireWorker,
   onClose,
 }) => {
   const maxUpgradeLevel = 7;
@@ -72,10 +75,15 @@ const ItemStore: React.FC<ItemStoreProps> = ({
   // Right side:
   //   Bribe = 8 (accessible from oven rows 0-1)
   //   Power-ups = 9, 10, 11 (accessible from oven rows 2-3)
-  // Bottom: Continue = 12
+  //   Hire Worker = 12
+  // Bottom: Continue = 13
 
-  const [selectedIndex, setSelectedIndex] = useState(12); // Start on Continue
+  const [selectedIndex, setSelectedIndex] = useState(13); // Start on Continue
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  const hireCost = COSTS.HIRE_WORKER;
+  const workerAlreadyHired = !!gameState.hiredWorker?.active;
+  const canAffordWorker = gameState.bank >= hireCost;
 
   const menuActions = useMemo(() => [
     () => { madePurchaseRef.current = true; onUpgradeOvenSpeed(0); },
@@ -90,8 +98,9 @@ const ItemStore: React.FC<ItemStoreProps> = ({
     () => { madePurchaseRef.current = true; onBuyPowerUp('beer'); },
     () => { madePurchaseRef.current = true; onBuyPowerUp('ice-cream'); },
     () => { madePurchaseRef.current = true; onBuyPowerUp('honey'); },
+    () => { madePurchaseRef.current = true; onHireWorker(); },
     handleClose,
-  ], [onUpgradeOvenSpeed, onUpgradeOven, onBribeReviewer, onBuyPowerUp, handleClose]);
+  ], [onUpgradeOvenSpeed, onUpgradeOven, onBribeReviewer, onBuyPowerUp, onHireWorker, handleClose]);
 
   // Focus selected element
   useEffect(() => {
@@ -151,7 +160,11 @@ const ItemStore: React.FC<ItemStoreProps> = ({
     if (index >= 9 && index <= 11) {
       return gs.bank < powerUpCost;
     }
-    // Continue (12) - never disabled
+    // Hire Worker (12)
+    if (index === 12) {
+      return !!gs.hiredWorker?.active || gs.bank < COSTS.HIRE_WORKER;
+    }
+    // Continue (13) - never disabled
     return false;
   };
 
@@ -217,7 +230,7 @@ const ItemStore: React.FC<ItemStoreProps> = ({
               const target = r * 2 + otherCol;
               if (!disabled(target)) return target;
             }
-            return 12; // Go to Continue
+            return 13; // Go to Continue
           }
           if (key === 'ArrowLeft') {
             if (col > 0) {
@@ -234,12 +247,12 @@ const ItemStore: React.FC<ItemStoreProps> = ({
             }
             // From level column (or if level disabled), go to right side
             if (row <= 1) {
-              // Try Bribe first, then power-ups
+              // Try Bribe first, then power-ups, then hire worker
               if (!disabled(8)) return 8;
-              return firstEnabled([9, 10, 11], current);
+              return firstEnabled([9, 10, 11, 12], current);
             }
-            // From bottom rows, go to power-ups
-            return firstEnabled([9, 10, 11], current);
+            // From bottom rows, go to power-ups or hire worker
+            return firstEnabled([9, 10, 11, 12], current);
           }
         }
 
@@ -250,8 +263,8 @@ const ItemStore: React.FC<ItemStoreProps> = ({
             return firstEnabled([1, 0, 3, 2], current);
           }
           if (key === 'ArrowDown') {
-            // Go to first enabled power-up
-            return firstEnabled([9, 10, 11, 12], current);
+            // Go to first enabled power-up, then hire worker
+            return firstEnabled([9, 10, 11, 12, 13], current);
           }
           if (key === 'ArrowUp') {
             // Go to first enabled in oven row 0-1
@@ -283,19 +296,30 @@ const ItemStore: React.FC<ItemStoreProps> = ({
             if (!disabled(8)) return 8;
             return current;
           }
-          if (key === 'ArrowDown') return 12; // Go to Continue
+          if (key === 'ArrowDown') return firstEnabled([12, 13], current); // Try Hire Worker, then Continue
         }
 
-        // At Continue (12)
+        // At Hire Worker (12)
         if (current === 12) {
           if (key === 'ArrowUp') {
-            // Try bottommost rightmost oven upgrade first (oven 4 level, then oven 4 speed)
-            if (!disabled(7)) return 7; // Oven 4 level (rightmost)
-            if (!disabled(6)) return 6; // Oven 4 speed
-            // No oven 4 upgrades - try power-ups if enabled
+            return firstEnabled([9, 10, 11, 8], current);
+          }
+          if (key === 'ArrowDown') return 13; // Go to Continue
+          if (key === 'ArrowLeft') {
+            return firstEnabled([5, 4, 7, 6], current);
+          }
+          if (key === 'ArrowRight') return current;
+        }
+
+        // At Continue (13)
+        if (current === 13) {
+          if (key === 'ArrowUp') {
+            // Try hire worker first, then bottommost oven upgrades
+            if (!disabled(12)) return 12;
+            if (!disabled(7)) return 7;
+            if (!disabled(6)) return 6;
             const powerUpEnabled = firstEnabled([9, 10, 11], -1);
             if (powerUpEnabled !== -1) return powerUpEnabled;
-            // Fall back to other ovens (bottommost rightmost first)
             return firstEnabled([5, 4, 3, 2, 1, 0], current);
           }
           if (key === 'ArrowLeft') return current;
@@ -481,13 +505,36 @@ const ItemStore: React.FC<ItemStoreProps> = ({
                 </button>
               ))}
             </div>
+
+            <div className="border-2 border-purple-300 rounded-lg p-1.5 sm:p-3 bg-gradient-to-br from-purple-50 to-indigo-50 mt-1.5 sm:mt-2">
+              <h4 className="text-[10px] sm:text-sm font-bold text-gray-800 mb-0.5 sm:mb-1 text-center">
+                {workerAlreadyHired ? '✅' : '👨‍🍳'} Hire Worker
+              </h4>
+              <p className="text-[9px] sm:text-xs text-gray-600 mb-1 sm:mb-2 text-center">
+                {workerAlreadyHired ? 'Worker on duty!' : 'Permanent helper chef'}
+              </p>
+              <button
+                {...getItemProps(12)}
+                disabled={workerAlreadyHired || !canAffordWorker}
+                className={`w-full rounded py-0.5 px-2 sm:py-1 sm:px-3 text-[10px] sm:text-xs font-semibold transition-colors ${
+                  !workerAlreadyHired && canAffordWorker
+                    ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                } ${selectedIndex === 12 ? selectedRing : ''}`}
+              >
+                {workerAlreadyHired ? 'Hired' : `$${hireCost}`}
+              </button>
+              <p className="text-[9px] sm:text-xs text-center mt-0.5 sm:mt-1 text-gray-500">
+                Costs ${COSTS.WORKER_RETENTION}/shop visit
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
       <button
-        {...getItemProps(12)}
-        className={`block mx-auto w-half bg-red-600 hover:bg-gray-700 text-white rounded-lg py-1.5 px-3 sm:py-2 sm:px-4 text-xs sm:text-sm font-semibold transition-colors ${selectedIndex === 12 ? selectedRing : ''}`}
+        {...getItemProps(13)}
+        className={`block mx-auto w-half bg-red-600 hover:bg-gray-700 text-white rounded-lg py-1.5 px-3 sm:py-2 sm:px-4 text-xs sm:text-sm font-semibold transition-colors ${selectedIndex === 13 ? selectedRing : ''}`}
       >
         Continue Playing
       </button>

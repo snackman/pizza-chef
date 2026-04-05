@@ -6,7 +6,7 @@ export type CustomerState =
   | 'leaving'      // Generic leaving (Brian complaining, etc.)
   | 'vomit';       // Beer+woozy = sick
 
-export type CustomerVariant = 'normal' | 'critic' | 'badLuckBrian' | 'scumbagSteve';
+export type CustomerVariant = 'normal' | 'critic' | 'badLuckBrian' | 'scumbagSteve' | 'healthInspector';
 
 export type WoozyState = 'normal' | 'drooling' | 'satisfied';
 
@@ -18,6 +18,7 @@ export const isCustomerApproaching = (c: Customer): boolean =>
   !isCustomerLeaving(c);
 
 export const getCustomerVariant = (c: Customer): CustomerVariant => {
+  if (c.healthInspector) return 'healthInspector';
   if (c.scumbagSteve) return 'scumbagSteve';
   if (c.badLuckBrian) return 'badLuckBrian';
   if (c.critic) return 'critic';
@@ -25,7 +26,7 @@ export const getCustomerVariant = (c: Customer): CustomerVariant => {
 };
 
 export const isCustomerAffectedByPowerUps = (c: Customer): boolean =>
-  !c.badLuckBrian && !c.critic && !c.scumbagSteve && !c.served && !c.leaving && !c.disappointed;
+  !c.badLuckBrian && !c.critic && !c.scumbagSteve && !c.healthInspector && !c.served && !c.leaving && !c.disappointed;
 
 export interface Customer {
   id: string;
@@ -48,6 +49,7 @@ export interface Customer {
   critic?: boolean;
   badLuckBrian?: boolean;
   scumbagSteve?: boolean;
+  healthInspector?: boolean;
   slicesReceived?: number; // For Steve who needs 2 slices
   lastLaneChangeTime?: number; // For Steve's random lane changes
   leaving?: boolean;
@@ -87,7 +89,14 @@ export interface NyanSweep {
 }
 
 export interface PepeHelper {
-  id: 'franco' | 'frank';
+  id: 'franco' | 'frank' | 'worker';
+  lane: number;
+  availableSlices: number;
+  lastActionTime: number;
+}
+
+export interface HiredWorker {
+  active: boolean;
   lane: number;
   availableSlices: number;
   lastActionTime: number;
@@ -206,7 +215,9 @@ export type StarLostReason =
   | 'woozy_critic_reached'
   | 'beer_vomit'
   | 'beer_critic_vomit'
-  | 'brian_hurled';
+  | 'brian_hurled'
+  | 'health_inspector_bribed'
+  | 'health_inspector_failed';
 
 export interface GameState {
   customers: Customer[];
@@ -238,6 +249,7 @@ export interface GameState {
   powerUpAlert?: { type: PowerUpType; endTime: number; chefLane: number };
   nyanSweep?: NyanSweep;
   pepeHelpers?: PepeHelpers;
+  hiredWorker?: HiredWorker;
   stats: GameStats;
   bossBattle?: BossBattle;
   defeatedBossLevels: number[];

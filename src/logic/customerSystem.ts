@@ -2,6 +2,7 @@ import {
   Customer,
   DroppedPlate,
   EmptyPlate,
+  OvenState,
   isCustomerLeaving,
   isCustomerAffectedByPowerUps,
   getCustomerVariant
@@ -13,7 +14,9 @@ export type CustomerUpdateEvent =
   | { type: 'GAME_OVER' }
   | { type: 'LIFE_LOST'; lane: number; position: number }
   | { type: 'STAR_LOST_CRITIC'; lane: number; position: number }
-  | { type: 'STAR_LOST_NORMAL'; lane: number; position: number };
+  | { type: 'STAR_LOST_NORMAL'; lane: number; position: number }
+  | { type: 'HEALTH_INSPECTOR_PASSED'; lane: number; position: number }
+  | { type: 'HEALTH_INSPECTOR_FAILED'; lane: number; position: number };
 
 export interface CustomerUpdateResult {
   nextCustomers: Customer[];
@@ -33,7 +36,8 @@ export type CustomerHitEvent =
   | 'UNFROZEN_AND_SERVED'
   | 'BRIAN_DROPPED_PLATE'
   | 'STEVE_FIRST_SLICE'
-  | 'STEVE_SERVED';
+  | 'STEVE_SERVED'
+  | 'HEALTH_INSPECTOR_BRIBED';
 
 export interface CustomerHitResult {
   updatedCustomer: Customer;
@@ -51,7 +55,8 @@ export interface CustomerHitResult {
 export const updateCustomerPositions = (
   customers: Customer[],
   activePowerUps: { type: string; endTime: number }[],
-  now: number
+  now: number,
+  ovens?: { [key: number]: OvenState }
 ): CustomerUpdateResult => {
   const events: CustomerUpdateEvent[] = [];
   const nextCustomers: Customer[] = [];
@@ -275,6 +280,37 @@ export const updateCustomerPositions = (
       return;
     }
 
+    // 6.75. Health Inspector Movement
+    if (processedCustomer.healthInspector && !isDeparting) {
+      if (processedCustomer.movingRight) {
+        processedCustomer.position += processedCustomer.speed * 2;
+        nextCustomers.push(processedCustomer);
+        return;
+      }
+
+      const hiNewPos = processedCustomer.position - processedCustomer.speed;
+      if (hiNewPos <= GAME_CONFIG.CHEF_X_POSITION) {
+        // Health inspector reached the counter - check ovens
+        processedCustomer.position = hiNewPos;
+        if (ovens) {
+          const hasBurntOven = Object.values(ovens).some(oven => oven.burned);
+          if (hasBurntOven) {
+            events.push({ type: 'HEALTH_INSPECTOR_FAILED', lane: processedCustomer.lane, position: hiNewPos });
+          } else {
+            events.push({ type: 'HEALTH_INSPECTOR_PASSED', lane: processedCustomer.lane, position: hiNewPos });
+          }
+        } else {
+          events.push({ type: 'HEALTH_INSPECTOR_PASSED', lane: processedCustomer.lane, position: hiNewPos });
+        }
+        processedCustomer.leaving = true;
+        processedCustomer.movingRight = true;
+      } else {
+        processedCustomer.position = hiNewPos;
+      }
+      nextCustomers.push(processedCustomer);
+      return;
+    }
+
     // 7. Standard Customer Movement (Approaching)
     const speedMod = processedCustomer.hotHoneyAffected ? 0.5 : 1;
     const newPos = processedCustomer.position - (processedCustomer.speed * speedMod);
@@ -314,6 +350,20 @@ export const processCustomerHit = (
 ): CustomerHitResult => {
   const events: CustomerHitEvent[] = [];
   const newEntities: { droppedPlate?: DroppedPlate; emptyPlate?: EmptyPlate } = {};
+
+  // 0. Health Inspector - rejects pizza ("No bribes!")
+  if (customer.healthInspector) {
+    events.push('HEALTH_INSPECTOR_BRIBED');
+    return {
+      updatedCustomer: {
+        ...customer,
+        textMessage: "No bribes!",
+        textMessageTime: now,
+      },
+      events,
+      newEntities: {}
+    };
+  }
 
   // 1. Bad Luck Brian
   if (customer.badLuckBrian) {

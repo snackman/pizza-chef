@@ -63,6 +63,12 @@ export const SCUMBAG_STEVE = {
   LANE_CHANGE_CHANCE: 0.3, // 30% chance to change lane each interval
 };
 
+export const HEALTH_INSPECTOR = {
+  CHANCE: 0.08, // 8% chance (if not other variant)
+  MIN_LEVEL: 5,
+  SPEED_MULTIPLIER: 0.7, // 30% slower than normal
+};
+
 export const SCORING = {
   // Customer Service
   CUSTOMER_NORMAL: 150,
@@ -97,6 +103,13 @@ export const COSTS = {
   OVEN_SPEED_UPGRADE: 10,
   BRIBE_REVIEWER: 25,
   BUY_POWERUP: 5,
+  HIRE_WORKER: 100,
+  WORKER_RETENTION: 50,
+};
+
+export const WORKER_CONFIG = {
+  ACTION_INTERVAL: 150,
+  STARTING_SLICES: 2,
 };
 
 export const BOSS_CONFIG = {
@@ -194,6 +207,7 @@ export const INITIAL_GAME_STATE = {
   powerUpAlert: undefined,
   nyanSweep: undefined,
   lastStarLostReason: undefined,
+  hiredWorker: undefined,
   stats: {
     slicesBaked: 0,
     customersServed: 0,
