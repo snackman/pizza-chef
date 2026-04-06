@@ -103,14 +103,17 @@ export const initializeBossBattle = (
 ): BossBattle => {
   const config = getBossConfig(bossType);
   // Papa John has no minions - immediately vulnerable
+  // Chuck E. Cheese spawns kid waves but is also immediately vulnerable
   const isPapaJohn = bossType === 'papaJohn';
+  const isChuckECheese = bossType === 'chuckECheese';
+  const alwaysVulnerable = isPapaJohn || isChuckECheese;
   return {
     active: true,
     bossType,
     bossHealth: config.HEALTH,
-    currentWave: isPapaJohn ? config.WAVES : 1, // Skip waves for Papa John
+    currentWave: isPapaJohn ? config.WAVES : 1, // Skip waves for Papa John; Chuck E. Cheese still has kid waves
     minions: isPapaJohn ? [] : createWaveMinions(1, now, config.MINIONS_PER_WAVE, bossType),
-    bossVulnerable: isPapaJohn, // Papa John is immediately vulnerable
+    bossVulnerable: alwaysVulnerable, // Papa John & Chuck E. Cheese are immediately vulnerable
     bossDefeated: false,
     bossPosition: isPapaJohn ? 50 : BOSS_CONFIG.BOSS_POSITION, // Papa John starts in the middle
     bossLane: 1.5, // Start in the middle (between lanes 1 and 2)
