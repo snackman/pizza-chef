@@ -845,44 +845,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         }
       }
 
-      // --- 9. LEVEL & BOSS LOGIC (PATCHED) ---
-      const targetLevel = Math.floor(newState.score / GAME_CONFIG.LEVEL_THRESHOLD) + 1;
-
-      if (targetLevel > newState.level) {
-        const oldLevel = newState.level;
-        newState.level = targetLevel;
-
-        const highestStoreLevel = Math.floor(targetLevel / GAME_CONFIG.STORE_LEVEL_INTERVAL) * GAME_CONFIG.STORE_LEVEL_INTERVAL;
-        if (highestStoreLevel >= 10 && highestStoreLevel > newState.lastStoreLevelShown) {
-          newState.lastStoreLevelShown = highestStoreLevel;
-          if (newState.nyanSweep?.active) newState.pendingStoreShow = true;
-          else newState.showStore = true;
-        }
-
-        // Check if boss battle(s) should trigger - returns ALL missed bosses
-        const bossTriggers = checkBossTrigger(
-          oldLevel,
-          targetLevel,
-          newState.defeatedBossLevels,
-        );
-        if (bossTriggers.length > 0) {
-          if (newState.bossBattle?.active) {
-            // Boss battle already active - queue all triggered bosses
-            const existingQueue = newState.pendingBossQueue ?? [];
-            newState.pendingBossQueue = [...existingQueue, ...bossTriggers];
-          } else {
-            // Start the first boss immediately, queue the rest
-            const [first, ...rest] = bossTriggers;
-            newState.bossBattle = initializeBossBattle(now, first.type);
-            if (rest.length > 0) {
-              const existingQueue = newState.pendingBossQueue ?? [];
-              newState.pendingBossQueue = [...existingQueue, ...rest];
-            }
-          }
-        }
-      }
-
-      // --- BOSS BATTLE PROCESSING ---
+      // --- 9a. BOSS BATTLE PROCESSING (runs FIRST so boss score is included in level-up check) ---
       if (newState.bossBattle?.active && !newState.bossBattle.bossDefeated) {
         const bossResult = processBossTick(
           newState.bossBattle,
@@ -966,6 +929,43 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             newState = addFloatingScore(event.points, event.lane, event.position, newState);
           }
         });
+      }
+
+      // --- 9b. LEVEL & BOSS LOGIC (runs AFTER boss processing so score includes boss rewards) ---
+      const targetLevel = Math.floor(newState.score / GAME_CONFIG.LEVEL_THRESHOLD) + 1;
+
+      if (targetLevel > newState.level) {
+        const oldLevel = newState.level;
+        newState.level = targetLevel;
+
+        const highestStoreLevel = Math.floor(targetLevel / GAME_CONFIG.STORE_LEVEL_INTERVAL) * GAME_CONFIG.STORE_LEVEL_INTERVAL;
+        if (highestStoreLevel >= 10 && highestStoreLevel > newState.lastStoreLevelShown) {
+          newState.lastStoreLevelShown = highestStoreLevel;
+          if (newState.nyanSweep?.active) newState.pendingStoreShow = true;
+          else newState.showStore = true;
+        }
+
+        // Check if boss battle(s) should trigger - returns ALL missed bosses
+        const bossTriggers = checkBossTrigger(
+          oldLevel,
+          targetLevel,
+          newState.defeatedBossLevels,
+        );
+        if (bossTriggers.length > 0) {
+          if (newState.bossBattle?.active) {
+            // Boss battle already active - queue all triggered bosses
+            const existingQueue = newState.pendingBossQueue ?? [];
+            newState.pendingBossQueue = [...existingQueue, ...bossTriggers];
+          } else {
+            // Start the first boss immediately, queue the rest
+            const [first, ...rest] = bossTriggers;
+            newState.bossBattle = initializeBossBattle(now, first.type);
+            if (rest.length > 0) {
+              const existingQueue = newState.pendingBossQueue ?? [];
+              newState.pendingBossQueue = [...existingQueue, ...rest];
+            }
+          }
+        }
       }
 
       // --- CLEAN KITCHEN BONUS CHECK ---
