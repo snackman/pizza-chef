@@ -27,7 +27,7 @@ const EmptyPlate: React.FC<EmptyPlateProps> = ({ plate }) => {
 
   return (
     <div
-      className="absolute w-[10%] aspect-square transition-all duration-100 flex items-center justify-center"
+      className="absolute w-[10%] aspect-square flex items-center justify-center"
       style={{
         left: `${plate.position}%`,
         top: `${topPercent}%`,

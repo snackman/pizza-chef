@@ -698,7 +698,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         newState.stats,
         dogeMultiplier,
         getStreakMultiplier(newState.stats.currentPlateStreak),
-        newState.nyanSweep?.active ?? false
+        newState.nyanSweep?.active ?? false,
+        now
       );
 
       newState.emptyPlates = plateResult.remainingPlates;

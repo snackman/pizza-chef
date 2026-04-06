@@ -374,7 +374,8 @@ export const processCustomerHit = (
         id: `plate-${now}-${customer.id}`,
         lane: customer.lane,
         position: customer.position,
-        speed: ENTITY_SPEEDS.PLATE
+        speed: ENTITY_SPEEDS.PLATE,
+        createdAt: now
       };
       return {
         updatedCustomer: {
@@ -424,7 +425,8 @@ export const processCustomerHit = (
       id: `plate-${now}-${customer.id}-unfreeze`,
       lane: customer.lane,
       position: customer.position,
-      speed: ENTITY_SPEEDS.PLATE
+      speed: ENTITY_SPEEDS.PLATE,
+      createdAt: now
     };
     return {
       updatedCustomer: {
@@ -448,7 +450,8 @@ export const processCustomerHit = (
         id: `plate-${now}-${customer.id}-first`,
         lane: customer.lane,
         position: customer.position,
-        speed: ENTITY_SPEEDS.PLATE
+        speed: ENTITY_SPEEDS.PLATE,
+        createdAt: now
       };
       return {
         updatedCustomer: { ...customer, woozy: false, woozyState: 'drooling' },
@@ -462,7 +465,8 @@ export const processCustomerHit = (
         id: `plate-${now}-${customer.id}`,
         lane: customer.lane,
         position: customer.position,
-        speed: ENTITY_SPEEDS.PLATE
+        speed: ENTITY_SPEEDS.PLATE,
+        createdAt: now
       };
       return {
         updatedCustomer: { ...customer, woozy: false, woozyState: 'satisfied', served: true, hasPlate: false },
@@ -495,6 +499,7 @@ export const processCustomerHit = (
         lane: customer.lane, // Start at Steve's lane
         position: customer.position,
         speed: ENTITY_SPEEDS.PLATE,
+        createdAt: now,
         // Angled throw properties
         startLane: customer.lane,
         startPosition: customer.position,
@@ -518,6 +523,7 @@ export const processCustomerHit = (
         lane: customer.lane, // Start at Steve's lane
         position: customer.position,
         speed: ENTITY_SPEEDS.PLATE,
+        createdAt: now,
         // Angled throw properties
         startLane: customer.lane,
         startPosition: customer.position,
@@ -545,7 +551,8 @@ export const processCustomerHit = (
     id: `plate-${now}-${customer.id}`,
     lane: customer.lane,
     position: customer.position,
-    speed: ENTITY_SPEEDS.PLATE
+    speed: ENTITY_SPEEDS.PLATE,
+    createdAt: now
   };
 
   return {

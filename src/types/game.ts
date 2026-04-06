@@ -73,6 +73,7 @@ export interface EmptyPlate {
   lane: number;
   position: number;
   speed: number;
+  createdAt: number;
   // For angled throws (Steve)
   startLane?: number;
   startPosition?: number;

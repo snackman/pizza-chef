@@ -157,6 +157,7 @@ export const TIMINGS = {
   DROPPED_PLATE_LIFETIME: 1000,
   TEXT_MESSAGE_LIFETIME: 3000,
   WARNING_BLINK_INTERVAL: 250, // ms between warning blinks
+  PLATE_MAX_LIFETIME: 5000, // TTL safety net: plates auto-removed after 5s
 };
 
 export const POSITIONS = {
