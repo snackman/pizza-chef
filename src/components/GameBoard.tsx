@@ -15,6 +15,7 @@ import { getOvenDisplayStatus } from '../logic/ovenSystem';
 import { OVEN_CONFIG, TIMINGS } from '../lib/constants';
 
 const chefImg = sprite("chef.png");
+const cheesedChefImg = sprite("cheesed-chef.png");
 const sadChefImg = sprite("sad-chef.png");
 const nyanChefImg = sprite("nyan-chef.png");
 const pizzaShopBg = bg("pizza-shop-background.webp");
@@ -165,12 +166,11 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
             zIndex: gameState.gameOver ? 19 : 10,
             willChange: 'transform',
             transition: isSlimed ? 'top 300ms ease-in-out' : 'top 150ms ease-out',
-            filter: isSlimed ? 'brightness(1.2) sepia(0.8) saturate(2.5) hue-rotate(10deg)' : undefined,
           }}
         >
           <img
-            src={gameState.gameOver ? sadChefImg : chefImg}
-            alt={gameState.gameOver ? "game over" : "chef"}
+            src={gameState.gameOver ? sadChefImg : isSlimed ? cheesedChefImg : chefImg}
+            alt={gameState.gameOver ? "game over" : isSlimed ? "cheesed chef" : "chef"}
             className="w-full h-full object-contain"
             style={{ transform: 'none' }}
           />
