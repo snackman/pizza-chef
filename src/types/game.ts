@@ -262,7 +262,7 @@ export interface GameState {
   stats: GameStats;
   bossBattle?: BossBattle;
   defeatedBossLevels: number[];
-  pendingBossTrigger?: { type: BossType; level: number };
+  pendingBossQueue?: { type: BossType; level: number }[];
   cleanKitchenStartTime?: number;
   lastCleanKitchenBonusTime?: number;
   cleanKitchenBonusAlert?: { endTime: number };

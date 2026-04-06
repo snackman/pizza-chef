@@ -32,38 +32,33 @@ export interface BossTriggerResult {
 }
 
 /**
- * Check if a boss battle should trigger based on level progression
+ * Check if any boss battles should trigger based on current level.
+ * Returns ALL bosses whose level threshold has been reached but not yet defeated,
+ * sorted by level ascending so lowest-level boss fights first.
+ * This ensures bosses can never be skipped regardless of how fast the player levels up.
  */
 export const checkBossTrigger = (
-  oldLevel: number,
+  _oldLevel: number,
   newLevel: number,
   defeatedBossLevels: number[],
-): BossTriggerResult | null => {
-  // Check Chuck E. Cheese (level 5)
-  if (oldLevel < BOSS_CONFIG.CHUCK_E_CHEESE_LEVEL && newLevel >= BOSS_CONFIG.CHUCK_E_CHEESE_LEVEL &&
-      !defeatedBossLevels.includes(BOSS_CONFIG.CHUCK_E_CHEESE_LEVEL)) {
-    return { type: 'chuckECheese', level: BOSS_CONFIG.CHUCK_E_CHEESE_LEVEL };
+): BossTriggerResult[] => {
+  const triggered: BossTriggerResult[] = [];
+
+  // All boss definitions sorted by level ascending
+  const allBosses: { type: BossType; level: number }[] = [
+    { type: 'papaJohn', level: BOSS_CONFIG.PAPA_JOHN_LEVEL },
+    { type: 'chuckECheese', level: BOSS_CONFIG.CHUCK_E_CHEESE_LEVEL },
+    { type: 'pizzaTheHut', level: BOSS_CONFIG.PIZZA_THE_HUT_LEVEL },
+    { type: 'dominos', level: BOSS_CONFIG.DOMINOS_LEVEL },
+  ].sort((a, b) => a.level - b.level);
+
+  for (const boss of allBosses) {
+    if (newLevel >= boss.level && !defeatedBossLevels.includes(boss.level)) {
+      triggered.push({ type: boss.type, level: boss.level });
+    }
   }
 
-  // Check Papa John (level 10)
-  if (oldLevel < BOSS_CONFIG.PAPA_JOHN_LEVEL && newLevel >= BOSS_CONFIG.PAPA_JOHN_LEVEL &&
-      !defeatedBossLevels.includes(BOSS_CONFIG.PAPA_JOHN_LEVEL)) {
-    return { type: 'papaJohn', level: BOSS_CONFIG.PAPA_JOHN_LEVEL };
-  }
-
-  // Check Dominos (level 30)
-  if (oldLevel < BOSS_CONFIG.DOMINOS_LEVEL && newLevel >= BOSS_CONFIG.DOMINOS_LEVEL &&
-      !defeatedBossLevels.includes(BOSS_CONFIG.DOMINOS_LEVEL)) {
-    return { type: 'dominos', level: BOSS_CONFIG.DOMINOS_LEVEL };
-  }
-
-  // Check Pizza the Hut (level 40)
-  if (oldLevel < BOSS_CONFIG.PIZZA_THE_HUT_LEVEL && newLevel >= BOSS_CONFIG.PIZZA_THE_HUT_LEVEL &&
-      !defeatedBossLevels.includes(BOSS_CONFIG.PIZZA_THE_HUT_LEVEL)) {
-    return { type: 'pizzaTheHut', level: BOSS_CONFIG.PIZZA_THE_HUT_LEVEL };
-  }
-
-  return null;
+  return triggered;
 };
 
 /**

@@ -838,18 +838,25 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           else newState.showStore = true;
         }
 
-        // Check if boss battle should trigger
-        const bossTrigger = checkBossTrigger(
+        // Check if boss battle(s) should trigger - returns ALL missed bosses
+        const bossTriggers = checkBossTrigger(
           oldLevel,
           targetLevel,
           newState.defeatedBossLevels,
         );
-        if (bossTrigger !== null) {
+        if (bossTriggers.length > 0) {
           if (newState.bossBattle?.active) {
-            // Queue the boss for after the current battle ends
-            newState.pendingBossTrigger = bossTrigger;
+            // Boss battle already active - queue all triggered bosses
+            const existingQueue = newState.pendingBossQueue ?? [];
+            newState.pendingBossQueue = [...existingQueue, ...bossTriggers];
           } else {
-            newState.bossBattle = initializeBossBattle(now, bossTrigger.type);
+            // Start the first boss immediately, queue the rest
+            const [first, ...rest] = bossTriggers;
+            newState.bossBattle = initializeBossBattle(now, first.type);
+            if (rest.length > 0) {
+              const existingQueue = newState.pendingBossQueue ?? [];
+              newState.pendingBossQueue = [...existingQueue, ...rest];
+            }
           }
         }
       }
@@ -889,10 +896,19 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         if (bossResult.defeatedBossLevel !== undefined) {
           newState.defeatedBossLevels = [...newState.defeatedBossLevels, bossResult.defeatedBossLevel];
 
-          // Spawn queued boss if one was pending
-          if (newState.pendingBossTrigger) {
-            newState.bossBattle = initializeBossBattle(now, newState.pendingBossTrigger.type);
-            newState.pendingBossTrigger = undefined;
+          // Spawn next queued boss if any are pending
+          if (newState.pendingBossQueue && newState.pendingBossQueue.length > 0) {
+            // Filter out any bosses that were already defeated (safety check)
+            const remainingQueue = newState.pendingBossQueue.filter(
+              b => !newState.defeatedBossLevels.includes(b.level)
+            );
+            if (remainingQueue.length > 0) {
+              const [nextBoss, ...rest] = remainingQueue;
+              newState.bossBattle = initializeBossBattle(now, nextBoss.type);
+              newState.pendingBossQueue = rest.length > 0 ? rest : undefined;
+            } else {
+              newState.pendingBossQueue = undefined;
+            }
           }
         }
 
