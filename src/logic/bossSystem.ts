@@ -114,13 +114,14 @@ export const initializeBossBattle = (
   const config = getBossConfig(bossType);
   // Papa John has no minions - immediately vulnerable
   const isPapaJohn = bossType === 'papaJohn';
+  const isPizzaTheHut = bossType === 'pizzaTheHut';
   return {
     active: true,
     bossType,
     bossHealth: config.HEALTH,
     currentWave: isPapaJohn ? config.WAVES : 1, // Skip waves for Papa John
-    minions: isPapaJohn ? [] : (bossType === 'pizzaTheHut' ? createSlimeWave(1, now) : createWaveMinions(1, now, config.MINIONS_PER_WAVE)),
-    bossVulnerable: isPapaJohn, // Papa John is immediately vulnerable
+    minions: isPapaJohn ? [] : (isPizzaTheHut ? createSlimeWave(1, now) : createWaveMinions(1, now, config.MINIONS_PER_WAVE)),
+    bossVulnerable: isPapaJohn || isPizzaTheHut, // Papa John and Pizza the Hut are immediately vulnerable
     bossDefeated: false,
     bossPosition: isPapaJohn ? 50 : BOSS_CONFIG.BOSS_POSITION, // Papa John starts in the middle
     bossLane: 1.5, // Start in the middle (between lanes 1 and 2)
