@@ -25,15 +25,21 @@ function getStarLostMessage(reason?: StarLostReason): string {
     case 'disappointed_critic':
       return 'A food critic stormed off angry!';
     case 'woozy_customer_reached':
-      return 'A tipsy customer stumbled to the counter!';
-    case 'woozy_critic_reached':
-      return 'A tipsy critic demanded a refund!';
+      return 'A tipsy customer left hungry!';
     case 'beer_vomit':
       return 'Too much beer made a customer sick!';
-    case 'beer_critic_vomit':
-      return 'A critic had one too many beers!';
     case 'brian_hurled':
       return 'Bad Luck Brian couldn\'t handle the beer!';
+    case 'health_inspector_bribed':
+      return 'You tried to bribe the health inspector!';
+    case 'health_inspector_failed':
+      return 'The health inspector found a burnt oven!';
+    case 'steve_disappointed':
+      return 'Scumbag Steve wanted more pizza!';
+    case 'papajohn_minion_reached':
+      return 'Papa John sabotaged the kitchen!';
+    case 'dominos_minion_reached':
+      return 'Dominos sabotaged the kitchen!';
     default:
       return 'You ran out of stars!';
   }
