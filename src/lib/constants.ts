@@ -131,6 +131,7 @@ export const CHUCK_E_CHEESE_CONFIG = {
   WAVES: 3,
   MINIONS_PER_WAVE: 8,
   KID_SPRITE_COUNT: 6,
+  KID_SPEED_MULTIPLIER: 2, // Kids move twice as fast as normal minions
   WAVE_SPEED_MULTIPLIER: 1.4,
   SPEED_VARIANCE: 0.4,
 };

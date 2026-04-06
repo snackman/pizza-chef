@@ -34,6 +34,8 @@ function getStarLostMessage(reason?: StarLostReason): string {
       return 'A critic had one too many beers!';
     case 'brian_hurled':
       return 'Bad Luck Brian couldn\'t handle the beer!';
+    case 'beer_around_kids':
+      return 'You can\'t drink beer around kids!';
     default:
       return 'You ran out of stars!';
   }

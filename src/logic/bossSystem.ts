@@ -68,7 +68,7 @@ export const createWaveMinions = (waveNumber: number, now: number, minionsPerWav
     let minionSprite: string | undefined;
 
     if (isChuckECheese) {
-      const baseSpeed = ENTITY_SPEEDS.MINION * Math.pow(CHUCK_E_CHEESE_CONFIG.WAVE_SPEED_MULTIPLIER, waveNumber - 1);
+      const baseSpeed = ENTITY_SPEEDS.MINION * CHUCK_E_CHEESE_CONFIG.KID_SPEED_MULTIPLIER * Math.pow(CHUCK_E_CHEESE_CONFIG.WAVE_SPEED_MULTIPLIER, waveNumber - 1);
       speed = baseSpeed * (1 + (Math.random() * 2 - 1) * CHUCK_E_CHEESE_CONFIG.SPEED_VARIANCE);
       minionSprite = sprite(`kid-${Math.floor(Math.random() * CHUCK_E_CHEESE_CONFIG.KID_SPRITE_COUNT) + 1}.png`);
     }

@@ -218,7 +218,8 @@ export type StarLostReason =
   | 'beer_critic_vomit'
   | 'brian_hurled'
   | 'health_inspector_bribed'
-  | 'health_inspector_failed';
+  | 'health_inspector_failed'
+  | 'beer_around_kids';
 
 export interface GameState {
   customers: Customer[];
