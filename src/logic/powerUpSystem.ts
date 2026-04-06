@@ -55,6 +55,16 @@ export const processPowerUpCollection = (
     };
 
     if (powerUp.type === 'beer') {
+        // Check if Chuck E. Cheese kids are on screen — can't drink beer around kids!
+        if (newState.bossBattle?.active &&
+            newState.bossBattle.bossType === 'chuckECheese' &&
+            !newState.bossBattle.bossDefeated &&
+            newState.bossBattle.minions.some(m => !m.defeated)) {
+            newState.lives = 0;
+            newState.lastStarLostReason = 'beer_around_kids';
+            return { newState, scoresToAdd, livesLost: 0, shouldTriggerGameOver: true, powerUpAlert: undefined, nyanSweepStarted: false };
+        }
+
         let lastReason: StarLostReason | undefined;
 
         newState.customers = newState.customers.map(customer => {

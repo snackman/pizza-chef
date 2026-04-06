@@ -113,8 +113,9 @@ export const WORKER_CONFIG = {
 };
 
 export const BOSS_CONFIG = {
-  DOMINOS_LEVEL: 30,
-  PAPA_JOHN_LEVEL: 10, // Single appearance at level 10
+  DOMINOS_LEVEL: 70,
+  PAPA_JOHN_LEVEL: 10,
+  CHUCK_E_CHEESE_LEVEL: 30,
   BOSS_POSITION: 85,
 };
 
@@ -123,6 +124,16 @@ export const PAPA_JOHN_CONFIG = {
   WAVES: 3,
   MINIONS_PER_WAVE: 4,
   HITS_PER_IMAGE: 8, // Change sprite every 8 hits
+};
+
+export const CHUCK_E_CHEESE_CONFIG = {
+  HEALTH: 20,
+  WAVES: 3,
+  MINIONS_PER_WAVE: 8,
+  KID_SPRITE_COUNT: 6,
+  KID_SPEED_MULTIPLIER: 2, // Kids move twice as fast as normal minions
+  WAVE_SPEED_MULTIPLIER: 1.4,
+  SPEED_VARIANCE: 0.4,
 };
 
 export const DOMINOS_CONFIG = {

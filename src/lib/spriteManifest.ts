@@ -44,6 +44,13 @@ export const PRELOAD_SPRITES = [
 
   // Boss/special
   'dominos-boss.png',
+  'chuck-e-cheese.png',
+  'kid-1.png',
+  'kid-2.png',
+  'kid-3.png',
+  'kid-4.png',
+  'kid-5.png',
+  'kid-6.png',
   'papa-john.png',
   'papa-john-2.png',
   'papa-john-3.png',

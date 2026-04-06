@@ -680,9 +680,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       // Handle life loss sounds
       if (powerUpResult.livesLost > 0) {
         soundManager.lifeLost();
-        if (powerUpResult.shouldTriggerGameOver) {
-          newState = triggerGameOver(newState, now);
-        }
+      }
+      if (powerUpResult.shouldTriggerGameOver) {
+        newState = triggerGameOver(newState, now);
       }
 
       // Handle Nyan sweep sound

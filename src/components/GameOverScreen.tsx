@@ -30,6 +30,8 @@ function getStarLostMessage(reason?: StarLostReason): string {
       return 'Too much beer made a customer sick!';
     case 'brian_hurled':
       return 'Bad Luck Brian couldn\'t handle the beer!';
+    case 'beer_around_kids':
+      return 'You can\'t drink beer around kids!';
     case 'health_inspector_bribed':
       return 'You tried to bribe the health inspector!';
     case 'health_inspector_failed':
