@@ -147,6 +147,7 @@ export const tryInteractWithOven = (
   const currentOven = gameState.ovens[lane];
 
   if (currentOven.burned) return { action: 'NONE' };
+  if (currentOven.slimeDisabledUntil && now < currentOven.slimeDisabledUntil) return { action: 'NONE' };
 
   // A. Start Cooking
   if (!currentOven.cooking) {

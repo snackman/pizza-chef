@@ -133,7 +133,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
               </div>
             )}
             <div className="relative" style={{ zIndex: 10 }}>
-              {ovenStatus === 'burned' ? '💀' :
+              {oven.slimeDisabledUntil && Date.now() < oven.slimeDisabledUntil ? '🧀' :
+               ovenStatus === 'burned' ? '💀' :
                ovenStatus === 'extinguishing' ? '🧯' :
                ovenStatus === 'sweeping' ? '🧹' :
                ovenStatus === 'burning' ? '💀' :
@@ -149,7 +150,9 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
 
       {/* ✅ Chef (no scale(15), positioned directly on board) */}
       {/* Hide chef when paused (but show game over chef) */}
-      {!gameState.nyanSweep?.active && (!gameState.paused || gameState.gameOver) && (
+      {!gameState.nyanSweep?.active && (!gameState.paused || gameState.gameOver) && (() => {
+        const isSlimed = !!(gameState.chefSlowedUntil && Date.now() < gameState.chefSlowedUntil);
+        return (
         <div
           className="absolute flex items-center justify-center"
           style={{
@@ -160,7 +163,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
             transform: 'translate3d(0, -50%, 0)', // center on lane
             zIndex: gameState.gameOver ? 19 : 10,
             willChange: 'transform',
-            transition: 'top 10ms ease-out',
+            transition: isSlimed ? 'top 1500ms ease-in-out' : 'top 10ms ease-out',
+            filter: isSlimed ? 'saturate(0.3) brightness(0.7)' : undefined,
           }}
         >
           <img
@@ -185,7 +189,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
             <PizzaSliceStack sliceCount={gameState.availableSlices} />
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* Pepe Helpers - Franco-Pepe and Frank-Pepe */}
       <PepeHelpers helpers={gameState.pepeHelpers} />
