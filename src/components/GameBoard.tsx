@@ -15,6 +15,7 @@ import { getOvenDisplayStatus } from '../logic/ovenSystem';
 import { OVEN_CONFIG, TIMINGS } from '../lib/constants';
 
 const chefImg = sprite("chef.png");
+const cheesedChefImg = sprite("cheesed-chef.png");
 const sadChefImg = sprite("sad-chef.png");
 const nyanChefImg = sprite("nyan-chef.png");
 const pizzaShopBg = bg("pizza-shop-background.webp");
@@ -133,7 +134,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
               </div>
             )}
             <div className="relative" style={{ zIndex: 10 }}>
-              {oven.slimeDisabledUntil && Date.now() < oven.slimeDisabledUntil ? '🧀' :
+              {oven.slimeDisabledUntil && Date.now() < oven.slimeDisabledUntil && oven.slimeCleaningStartTime ? '🧹' :
+               oven.slimeDisabledUntil && Date.now() < oven.slimeDisabledUntil ? '🧀' :
                ovenStatus === 'burned' ? '💀' :
                ovenStatus === 'extinguishing' ? '🧯' :
                ovenStatus === 'sweeping' ? '🧹' :
@@ -163,13 +165,12 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
             transform: 'translate3d(0, -50%, 0)', // center on lane
             zIndex: gameState.gameOver ? 19 : 10,
             willChange: 'transform',
-            transition: isSlimed ? 'top 1500ms ease-in-out' : 'top 10ms ease-out',
-            filter: isSlimed ? 'saturate(0.3) brightness(0.7)' : undefined,
+            transition: isSlimed ? 'top 300ms ease-in-out' : 'top 150ms ease-out',
           }}
         >
           <img
-            src={gameState.gameOver ? sadChefImg : chefImg}
-            alt={gameState.gameOver ? "game over" : "chef"}
+            src={gameState.gameOver ? sadChefImg : isSlimed ? cheesedChefImg : chefImg}
+            alt={gameState.gameOver ? "game over" : isSlimed ? "cheesed chef" : "chef"}
             className="w-full h-full object-contain"
             style={{ transform: 'none' }}
           />

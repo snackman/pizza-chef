@@ -160,6 +160,7 @@ export interface OvenState {
   pausedElapsed?: number;
   sliceCount: number;
   slimeDisabledUntil?: number;
+  slimeCleaningStartTime?: number;
 }
 
 export interface BossMinion {

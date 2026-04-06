@@ -94,7 +94,8 @@ export const createWaveMinions = (waveNumber: number, now: number, minionsPerWav
  * Get the total number of slimes for a Pizza the Hut wave
  */
 export const getSlimeWaveCount = (waveNumber: number): number => {
-  return PIZZA_THE_HUT_CONFIG.MINIONS_PER_WAVE + (waveNumber - 1) * 2;
+  const baseCount = PIZZA_THE_HUT_CONFIG.MINIONS_PER_WAVE + (waveNumber - 1) * 2;
+  return Math.round(baseCount * 0.75);
 };
 
 /**
@@ -159,9 +160,8 @@ export const initializeBossBattle = (
     hitsReceived: 0,
   };
 
-  // Pizza the Hut: set up staggered slime spawning instead of bulk wave
+  // Pizza the Hut: set up continuous slime spawning
   if (isPizzaTheHut) {
-    result.slimesRemainingInWave = getSlimeWaveCount(1);
     result.nextSlimeSpawnTime = now;
     result.slimeWaveIndex = 0;
   }
@@ -421,16 +421,13 @@ export const checkWaveCompletion = (
   const activeMinions = bossBattle.minions.filter(m => !m.defeated);
   const events: BossEvent[] = [];
 
-  // For Pizza the Hut, wave is only complete when all slimes are spawned AND defeated
+  // Pizza the Hut has continuous slime - no wave completion needed
   if (bossBattle.bossType === 'pizzaTheHut') {
-    const stillSpawning = (bossBattle.slimesRemainingInWave ?? 0) > 0;
-    if (activeMinions.length > 0 || stillSpawning) {
-      return { updatedBossBattle: bossBattle, events };
-    }
-  } else {
-    if (activeMinions.length > 0) {
-      return { updatedBossBattle: bossBattle, events };
-    }
+    return { updatedBossBattle: bossBattle, events };
+  }
+
+  if (activeMinions.length > 0) {
+    return { updatedBossBattle: bossBattle, events };
   }
 
   let updatedBossBattle = { ...bossBattle };
@@ -535,15 +532,15 @@ export const processBossTick = (
   let totalLivesLost = 0;
   const allConsumedSliceIds = new Set<string>();
 
-  // 0. Spawn staggered slimes for Pizza the Hut
+  // 0. Spawn continuous slimes for Pizza the Hut (until defeated)
   let updatedBoss = { ...bossBattle };
   if (bossBattle.bossType === 'pizzaTheHut' &&
-      (bossBattle.slimesRemainingInWave ?? 0) > 0 &&
+      !bossBattle.bossDefeated &&
       bossBattle.nextSlimeSpawnTime !== undefined &&
       now >= bossBattle.nextSlimeSpawnTime) {
     const slimeIndex = bossBattle.slimeWaveIndex ?? 0;
     const newSlime = createSingleSlime(
-      bossBattle.currentWave,
+      1,
       slimeIndex,
       now,
       bossBattle.bossPosition,
@@ -552,7 +549,6 @@ export const processBossTick = (
     updatedBoss = {
       ...bossBattle,
       minions: [...bossBattle.minions, newSlime],
-      slimesRemainingInWave: (bossBattle.slimesRemainingInWave ?? 0) - 1,
       nextSlimeSpawnTime: now + PIZZA_THE_HUT_CONFIG.SLIME_THROW_INTERVAL,
       slimeWaveIndex: slimeIndex + 1,
     };

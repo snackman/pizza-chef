@@ -279,6 +279,8 @@ function App() {
         const currentOven = gs.ovens[gs.chefLane];
         if (currentOven.burned) {
           a.cleanOven();
+        } else if (currentOven.slimeDisabledUntil && Date.now() < currentOven.slimeDisabledUntil) {
+          a.cleanOven();
         } else {
           a.useOven();
         }

@@ -21,7 +21,8 @@ import {
   POSITIONS,
   INITIAL_GAME_STATE,
   POWERUPS,
-  TIMINGS
+  TIMINGS,
+  OVEN_CONFIG
 } from '../lib/constants';
 
 // --- Logic Imports ---
@@ -252,6 +253,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           ovens: { ...prev.ovens, [prev.chefLane]: { ...currentOven, cleaningStartTime: Date.now() } }
         };
       }
+      // Also allow cleaning slime-disabled ovens
+      if (currentOven.slimeDisabledUntil && Date.now() < currentOven.slimeDisabledUntil && !currentOven.slimeCleaningStartTime) {
+        soundManager.cleaningStart();
+        return {
+          ...prev,
+          ovens: { ...prev.ovens, [prev.chefLane]: { ...currentOven, slimeCleaningStartTime: Date.now() } }
+        };
+      }
       return prev;
     });
   }, [gameState.gameOver, gameState.paused, gameState.chefLane]);
@@ -281,6 +290,17 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       // Initialize clean kitchen timer if not set
       if (newState.cleanKitchenStartTime === undefined) {
         newState.cleanKitchenStartTime = now;
+      }
+
+      // TEST: Trigger Pizza the Hut boss immediately at game start
+      if (!newState.bossBattle && newState.defeatedBossLevels.length === 0) {
+        const bossTriggers = checkBossTrigger(0, newState.level, newState.defeatedBossLevels);
+        if (bossTriggers.length > 0) {
+          const pthTrigger = bossTriggers.find(b => b.type === 'pizzaTheHut');
+          if (pthTrigger) {
+            newState.bossBattle = initializeBossBattle(now, 'pizzaTheHut');
+          }
+        }
       }
 
       // 1. PROCESS OVENS (Logic from ovenSystem)
@@ -917,8 +937,16 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         }
         for (let lane = 0; lane < 4; lane++) {
           const oven = newState.ovens[lane];
+          // Check if slime cleaning is complete (uses same cleaning time as burned ovens)
+          if (oven.slimeCleaningStartTime && oven.slimeDisabledUntil) {
+            if (now - oven.slimeCleaningStartTime >= OVEN_CONFIG.CLEANING_TIME) {
+              soundManager.cleaningComplete();
+              newState.ovens = { ...newState.ovens, [lane]: { ...oven, slimeDisabledUntil: undefined, slimeCleaningStartTime: undefined } };
+              continue;
+            }
+          }
           if (oven.slimeDisabledUntil && now >= oven.slimeDisabledUntil) {
-            newState.ovens = { ...newState.ovens, [lane]: { ...oven, slimeDisabledUntil: undefined } };
+            newState.ovens = { ...newState.ovens, [lane]: { ...oven, slimeDisabledUntil: undefined, slimeCleaningStartTime: undefined } };
           }
         }
 

@@ -23,6 +23,8 @@ interface MobileGameControlsProps {
       cleaningStartTime: number;
       pausedElapsed?: number;
       sliceCount: number;
+      slimeDisabledUntil?: number;
+      slimeCleaningStartTime?: number;
     };
   };
   ovenSpeedUpgrades: { [key: number]: number };
@@ -58,6 +60,8 @@ const MobileGameControls: React.FC<MobileGameControlsProps> = ({
     const oven = ovens[safeLane];
     if (!oven) return;
     if (oven.burned) {
+      onCleanOven();
+    } else if (oven.slimeDisabledUntil && Date.now() < oven.slimeDisabledUntil) {
       onCleanOven();
     } else {
       onUseOven();
@@ -112,7 +116,8 @@ const MobileGameControls: React.FC<MobileGameControlsProps> = ({
             onClick={handleOvenAction}
             disabled={isDisabled}
             className={`relative w-16 h-16 rounded-lg border-4 shadow-xl transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed
-              ${ovenStatus === 'burned' || ovenStatus === 'burning' ? 'bg-gray-900 border-gray-600 animate-pulse' :
+              ${currentOven?.slimeDisabledUntil && Date.now() < currentOven.slimeDisabledUntil ? 'bg-yellow-400 border-yellow-600 animate-pulse' :
+                ovenStatus === 'burned' || ovenStatus === 'burning' ? 'bg-gray-900 border-gray-600 animate-pulse' :
                 ovenStatus === 'warning' ? 'bg-orange-300 border-orange-600 animate-pulse' :
                 ovenStatus === 'ready' ? 'bg-yellow-200 border-yellow-500' :
                 ovenStatus === 'cooking' ? 'bg-orange-200 border-orange-400' :
@@ -122,6 +127,11 @@ const MobileGameControls: React.FC<MobileGameControlsProps> = ({
             {currentOven && currentOven.sliceCount > 0 && (
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-xl">
                 🍕
+              </div>
+            )}
+            {currentOven?.slimeDisabledUntil && Date.now() < currentOven.slimeDisabledUntil && (
+              <div className="absolute inset-0 flex items-center justify-center text-2xl">
+                {currentOven.slimeCleaningStartTime ? '🧹' : '🧀'}
               </div>
             )}
             {ovenStatus === 'burned' && (
@@ -174,7 +184,8 @@ const MobileGameControls: React.FC<MobileGameControlsProps> = ({
           {/* Oven Control */}
           <div className="flex items-center space-x-3">
             <div className="text-black text-xs font-bold text-right min-w-[60px]">
-              {ovenStatus === 'burned' ? 'Clean!' :
+              {currentOven?.slimeDisabledUntil && Date.now() < currentOven.slimeDisabledUntil ? (currentOven.slimeCleaningStartTime ? 'Cleaning...' : 'Clean!') :
+               ovenStatus === 'burned' ? 'Clean!' :
                ovenStatus === 'burning' ? 'Burning!' :
                ovenStatus === 'warning' ? 'Warning!' :
                ovenStatus === 'ready' ? 'Take Out!' :
@@ -185,7 +196,8 @@ const MobileGameControls: React.FC<MobileGameControlsProps> = ({
               onClick={handleOvenAction}
               disabled={isDisabled}
               className={`relative w-24 h-24 rounded-lg border-4 shadow-xl transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed
-                ${ovenStatus === 'burned' || ovenStatus === 'burning' ? 'bg-gray-900 border-gray-600 animate-pulse' :
+                ${currentOven?.slimeDisabledUntil && Date.now() < currentOven.slimeDisabledUntil ? 'bg-yellow-400 border-yellow-600 animate-pulse' :
+                  ovenStatus === 'burned' || ovenStatus === 'burning' ? 'bg-gray-900 border-gray-600 animate-pulse' :
                   ovenStatus === 'warning' ? 'bg-orange-300 border-orange-600 animate-pulse' :
                   ovenStatus === 'ready' ? 'bg-yellow-200 border-yellow-500' :
                   ovenStatus === 'cooking' ? 'bg-orange-200 border-orange-400' :
@@ -195,6 +207,11 @@ const MobileGameControls: React.FC<MobileGameControlsProps> = ({
               {currentOven && currentOven.sliceCount > 0 && (
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl">
                   🍕
+                </div>
+              )}
+              {currentOven?.slimeDisabledUntil && Date.now() < currentOven.slimeDisabledUntil && (
+                <div className="absolute inset-0 flex items-center justify-center text-3xl">
+                  {currentOven.slimeCleaningStartTime ? '🧹' : '🧀'}
                 </div>
               )}
               {ovenStatus === 'burned' && (
