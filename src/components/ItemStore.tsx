@@ -508,10 +508,10 @@ const ItemStore: React.FC<ItemStoreProps> = ({
 
             <div className="border-2 border-purple-300 rounded-lg p-1.5 sm:p-3 bg-gradient-to-br from-purple-50 to-indigo-50 mt-1.5 sm:mt-2">
               <h4 className="text-[10px] sm:text-sm font-bold text-gray-800 mb-0.5 sm:mb-1 text-center">
-                {workerAlreadyHired ? '✅' : '👨‍🍳'} Hire Worker
+                {workerAlreadyHired ? '✅' : '👨‍🍳'} Hire Intern
               </h4>
               <p className="text-[9px] sm:text-xs text-gray-600 mb-1 sm:mb-2 text-center">
-                {workerAlreadyHired ? 'Worker on duty!' : 'Permanent helper chef'}
+                {workerAlreadyHired ? 'Intern on duty!' : 'Permanent helper chef'}
               </p>
               <button
                 {...getItemProps(12)}

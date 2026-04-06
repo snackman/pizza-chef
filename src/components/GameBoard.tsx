@@ -211,7 +211,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
         >
           <img
             src={sprite("intern.png")}
-            alt="Hired worker"
+            alt="Hired intern"
             className="w-full h-full object-contain"
           />
           {gameState.hiredWorker.availableSlices > 0 && (
