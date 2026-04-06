@@ -340,6 +340,16 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           newState.lastStarLostReason = 'disappointed_customer';
           newState = addFloatingStar(false, event.lane, event.position, newState);
         }
+        if (event.type === 'STAR_LOST_WOOZY_NORMAL') {
+          newState.lives = Math.max(0, newState.lives - 1);
+          newState.lastStarLostReason = 'woozy_customer_reached';
+          newState = addFloatingStar(false, event.lane, event.position, newState);
+        }
+        if (event.type === 'STAR_LOST_STEVE') {
+          newState.lives = Math.max(0, newState.lives - 1);
+          newState.lastStarLostReason = 'steve_disappointed';
+          newState = addFloatingStar(false, event.lane, event.position, newState);
+        }
         if (event.type === 'GAME_OVER' && newState.lives === 0) {
           newState = triggerGameOver(newState, now);
         }
@@ -865,6 +875,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             newState = addFloatingStar(false, i % 4, GAME_CONFIG.CHEF_X_POSITION, newState);
           }
           newState.lives = Math.max(0, newState.lives - bossResult.livesLost);
+          // Set boss-specific loss reason
+          newState.lastStarLostReason = newState.bossBattle?.bossType === 'papaJohn'
+            ? 'papajohn_minion_reached'
+            : 'dominos_minion_reached';
           if (newState.lives === 0) {
             newState = triggerGameOver(newState, now);
           }

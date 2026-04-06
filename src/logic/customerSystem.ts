@@ -15,6 +15,8 @@ export type CustomerUpdateEvent =
   | { type: 'LIFE_LOST'; lane: number; position: number }
   | { type: 'STAR_LOST_CRITIC'; lane: number; position: number }
   | { type: 'STAR_LOST_NORMAL'; lane: number; position: number }
+  | { type: 'STAR_LOST_WOOZY_NORMAL'; lane: number; position: number }
+  | { type: 'STAR_LOST_STEVE'; lane: number; position: number }
   | { type: 'HEALTH_INSPECTOR_PASSED'; lane: number; position: number }
   | { type: 'HEALTH_INSPECTOR_FAILED'; lane: number; position: number };
 
@@ -182,7 +184,7 @@ export const updateCustomerPositions = (
           events.push({ type: 'LIFE_LOST', lane: processedCustomer.lane, position: newPos });
           events.push(getCustomerVariant(processedCustomer) === 'critic'
             ? { type: 'STAR_LOST_CRITIC', lane: processedCustomer.lane, position: newPos }
-            : { type: 'STAR_LOST_NORMAL', lane: processedCustomer.lane, position: newPos });
+            : { type: 'STAR_LOST_WOOZY_NORMAL', lane: processedCustomer.lane, position: newPos });
           events.push({ type: 'GAME_OVER' }); // Technically game over logic checks lives later, but this signals a fail state
 
           processedCustomer.disappointed = true;
@@ -264,7 +266,7 @@ export const updateCustomerPositions = (
       if (newPos <= GAME_CONFIG.CHEF_X_POSITION) {
         // Steve reaches chef without enough pizza -> Disappointed
         events.push({ type: 'LIFE_LOST', lane: processedCustomer.lane, position: newPos });
-        events.push({ type: 'STAR_LOST_NORMAL', lane: processedCustomer.lane, position: newPos });
+        events.push({ type: 'STAR_LOST_STEVE', lane: processedCustomer.lane, position: newPos });
         events.push({ type: 'GAME_OVER' });
 
         processedCustomer.disappointed = true;

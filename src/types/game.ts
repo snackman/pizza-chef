@@ -213,12 +213,13 @@ export type StarLostReason =
   | 'disappointed_customer'
   | 'disappointed_critic'
   | 'woozy_customer_reached'
-  | 'woozy_critic_reached'
   | 'beer_vomit'
-  | 'beer_critic_vomit'
   | 'brian_hurled'
   | 'health_inspector_bribed'
-  | 'health_inspector_failed';
+  | 'health_inspector_failed'
+  | 'steve_disappointed'
+  | 'papajohn_minion_reached'
+  | 'dominos_minion_reached';
 
 export interface GameState {
   customers: Customer[];
