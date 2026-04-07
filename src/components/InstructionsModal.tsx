@@ -3,8 +3,6 @@ import { Pizza, X, RotateCcw, Volume2, VolumeX, Trophy, Play } from 'lucide-reac
 import { soundManager } from '../utils/sounds';
 import { sprite } from '../lib/assets';
 
-const chefImg = sprite("chef.png");
-const smokingChefImg = sprite("chef-smoking.png");
 
 interface InstructionsModalProps {
   onClose: () => void;
@@ -14,6 +12,9 @@ interface InstructionsModalProps {
 }
 
 const InstructionsModal: React.FC<InstructionsModalProps> = ({ onClose, onReset, onShowHighScores, onResume }) => {
+  // Sprites (resolved at render time for sprite sheet support)
+  const chefImg = sprite("chef.png");
+  const smokingChefImg = sprite("chef-smoking.png");
   const [isMuted, setIsMuted] = React.useState(soundManager.checkMuted());
 
   const handleToggleMute = () => {

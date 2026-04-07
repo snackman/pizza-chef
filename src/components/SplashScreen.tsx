@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { sprite } from '../lib/assets';
 
-const chefImg = sprite("chef.png");
 
 interface SplashScreenProps {
   onStart: () => void;
@@ -14,6 +13,8 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
   isLoading = false,
   loadingProgress = 100
 }) => {
+  // Sprites (resolved at render time for sprite sheet support)
+  const chefImg = sprite("chef.png");
   // Allow Enter key to start the game (only when not loading)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

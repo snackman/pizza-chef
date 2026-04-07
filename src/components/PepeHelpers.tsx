@@ -3,14 +3,15 @@ import { sprite } from '../lib/assets';
 import { PepeHelpers as PepeHelpersType } from '../types/game';
 import PizzaSliceStack from './PizzaSliceStack';
 
-const francoPepeImg = sprite("franco-pepe.png");
-const frankPepeImg = sprite("frank-pepe.png");
 
 interface PepeHelpersProps {
   helpers: PepeHelpersType | undefined;
 }
 
 const PepeHelpers: React.FC<PepeHelpersProps> = ({ helpers }) => {
+  // Sprites (resolved at render time for sprite sheet support)
+  const francoPepeImg = sprite("franco-pepe.png");
+  const frankPepeImg = sprite("frank-pepe.png");
   if (!helpers?.active) return null;
 
   return (

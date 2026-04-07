@@ -3,7 +3,6 @@ import { Play, RotateCcw, Volume2, VolumeX, Trophy, HelpCircle } from 'lucide-re
 import { useMenuKeyboardNav } from '../hooks/useMenuKeyboardNav';
 import { sprite } from '../lib/assets';
 
-const smokingChefImg = sprite('chef-smoking.png');
 
 interface PauseMenuProps {
   isVisible: boolean;
@@ -24,6 +23,8 @@ const PauseMenu: React.FC<PauseMenuProps> = ({
   onShowScores,
   onShowHelp,
 }) => {
+  // Sprites (resolved at render time for sprite sheet support)
+  const smokingChefImg = sprite('chef-smoking.png');
   const menuActions = [onResume, onReset, onToggleMute, onShowScores, onShowHelp];
 
   const handleSelect = useCallback((index: number) => {

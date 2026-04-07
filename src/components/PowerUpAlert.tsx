@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { PowerUpType } from '../types/game';
 import { sprite } from '../lib/assets';
 
-const dogeAlertImg = sprite("doge-power-up-alert.png");
 
 interface PowerUpAlertProps {
   powerUpType: PowerUpType;
@@ -10,6 +9,8 @@ interface PowerUpAlertProps {
 }
 
 const PowerUpAlert: React.FC<PowerUpAlertProps> = ({ powerUpType }) => {
+  // Sprites (resolved at render time for sprite sheet support)
+  const dogeAlertImg = sprite("doge-power-up-alert.png");
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {

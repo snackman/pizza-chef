@@ -4,17 +4,6 @@ import { Customer as CustomerType, getCustomerVariant } from '../types/game';
 import { sprite } from '../lib/assets';
 
 // Sprites (all hosted on Cloudflare)
-const droolfaceImg = sprite("drool-face.png");
-const yumfaceImg = sprite("yum-face.png");
-const frozenfaceImg = sprite("frozen-face.png");
-const spicyfaceImg = sprite("spicy-face.png");
-const woozyfaceImg = sprite("woozy-face.png");
-const criticImg = sprite("critic.png");
-const badLuckBrianImg = sprite("bad-luck-brian.png");
-const badLuckBrianPukeImg = sprite("bad-luck-brian-puke.png");
-const rainbowBrian = sprite("rainbow-brian.png");
-const scumbagSteveImg = sprite("scumbag-steve.png");
-const healthInspectorImg = sprite("health-inspector.png");
 
 interface CustomerProps {
   customer: CustomerType;
@@ -23,6 +12,18 @@ interface CustomerProps {
 }
 
 const Customer: React.FC<CustomerProps> = ({ customer, boardWidth, boardHeight }) => {
+  // Sprites (resolved at render time for sprite sheet support)
+  const droolfaceImg = sprite("drool-face.png");
+  const yumfaceImg = sprite("yum-face.png");
+  const frozenfaceImg = sprite("frozen-face.png");
+  const spicyfaceImg = sprite("spicy-face.png");
+  const woozyfaceImg = sprite("woozy-face.png");
+  const criticImg = sprite("critic.png");
+  const badLuckBrianImg = sprite("bad-luck-brian.png");
+  const badLuckBrianPukeImg = sprite("bad-luck-brian-puke.png");
+  const rainbowBrian = sprite("rainbow-brian.png");
+  const scumbagSteveImg = sprite("scumbag-steve.png");
+  const healthInspectorImg = sprite("health-inspector.png");
   // 1. Define 'ready' first to avoid ReferenceErrors
   const ready = boardWidth > 0 && boardHeight > 0;
 

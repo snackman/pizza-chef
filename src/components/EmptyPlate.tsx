@@ -2,7 +2,6 @@ import React from 'react';
 import { EmptyPlate as EmptyPlateType } from '../types/game';
 import { sprite } from '../lib/assets';
 
-const paperPlateImg = sprite("paperplate.png");
 
 interface EmptyPlateProps {
   plate: EmptyPlateType;
@@ -11,6 +10,8 @@ interface EmptyPlateProps {
 const OVEN_POSITION = 10; // Target X position (near the ovens)
 
 const EmptyPlate: React.FC<EmptyPlateProps> = ({ plate }) => {
+  // Sprites (resolved at render time for sprite sheet support)
+  const paperPlateImg = sprite("paperplate.png");
   // Calculate visual lane for angled throws
   let visualLane = plate.lane;
 

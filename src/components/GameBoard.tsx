@@ -14,10 +14,6 @@ import { sprite, bg } from '../lib/assets';
 import { getOvenDisplayStatus } from '../logic/ovenSystem';
 import { OVEN_CONFIG, TIMINGS } from '../lib/constants';
 
-const chefImg = sprite("chef.png");
-const cheesedChefImg = sprite("cheesed-chef.png");
-const sadChefImg = sprite("sad-chef.png");
-const nyanChefImg = sprite("nyan-chef.png");
 const pizzaShopBg = bg("pizza-shop-background.webp");
 
 interface GameBoardProps {
@@ -25,6 +21,11 @@ interface GameBoardProps {
 }
 
 const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
+  // Sprites (resolved at render time for sprite sheet support)
+  const chefImg = sprite("chef.png");
+  const cheesedChefImg = sprite("cheesed-chef.png");
+  const sadChefImg = sprite("sad-chef.png");
+  const nyanChefImg = sprite("nyan-chef.png");
   const lanes = [0, 1, 2, 3];
   const [completedScores, setCompletedScores] = useState<Set<string>>(new Set());
   const [completedStars, setCompletedStars] = useState<Set<string>>(new Set());

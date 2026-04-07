@@ -7,9 +7,6 @@ import { getUpgradeCost, getSpeedUpgradeCost } from '../logic/storeSystem';
 import { COSTS } from '../lib/constants';
 
 // Power-up images (served from Cloudflare)
-const beerImg = sprite("beer.png");
-const honeyImg = sprite("hot-honey.png");
-const sundaeImg = sprite("sundae.png");
 
 interface ItemStoreProps {
   gameState: GameState;
@@ -30,6 +27,10 @@ const ItemStore: React.FC<ItemStoreProps> = ({
   onHireWorker,
   onClose,
 }) => {
+  // Sprites (resolved at render time for sprite sheet support)
+  const beerImg = sprite("beer.png");
+  const honeyImg = sprite("hot-honey.png");
+  const sundaeImg = sprite("sundae.png");
   const maxUpgradeLevel = 7;
   const maxSpeedUpgradeLevel = 3;
   const bribeCost = 25;

@@ -2,7 +2,6 @@ import React from 'react';
 import { sprite } from '../lib/assets';
 import { getOvenDisplayStatus } from '../logic/ovenSystem';
 
-const pizzaPanImg = sprite("pizzapan.png");
 
 interface MobileGameControlsProps {
   gameOver: boolean;
@@ -46,6 +45,8 @@ const MobileGameControls: React.FC<MobileGameControlsProps> = ({
   ovenSpeedUpgrades,
   isLandscape = false,
 }) => {
+  // Sprites (resolved at render time for sprite sheet support)
+  const pizzaPanImg = sprite("pizzapan.png");
   const safeLane = Math.round(currentLane);
   const isDisabled = gameOver || paused || nyanSweepActive;
 

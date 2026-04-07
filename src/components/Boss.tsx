@@ -3,35 +3,6 @@ import { BossBattle } from '../types/game';
 import { sprite } from '../lib/assets';
 import { PAPA_JOHN_CONFIG, DOMINOS_CONFIG, CHUCK_E_CHEESE_CONFIG, PIZZA_THE_HUT_CONFIG } from '../lib/constants';
 
-const dominosBossImg = sprite("dominos-boss.png");
-const pizzaTheHutImg = sprite("pizza-the-hut.png");
-const cheeseSlimeImg = sprite("cheese-slime.png");
-const chuckECheeseImg = sprite("chuck-e-cheese.png");
-const papaJohnSprites = [
-  sprite("papa-john.png"),    // Encounter 1 (level 10)
-  sprite("papa-john-2.png"),  // Encounter 2 (level 20)
-  sprite("papa-john-3.png"),  // Encounter 3 (level 40)
-  sprite("papa-john-4.png"),  // Encounter 4 (level 50)
-  sprite("papa-john-5.png"),  // Encounter 5 (level 60)
-  sprite("papa-john-6.png"),  // Encounter 6 (level 70)
-];
-
-const getBossSprite = (bossBattle: BossBattle): string => {
-  if (bossBattle.bossType === 'dominos') {
-    return dominosBossImg;
-  }
-  if (bossBattle.bossType === 'pizzaTheHut') {
-    return pizzaTheHutImg;
-  }
-  if (bossBattle.bossType === 'chuckECheese') {
-    return chuckECheeseImg;
-  }
-  // Papa John - select based on hits received (changes every 8 hits)
-  const hits = bossBattle.hitsReceived || 0;
-  const spriteIndex = Math.min(Math.floor(hits / 8), papaJohnSprites.length - 1);
-  return papaJohnSprites[spriteIndex];
-};
-
 const getBossConfig = (bossBattle: BossBattle) => {
   if (bossBattle.bossType === 'papaJohn') return PAPA_JOHN_CONFIG;
   if (bossBattle.bossType === 'pizzaTheHut') return PIZZA_THE_HUT_CONFIG;
@@ -44,6 +15,29 @@ interface BossProps {
 }
 
 const Boss: React.FC<BossProps> = ({ bossBattle }) => {
+  // Sprites (resolved at render time for sprite sheet support)
+  const dominosBossImg = sprite("dominos-boss.png");
+  const pizzaTheHutImg = sprite("pizza-the-hut.png");
+  const cheeseSlimeImg = sprite("cheese-slime.png");
+  const chuckECheeseImg = sprite("chuck-e-cheese.png");
+  const papaJohnSprites = [
+    sprite("papa-john.png"),
+    sprite("papa-john-2.png"),
+    sprite("papa-john-3.png"),
+    sprite("papa-john-4.png"),
+    sprite("papa-john-5.png"),
+    sprite("papa-john-6.png"),
+  ];
+
+  const getBossSprite = (bb: BossBattle): string => {
+    if (bb.bossType === 'dominos') return dominosBossImg;
+    if (bb.bossType === 'pizzaTheHut') return pizzaTheHutImg;
+    if (bb.bossType === 'chuckECheese') return chuckECheeseImg;
+    const hits = bb.hitsReceived || 0;
+    const idx = Math.min(Math.floor(hits / 8), papaJohnSprites.length - 1);
+    return papaJohnSprites[idx];
+  };
+
   if (!bossBattle.active && !bossBattle.bossDefeated) return null;
 
   const bossSprite = getBossSprite(bossBattle);

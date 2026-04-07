@@ -2,13 +2,14 @@ import React from 'react';
 import { PizzaSlice as PizzaSliceType } from '../types/game';
 import { sprite } from '../lib/assets';
 
-const slicePlateImg = sprite("slice-plate.png");
 
 interface PizzaSliceProps {
   slice: PizzaSliceType;
 }
 
 const PizzaSlice: React.FC<PizzaSliceProps> = ({ slice }) => {
+  // Sprites (resolved at render time for sprite sheet support)
+  const slicePlateImg = sprite("slice-plate.png");
   const topPercent = slice.lane * 25 + 6;
 
   return (

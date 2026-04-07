@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { DroppedPlate as DroppedPlateType } from '../types/game';
 import { sprite } from '../lib/assets';
 
-const slicePlateImg = sprite("slice-plate.png");
 
 interface DroppedPlateProps {
   droppedPlate: DroppedPlateType;
@@ -12,6 +11,8 @@ const BLINK_DURATION = 250;
 const TOTAL_DURATION = 1000;
 
 const DroppedPlate: React.FC<DroppedPlateProps> = ({ droppedPlate }) => {
+  // Sprites (resolved at render time for sprite sheet support)
+  const slicePlateImg = sprite("slice-plate.png");
   const [visible, setVisible] = useState(true);
   const elapsed = Date.now() - droppedPlate.startTime;
 

@@ -3,14 +3,6 @@ import { PowerUp as PowerUpType } from '../types/game';
 import { sprite } from '../lib/assets';
 
 // Power-up images (served from Cloudflare)
-const beerImg = sprite("beer.png");
-const honeyImg = sprite("hot-honey.png");
-const sundaeImg = sprite("sundae.png");
-const dogeImg = sprite("doge.png");
-const nyanImg = sprite("nyan-cat.png");
-const moltobennyImg = sprite("molto-benny.png");
-const starImg = sprite("star.png");
-const pepeImg = sprite("pepe.png");
 
 interface PowerUpProps {
   powerUp: PowerUpType;
@@ -19,6 +11,15 @@ interface PowerUpProps {
 }
 
 const PowerUp: React.FC<PowerUpProps> = ({ powerUp, boardWidth, boardHeight }) => {
+  // Sprites (resolved at render time for sprite sheet support)
+  const beerImg = sprite("beer.png");
+  const honeyImg = sprite("hot-honey.png");
+  const sundaeImg = sprite("sundae.png");
+  const dogeImg = sprite("doge.png");
+  const nyanImg = sprite("nyan-cat.png");
+  const moltobennyImg = sprite("molto-benny.png");
+  const starImg = sprite("star.png");
+  const pepeImg = sprite("pepe.png");
   // Original coordinate system (percent of board)
   const xPct = powerUp.position;
   const yPct = powerUp.lane * 25 + 6;
