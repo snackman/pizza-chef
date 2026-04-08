@@ -123,8 +123,8 @@ export const trySpawnCustomer = (
   customersRequired?: number,
   totalCustomersSpawned?: number,
 ): SpawnResult<Customer> => {
-  // Don't spawn during boss phases or when level is complete
-  if (levelPhase === 'boss_incoming' || levelPhase === 'boss' || levelPhase === 'complete' || levelPhase === 'store') {
+  // Don't spawn when level is complete or in store
+  if (levelPhase === 'complete' || levelPhase === 'store') {
     return { shouldSpawn: false };
   }
 
