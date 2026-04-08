@@ -126,12 +126,12 @@ export const LEVEL_SYSTEM = {
     10, // Level 1
     15, // Level 2
     20, // Level 3
-    20, // Level 4
-    25, // Level 5
-    25, // Level 6
-    30, // Level 7 (base for 7+, grows by 2/level, no cap)
+    25, // Level 4
+    30, // Level 5
+    35, // Level 6
+    40, // Level 7 (base for 7+, grows by 5/level, no cap)
   ],
-  CUSTOMERS_GROWTH_PER_LEVEL: 2,
+  CUSTOMERS_GROWTH_PER_LEVEL: 5,
 
   // Content unlocks (level at which each unlocks)
   UNLOCK_SCHEDULE: {
