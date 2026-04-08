@@ -144,7 +144,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     initializeBossMasks();
   }, []);
 
-  // Initialize level system when game starts
+  // Initialize level system when game starts (without announcement — that waits for controls dismiss)
   useEffect(() => {
     if (!gameStarted) return;
     const now = Date.now();
@@ -156,7 +156,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         levelStartTime: now,
         starsLostThisLevel: 0,
       },
-      levelAnnouncement: { level: 1, endTime: now + 2000 },
     }));
   }, [gameStarted]);
 
@@ -994,6 +993,11 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
       // Level phase state machine
       if (newState.levelPhase === 'playing') {
+        // Trigger level 1 announcement on first unpaused tick (after controls overlay dismissed)
+        if (newState.level === 1 && !newState.levelAnnouncement && newState.levelProgress.customersServed === 0 && newState.levelProgress.levelStartTime <= now) {
+          newState.levelAnnouncement = { level: 1, endTime: now + 2000 };
+        }
+
         // Show level announcement at the start of each level (first 2 seconds)
         if (newState.levelAnnouncement && now < newState.levelAnnouncement.endTime) {
           // Announcement still showing - don't change anything
