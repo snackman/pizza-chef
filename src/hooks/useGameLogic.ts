@@ -1005,7 +1005,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         // Check if all required customers have been served
         if (newState.levelProgress.customersServed >= newState.levelProgress.customersRequired) {
           // Wait for all plates to be caught/off-screen and pizzas to land before ending
-          const hasActivePlates = newState.customers.some(c => c.hasPlate && !c.leaving);
+          const hasActivePlates = newState.emptyPlates.length > 0;
           const hasActiveSlices = newState.pizzaSlices.length > 0;
 
           if (!hasActivePlates && !hasActiveSlices) {
