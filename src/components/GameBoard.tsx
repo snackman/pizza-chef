@@ -366,9 +366,9 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState, onLevelCompleteClick }
 
       {/* Level Complete Overlay */}
       {gameState.levelPhase === 'complete' && gameState.levelCompleteInfo && (
-        <div className="absolute inset-0 flex items-center justify-center z-30">
+        <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 60 }}>
           <div className="bg-black bg-opacity-80 absolute inset-0" />
-          <div className="relative bg-gradient-to-b from-green-600 to-green-800 text-white rounded-xl px-6 py-4 sm:px-10 sm:py-6 text-center shadow-2xl z-40 max-w-sm mx-4">
+          <div className="relative bg-gradient-to-b from-green-600 to-green-800 text-white rounded-xl px-6 py-4 sm:px-10 sm:py-6 text-center shadow-2xl max-w-sm mx-4" style={{ zIndex: 61 }}>
             <h2 className="text-xl sm:text-3xl font-bold">Level {gameState.levelCompleteInfo.level} Complete!</h2>
             <div className="mt-3 space-y-1 text-sm sm:text-base">
               <p>Customers Served: {gameState.levelCompleteInfo.customersServed}</p>
