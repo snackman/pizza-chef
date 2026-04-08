@@ -128,9 +128,9 @@ export const trySpawnCustomer = (
     return { shouldSpawn: false };
   }
 
-  // Don't spawn if we've already spawned enough customers for this level
-  // We track spawned (not served) so all required customers are on the board
-  if (totalCustomersSpawned !== undefined && customersRequired !== undefined && totalCustomersSpawned >= customersRequired) {
+  // Don't spawn if enough customers have been served for this level
+  // We use served count (not spawned) so disappointed customers don't block progress
+  if (customersServed !== undefined && customersRequired !== undefined && customersServed >= customersRequired) {
     return { shouldSpawn: false };
   }
 

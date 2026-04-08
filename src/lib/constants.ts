@@ -123,12 +123,12 @@ export const BOSS_CONFIG = {
 // --- Level System ---
 export const LEVEL_SYSTEM = {
   CUSTOMERS_PER_LEVEL: [
-    25, // Level 1
-    25, // Level 2
-    28, // Level 3
-    28, // Level 4
-    30, // Level 5
-    30, // Level 6
+    10, // Level 1
+    15, // Level 2
+    20, // Level 3
+    20, // Level 4
+    25, // Level 5
+    25, // Level 6
     30, // Level 7 (base for 7+, grows by 2/level, no cap)
   ],
   CUSTOMERS_GROWTH_PER_LEVEL: 2,
@@ -330,7 +330,7 @@ export const INITIAL_GAME_STATE = {
   levelPhase: 'playing' as const,
   levelProgress: {
     customersServed: 0,
-    customersRequired: LEVEL_SYSTEM.CUSTOMERS_PER_LEVEL[0], // 25 for level 1
+    customersRequired: LEVEL_SYSTEM.CUSTOMERS_PER_LEVEL[0], // 10 for level 1
     levelStartTime: 0,
     starsLostThisLevel: 0,
   },

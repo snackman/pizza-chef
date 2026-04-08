@@ -308,6 +308,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         return prev;
       }
       if (prev.paused) return prev;
+      if (prev.levelPhase === 'complete') return prev;
 
       let newState = { ...prev, stats: { ...prev.stats, powerUpsUsed: { ...prev.stats.powerUpsUsed } } };
       const now = Date.now();
@@ -1297,7 +1298,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
     // Spawn decision uses current state (functional) so it doesn't depend on closures.
     setGameState(current => {
-      if (current.paused || current.gameOver) return current;
+      if (current.paused || current.gameOver || current.levelPhase === 'complete') return current;
 
       const now = Date.now();
 
