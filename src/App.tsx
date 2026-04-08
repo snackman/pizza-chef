@@ -58,6 +58,7 @@ function App() {
     buyPowerUp,
     hireWorker,
     debugActivatePowerUp,
+    openLevelStore,
   } = useGameLogic(gameStarted);
 
   // Custom pause handler - shows pause menu overlay
@@ -264,6 +265,9 @@ function App() {
       // Optional: block input when overlays/modals are up
       if (showControlsOverlay || showHighScores || showGameOver || gs.showStore) return;
 
+      // Block input during level complete and boss incoming phases
+      if (gs.levelPhase === 'complete' || gs.levelPhase === 'boss_incoming') return;
+
       const target = event.target as HTMLElement | null;
       const isTyping =
         !!target &&
@@ -338,7 +342,7 @@ function App() {
               className="relative w-full max-h-[calc(100vh-36px)] aspect-[5/3] z-30"
               style={{ maxWidth: 'calc((100vh - 36px) * 5 / 3)' }}
             >
-              <GameBoard gameState={gameState} />
+              <GameBoard gameState={gameState} onLevelCompleteClick={openLevelStore} />
 
               {gameState.powerUpAlert && !gameState.paused && (
                 <PowerUpAlert powerUpType={gameState.powerUpAlert.type} chefLane={gameState.powerUpAlert.chefLane} />
@@ -456,7 +460,7 @@ function App() {
             ref={gameBoardRef}
             className={`relative w-full ${isMobile ? '' : 'max-w-6xl'} aspect-[5/3] z-30`}
           >
-            <GameBoard gameState={gameState} />
+            <GameBoard gameState={gameState} onLevelCompleteClick={openLevelStore} />
 
             {gameState.powerUpAlert && !gameState.paused && (
               <PowerUpAlert powerUpType={gameState.powerUpAlert.type} chefLane={gameState.powerUpAlert.chefLane} />

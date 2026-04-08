@@ -120,6 +120,73 @@ export const BOSS_CONFIG = {
   BOSS_POSITION: 85,
 };
 
+// --- Level System ---
+export const LEVEL_SYSTEM = {
+  CUSTOMERS_PER_LEVEL: [
+    25, // Level 1
+    25, // Level 2
+    28, // Level 3
+    28, // Level 4
+    30, // Level 5
+    30, // Level 6
+    30, // Level 7 (base for 7+, grows by 2/level, no cap)
+  ],
+  CUSTOMERS_GROWTH_PER_LEVEL: 2,
+
+  // Content unlocks (level at which each unlocks)
+  UNLOCK_SCHEDULE: {
+    CRITIC: 1,
+    BAD_LUCK_BRIAN: 2,
+    ICE_CREAM: 2,
+    HOT_HONEY: 2,
+    BEER: 3,
+    STAR: 3,
+    SCUMBAG_STEVE: 3,
+    DOGE: 4,
+    NYAN: 4,
+    HEALTH_INSPECTOR: 5,
+    PEPE: 5,
+    MOLTOBENNY: 5,
+  },
+
+  // Customer speed multiplier per level
+  SPEED_MULTIPLIERS: [1.0, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3],
+  SPEED_GROWTH_PER_LEVEL: 0.05, // After level 7
+
+  // Min spawn interval per level (ms)
+  SPAWN_INTERVALS: [3000, 2600, 2200, 1800, 1500, 1200, 1000],
+  SPAWN_INTERVAL_FLOOR: 800, // After level 7
+
+  // Special customer spawn chances per level
+  SPECIAL_CHANCES: {
+    CRITIC: [0.12, 0.15, 0.15, 0.15, 0.15], // Levels 1-5+
+    BRIAN: [0, 0.08, 0.10, 0.10, 0.10],
+    STEVE: [0, 0, 0.06, 0.08, 0.08],
+    INSPECTOR: [0, 0, 0, 0, 0.05],
+  },
+
+  // Boss schedule
+  BOSS_LEVELS: {
+    3: 'papaJohn' as const,
+    5: 'chuckECheese' as const,
+    7: 'pizzaTheHut' as const,
+    9: 'dominos' as const,
+  },
+  BOSS_RECURRENCE_START: 10,
+  BOSS_RECURRENCE_INTERVAL: 2,
+
+  // Boss difficulty scaling for recurring bosses (level 10+)
+  BOSS_HEALTH_SCALE: 0.15, // +15% per recurrence
+  BOSS_MINION_SPEED_SCALE: 0.10, // +10% per recurrence
+};
+
+export const LEVEL_REWARDS = {
+  BASE_COMPLETION: 5,
+  PERFECT_BONUS: 10,
+  QUICK_BONUS: 5,
+  BOSS_BONUS: 50,
+};
+
 export const PAPA_JOHN_CONFIG = {
   HEALTH: 40, // 40 slices to defeat, changes image every 8 hits
   WAVES: 3,
@@ -259,4 +326,15 @@ export const INITIAL_GAME_STATE = {
   cleanKitchenStartTime: undefined,
   lastCleanKitchenBonusTime: undefined,
   cleanKitchenBonusAlert: undefined,
+  // Level system
+  levelPhase: 'playing' as const,
+  levelProgress: {
+    customersServed: 0,
+    customersRequired: LEVEL_SYSTEM.CUSTOMERS_PER_LEVEL[0], // 25 for level 1
+    levelStartTime: 0,
+    starsLostThisLevel: 0,
+  },
+  levelAnnouncement: undefined as { level: number; endTime: number } | undefined,
+  bossIncomingAlert: undefined as { endTime: number } | undefined,
+  levelCompleteInfo: undefined as { level: number; customersServed: number; starsLost: number; rewards: number; bossDefeated: boolean } | undefined,
 };

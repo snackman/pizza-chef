@@ -22,9 +22,10 @@ const pizzaShopBg = bg("pizza-shop-background.webp");
 
 interface GameBoardProps {
   gameState: GameState;
+  onLevelCompleteClick?: () => void;
 }
 
-const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
+const GameBoard: React.FC<GameBoardProps> = ({ gameState, onLevelCompleteClick }) => {
   const lanes = [0, 1, 2, 3];
   const [completedScores, setCompletedScores] = useState<Set<string>>(new Set());
   const [completedStars, setCompletedStars] = useState<Set<string>>(new Set());
@@ -339,6 +340,56 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
           }}
         >
           🍕
+        </div>
+      )}
+
+      {/* Level Start Announcement */}
+      {gameState.levelAnnouncement && (
+        <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+          <div className="bg-black bg-opacity-70 text-white rounded-xl px-6 py-4 sm:px-10 sm:py-6 text-center animate-pulse">
+            <h2 className="text-2xl sm:text-4xl font-bold">Level {gameState.levelAnnouncement.level}</h2>
+            <p className="text-sm sm:text-lg mt-1 text-gray-300">
+              Serve {gameState.levelProgress.customersRequired} customers
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Boss Incoming Alert */}
+      {gameState.bossIncomingAlert && (
+        <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+          <div className="bg-red-900 bg-opacity-90 text-white rounded-xl px-8 py-6 sm:px-12 sm:py-8 text-center animate-bounce border-4 border-red-500">
+            <h2 className="text-3xl sm:text-5xl font-bold text-red-300">BOSS INCOMING!</h2>
+          </div>
+        </div>
+      )}
+
+      {/* Level Complete Overlay */}
+      {gameState.levelPhase === 'complete' && gameState.levelCompleteInfo && (
+        <div className="absolute inset-0 flex items-center justify-center z-30">
+          <div className="bg-black bg-opacity-80 absolute inset-0" />
+          <div className="relative bg-gradient-to-b from-green-600 to-green-800 text-white rounded-xl px-6 py-4 sm:px-10 sm:py-6 text-center shadow-2xl z-40 max-w-sm mx-4">
+            <h2 className="text-xl sm:text-3xl font-bold">Level {gameState.levelCompleteInfo.level} Complete!</h2>
+            <div className="mt-3 space-y-1 text-sm sm:text-base">
+              <p>Customers Served: {gameState.levelCompleteInfo.customersServed}</p>
+              <p>Stars Lost: {gameState.levelCompleteInfo.starsLost}</p>
+              {gameState.levelCompleteInfo.bossDefeated && (
+                <p className="font-bold text-yellow-300">Boss Defeated!</p>
+              )}
+              {gameState.levelCompleteInfo.starsLost === 0 && (
+                <p className="font-bold text-yellow-300">Perfect Level!</p>
+              )}
+              <p className="text-lg sm:text-xl font-bold text-green-200 mt-2">
+                +${gameState.levelCompleteInfo.rewards}
+              </p>
+            </div>
+            <button
+              onClick={onLevelCompleteClick}
+              className="mt-4 bg-white text-green-700 font-bold py-2 px-6 rounded-lg hover:bg-green-100 transition-colors text-sm sm:text-base"
+            >
+              Continue to Store
+            </button>
+          </div>
         </div>
       )}
     </div>

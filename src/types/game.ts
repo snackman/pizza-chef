@@ -175,6 +175,33 @@ export interface BossMinion {
 
 export type BossType = 'dominos' | 'papaJohn' | 'chuckECheese' | 'pizzaTheHut';
 
+// Level system types
+export type LevelPhase = 'playing' | 'boss_incoming' | 'boss' | 'complete' | 'store';
+
+export interface LevelProgress {
+  customersServed: number;
+  customersRequired: number;
+  levelStartTime: number;
+  starsLostThisLevel: number;
+}
+
+export interface LevelAnnouncement {
+  level: number;
+  endTime: number;
+}
+
+export interface BossIncomingAlert {
+  endTime: number;
+}
+
+export interface LevelCompleteInfo {
+  level: number;
+  customersServed: number;
+  starsLost: number;
+  rewards: number;
+  bossDefeated: boolean;
+}
+
 export interface BossBattle {
   active: boolean;
   bossType: BossType;
@@ -272,4 +299,10 @@ export interface GameState {
   cleanKitchenBonusAlert?: { endTime: number };
   lastPauseTime?: number; // Track when game was paused for timer adjustments
   chefSlowedUntil?: number;
+  // Level system
+  levelPhase: LevelPhase;
+  levelProgress: LevelProgress;
+  levelAnnouncement?: LevelAnnouncement;
+  bossIncomingAlert?: BossIncomingAlert;
+  levelCompleteInfo?: LevelCompleteInfo;
 }

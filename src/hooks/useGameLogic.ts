@@ -7,6 +7,7 @@ import {
   PowerUpType,
   StarLostReason,
   EmptyPlate,
+  LevelPhase,
   isCustomerLeaving,
   getCustomerVariant
 } from '../types/game';
@@ -22,7 +23,9 @@ import {
   INITIAL_GAME_STATE,
   POWERUPS,
   TIMINGS,
-  OVEN_CONFIG
+  OVEN_CONFIG,
+  LEVEL_SYSTEM,
+  LEVEL_REWARDS,
 } from '../lib/constants';
 
 // --- Logic Imports ---
@@ -70,13 +73,16 @@ import {
 import {
   checkBossTrigger,
   initializeBossBattle,
-  processBossTick
+  processBossTick,
+  getBossForLevel,
+  getBossScaling,
 } from '../logic/bossSystem';
 
 import { initializeBossMasks } from '../logic/bossCollisionMasks';
 
 import {
-  processSpawning
+  processSpawning,
+  getCustomersForLevel,
 } from '../logic/spawnSystem';
 
 import {
@@ -100,7 +106,8 @@ import {
   bribeReviewer as bribeReviewerStore,
   buyPowerUp as buyPowerUpStore,
   hireWorker as hireWorkerStore,
-  processWorkerRetention
+  processWorkerRetention,
+  calculateLevelRewards,
 } from '../logic/storeSystem';
 
 const DEFAULT_OVEN_SOUND_STATES: { [key: number]: OvenSoundState } = {
@@ -117,6 +124,12 @@ export const useGameLogic = (gameStarted: boolean = true) => {
   const lastPowerUpSpawnRef = useRef(0);
 
   /**
+   * Track total customers spawned this level (separate from customers served)
+   * Reset when a new level starts
+   */
+  const customersSpawnedThisLevelRef = useRef(0);
+
+  /**
    * ✅ PERFORMANCE: ovenSoundStates is no longer React state.
    * - avoids re-renders when sound-state changes
    * - avoids JSON.stringify compare
@@ -130,6 +143,22 @@ export const useGameLogic = (gameStarted: boolean = true) => {
   useEffect(() => {
     initializeBossMasks();
   }, []);
+
+  // Initialize level system when game starts
+  useEffect(() => {
+    if (!gameStarted) return;
+    const now = Date.now();
+    setGameState(prev => ({
+      ...prev,
+      levelProgress: {
+        customersServed: 0,
+        customersRequired: getCustomersForLevel(1),
+        levelStartTime: now,
+        starsLostThisLevel: 0,
+      },
+      levelAnnouncement: { level: 1, endTime: now + 2000 },
+    }));
+  }, [gameStarted]);
 
   // --- 1. THE STABLE TICK REF ---
   const latestTickRef = useRef<() => void>(() => { });
@@ -886,24 +915,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           }
         }
 
-        // Handle defeated boss level
+        // Handle defeated boss level (old system tracking - kept for compatibility)
         if (bossResult.defeatedBossLevel !== undefined) {
           newState.defeatedBossLevels = [...newState.defeatedBossLevels, bossResult.defeatedBossLevel];
-
-          // Spawn next queued boss if any are pending
-          if (newState.pendingBossQueue && newState.pendingBossQueue.length > 0) {
-            // Filter out any bosses that were already defeated (safety check)
-            const remainingQueue = newState.pendingBossQueue.filter(
-              b => !newState.defeatedBossLevels.includes(b.level)
-            );
-            if (remainingQueue.length > 0) {
-              const [nextBoss, ...rest] = remainingQueue;
-              newState.bossBattle = initializeBossBattle(now, nextBoss.type);
-              newState.pendingBossQueue = rest.length > 0 ? rest : undefined;
-            } else {
-              newState.pendingBossQueue = undefined;
-            }
-          }
+          // Note: boss spawning is now handled by the level phase state machine in section 9b
         }
 
         // Apply slime effects
@@ -949,41 +964,110 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         });
       }
 
-      // --- 9b. LEVEL & BOSS LOGIC (runs AFTER boss processing so score includes boss rewards) ---
-      const targetLevel = Math.floor(newState.score / GAME_CONFIG.LEVEL_THRESHOLD) + 1;
+      // --- 9b. LEVEL PROGRESSION (customer-count based) ---
+      // Track customers served this tick by comparing stats delta
+      const customersServedThisTick = newState.stats.customersServed - prev.stats.customersServed;
+      if (customersServedThisTick > 0 && newState.levelPhase === 'playing') {
+        newState.levelProgress = {
+          ...newState.levelProgress,
+          customersServed: newState.levelProgress.customersServed + customersServedThisTick,
+        };
+      }
 
-      if (targetLevel > newState.level) {
-        const oldLevel = newState.level;
-        newState.level = targetLevel;
+      // Track stars lost this level
+      if (newState.lives < prev.lives) {
+        const starsLost = prev.lives - newState.lives;
+        newState.levelProgress = {
+          ...newState.levelProgress,
+          starsLostThisLevel: newState.levelProgress.starsLostThisLevel + starsLost,
+        };
+      }
 
-        const highestStoreLevel = Math.floor(targetLevel / GAME_CONFIG.STORE_LEVEL_INTERVAL) * GAME_CONFIG.STORE_LEVEL_INTERVAL;
-        if (highestStoreLevel >= 10 && highestStoreLevel > newState.lastStoreLevelShown) {
-          newState.lastStoreLevelShown = highestStoreLevel;
-          if (newState.nyanSweep?.active) newState.pendingStoreShow = true;
-          else newState.showStore = true;
+      // Initialize levelStartTime if it's 0 (game just started)
+      if (newState.levelProgress.levelStartTime === 0) {
+        newState.levelProgress = {
+          ...newState.levelProgress,
+          levelStartTime: now,
+        };
+      }
+
+      // Level phase state machine
+      if (newState.levelPhase === 'playing') {
+        // Show level announcement at the start of each level (first 2 seconds)
+        if (newState.levelAnnouncement && now < newState.levelAnnouncement.endTime) {
+          // Announcement still showing - don't change anything
+        } else if (newState.levelAnnouncement && now >= newState.levelAnnouncement.endTime) {
+          // Announcement finished
+          newState.levelAnnouncement = undefined;
         }
 
-        // Check if boss battle(s) should trigger - returns ALL missed bosses
-        const bossTriggers = checkBossTrigger(
-          oldLevel,
-          targetLevel,
-          newState.defeatedBossLevels,
-        );
-        if (bossTriggers.length > 0) {
-          if (newState.bossBattle?.active) {
-            // Boss battle already active - queue all triggered bosses
-            const existingQueue = newState.pendingBossQueue ?? [];
-            newState.pendingBossQueue = [...existingQueue, ...bossTriggers];
+        // Check if all required customers have been served
+        if (newState.levelProgress.customersServed >= newState.levelProgress.customersRequired) {
+          const bossType = getBossForLevel(newState.level);
+          if (bossType) {
+            // Boss level - transition to boss_incoming
+            newState.levelPhase = 'boss_incoming';
+            newState.bossIncomingAlert = { endTime: now + 2000 }; // 2 second alert
+            // Clear all remaining approaching customers from the board
+            newState.customers = newState.customers.filter(c => c.served || c.leaving || c.disappointed || c.vomit);
           } else {
-            // Start the first boss immediately, queue the rest
-            const [first, ...rest] = bossTriggers;
-            newState.bossBattle = initializeBossBattle(now, first.type);
-            if (rest.length > 0) {
-              const existingQueue = newState.pendingBossQueue ?? [];
-              newState.pendingBossQueue = [...existingQueue, ...rest];
-            }
+            // Non-boss level - transition to complete
+            newState.levelPhase = 'complete';
+            const rewards = calculateLevelRewards(
+              newState.levelProgress.starsLostThisLevel,
+              false,
+            );
+            newState.bank += rewards;
+            newState.levelCompleteInfo = {
+              level: newState.level,
+              customersServed: newState.levelProgress.customersServed,
+              starsLost: newState.levelProgress.starsLostThisLevel,
+              rewards,
+              bossDefeated: false,
+            };
           }
         }
+      } else if (newState.levelPhase === 'boss_incoming') {
+        // Wait for the alert timer to expire
+        if (newState.bossIncomingAlert && now >= newState.bossIncomingAlert.endTime) {
+          newState.levelPhase = 'boss';
+          newState.bossIncomingAlert = undefined;
+          // Spawn the boss
+          const bossType = getBossForLevel(newState.level)!;
+          const scaling = getBossScaling(newState.level);
+          const bossBattle = initializeBossBattle(now, bossType);
+          // Apply scaling for recurring bosses
+          if (scaling.healthMultiplier > 1) {
+            bossBattle.bossHealth = Math.ceil(bossBattle.bossHealth * scaling.healthMultiplier);
+          }
+          newState.bossBattle = bossBattle;
+        }
+      } else if (newState.levelPhase === 'boss') {
+        // Boss battle in progress - check if boss is defeated
+        if (newState.bossBattle && newState.bossBattle.bossDefeated) {
+          newState.levelPhase = 'complete';
+          const rewards = calculateLevelRewards(
+            newState.levelProgress.starsLostThisLevel,
+            true,
+          );
+          newState.bank += rewards;
+          newState.levelCompleteInfo = {
+            level: newState.level,
+            customersServed: newState.levelProgress.customersServed,
+            starsLost: newState.levelProgress.starsLostThisLevel,
+            rewards,
+            bossDefeated: true,
+          };
+          // Mark boss level as defeated
+          if (!newState.defeatedBossLevels.includes(newState.level)) {
+            newState.defeatedBossLevels = [...newState.defeatedBossLevels, newState.level];
+          }
+        }
+      }
+      // 'complete' phase: after 2 seconds, auto-transition to store
+      if (newState.levelPhase === 'complete' && newState.levelCompleteInfo) {
+        // The store will be triggered from the UI when the player clicks "Continue"
+        // For now we keep the complete phase showing the level complete overlay
       }
 
       // --- CLEAN KITCHEN BONUS CHECK ---
@@ -1025,7 +1109,42 @@ export const useGameLogic = (gameStarted: boolean = true) => {
   }, []);
 
   const closeStore = useCallback(() => {
-    setGameState(prev => closeStoreStore(prev));
+    setGameState(prev => {
+      const closed = closeStoreStore(prev);
+      // Advance to next level when store closes
+      const nextLevel = closed.level + 1;
+      const nextRequired = getCustomersForLevel(nextLevel);
+      // Reset the spawned counter for the new level
+      customersSpawnedThisLevelRef.current = 0;
+      return {
+        ...closed,
+        level: nextLevel,
+        levelPhase: 'playing' as LevelPhase,
+        levelProgress: {
+          customersServed: 0,
+          customersRequired: nextRequired,
+          levelStartTime: Date.now(),
+          starsLostThisLevel: 0,
+        },
+        levelAnnouncement: { level: nextLevel, endTime: Date.now() + 2000 },
+        levelCompleteInfo: undefined,
+        bossIncomingAlert: undefined,
+        // Clear boss battle state if any
+        bossBattle: undefined,
+        pendingBossQueue: undefined,
+      };
+    });
+  }, []);
+
+  const openLevelStore = useCallback(() => {
+    setGameState(prev => {
+      if (prev.levelPhase !== 'complete') return prev;
+      return {
+        ...prev,
+        levelPhase: 'store' as LevelPhase,
+        showStore: true,
+      };
+    });
   }, []);
 
   const bribeReviewer = useCallback(() => {
@@ -1083,9 +1202,19 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
   const resetGame = useCallback(() => {
     soundManager.stopNyan();
-    setGameState({ ...INITIAL_GAME_STATE });
+    setGameState({
+      ...INITIAL_GAME_STATE,
+      levelProgress: {
+        customersServed: 0,
+        customersRequired: getCustomersForLevel(1),
+        levelStartTime: Date.now(),
+        starsLostThisLevel: 0,
+      },
+      levelAnnouncement: { level: 1, endTime: Date.now() + 2000 },
+    });
     lastCustomerSpawnRef.current = 0;
     lastPowerUpSpawnRef.current = 0;
+    customersSpawnedThisLevelRef.current = 0;
     // ✅ reset ref (no render)
     ovenSoundStatesRef.current = { ...DEFAULT_OVEN_SOUND_STATES };
   }, []);
@@ -1178,13 +1307,18 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         lastPowerUpSpawnRef.current,
         now,
         current.level,
-        current.bossBattle?.active ?? false
+        current.bossBattle?.active ?? false,
+        current.levelPhase,
+        current.levelProgress.customersServed,
+        current.levelProgress.customersRequired,
+        customersSpawnedThisLevelRef.current,
       );
 
       let next = current;
 
       if (spawnResult.newCustomer) {
         lastCustomerSpawnRef.current = now;
+        customersSpawnedThisLevelRef.current += 1;
         next = { ...next, customers: [...next.customers, spawnResult.newCustomer] };
       }
 
@@ -1260,5 +1394,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     buyPowerUp,
     hireWorker,
     debugActivatePowerUp,
+    openLevelStore,
   };
 };

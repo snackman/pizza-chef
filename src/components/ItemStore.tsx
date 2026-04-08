@@ -352,6 +352,22 @@ const ItemStore: React.FC<ItemStoreProps> = ({
   return (
     // ADDED z-[100] here to ensure the Store Card sits above text prompts (which are z-50)
     <div className="bg-white rounded-lg shadow-2xl p-2 sm:p-4 w-full max-w-3xl mx-2 sm:mx-4 relative z-[100] max-h-[95vh] overflow-y-auto">
+      {/* Level Complete Banner */}
+      {gameState.levelCompleteInfo && (
+        <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg p-2 sm:p-3 mb-2 sm:mb-3 text-center">
+          <h2 className="text-sm sm:text-xl font-bold">Level {gameState.levelCompleteInfo.level} Complete!</h2>
+          <div className="flex items-center justify-center space-x-3 sm:space-x-6 text-[10px] sm:text-xs mt-1">
+            <span>Served: {gameState.levelCompleteInfo.customersServed}</span>
+            <span>Stars Lost: {gameState.levelCompleteInfo.starsLost}</span>
+            {gameState.levelCompleteInfo.bossDefeated && <span className="font-bold">Boss Defeated!</span>}
+            <span className="font-bold text-yellow-200">+${gameState.levelCompleteInfo.rewards}</span>
+          </div>
+          {gameState.levelCompleteInfo.starsLost === 0 && (
+            <p className="text-[10px] sm:text-xs text-yellow-200 font-bold mt-0.5">Perfect Level!</p>
+          )}
+        </div>
+      )}
+
       {/* Header Row */}
       <div className="flex items-center justify-between mb-2 sm:mb-4">
         {/* Left: Store Title + Bank */}
@@ -536,7 +552,7 @@ const ItemStore: React.FC<ItemStoreProps> = ({
         {...getItemProps(13)}
         className={`block mx-auto w-half bg-red-600 hover:bg-gray-700 text-white rounded-lg py-1.5 px-3 sm:py-2 sm:px-4 text-xs sm:text-sm font-semibold transition-colors ${selectedIndex === 13 ? selectedRing : ''}`}
       >
-        Continue Playing
+        Next Level
       </button>
 
       {/* Retirement joke overlay */}

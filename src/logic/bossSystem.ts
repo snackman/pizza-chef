@@ -1,5 +1,5 @@
 import { GameState, BossBattle, BossMinion, PizzaSlice, BossType, ActivePowerUp } from '../types/game';
-import { BOSS_CONFIG, PAPA_JOHN_CONFIG, DOMINOS_CONFIG, CHUCK_E_CHEESE_CONFIG, PIZZA_THE_HUT_CONFIG, POSITIONS, ENTITY_SPEEDS, SCORING, GAME_CONFIG } from '../lib/constants';
+import { BOSS_CONFIG, PAPA_JOHN_CONFIG, DOMINOS_CONFIG, CHUCK_E_CHEESE_CONFIG, PIZZA_THE_HUT_CONFIG, POSITIONS, ENTITY_SPEEDS, SCORING, GAME_CONFIG, LEVEL_SYSTEM } from '../lib/constants';
 import { sprite } from '../lib/assets';
 import { checkSliceMinionCollision, checkMinionReachedChef } from './collisionSystem';
 import { getPapaJohnMask, checkMaskCollision } from './bossCollisionMasks';
@@ -30,6 +30,41 @@ export interface BossTriggerResult {
   type: BossType;
   level: number;
 }
+
+/**
+ * Get the boss type for a given level, or null if no boss at this level.
+ * Uses the new level system: bosses at levels 3, 5, 7, 9, and recurring from 10+.
+ */
+export const getBossForLevel = (level: number): BossType | null => {
+  // Check fixed boss levels
+  const fixedBoss = LEVEL_SYSTEM.BOSS_LEVELS[level as keyof typeof LEVEL_SYSTEM.BOSS_LEVELS];
+  if (fixedBoss) return fixedBoss;
+
+  // Check recurring bosses (level 10+, every 2 levels)
+  if (level >= LEVEL_SYSTEM.BOSS_RECURRENCE_START && (level - LEVEL_SYSTEM.BOSS_RECURRENCE_START) % LEVEL_SYSTEM.BOSS_RECURRENCE_INTERVAL === 0) {
+    // Cycle through the 4 bosses
+    const bossTypes: BossType[] = ['papaJohn', 'chuckECheese', 'pizzaTheHut', 'dominos'];
+    const cycleIndex = ((level - LEVEL_SYSTEM.BOSS_RECURRENCE_START) / LEVEL_SYSTEM.BOSS_RECURRENCE_INTERVAL) % bossTypes.length;
+    return bossTypes[cycleIndex];
+  }
+
+  return null;
+};
+
+/**
+ * Get boss difficulty scaling for recurring bosses (level 10+).
+ * Returns a multiplier for health and minion speed.
+ */
+export const getBossScaling = (level: number): { healthMultiplier: number; speedMultiplier: number } => {
+  if (level < LEVEL_SYSTEM.BOSS_RECURRENCE_START) {
+    return { healthMultiplier: 1, speedMultiplier: 1 };
+  }
+  const recurrence = Math.floor((level - LEVEL_SYSTEM.BOSS_RECURRENCE_START) / LEVEL_SYSTEM.BOSS_RECURRENCE_INTERVAL);
+  return {
+    healthMultiplier: 1 + recurrence * LEVEL_SYSTEM.BOSS_HEALTH_SCALE,
+    speedMultiplier: 1 + recurrence * LEVEL_SYSTEM.BOSS_MINION_SPEED_SCALE,
+  };
+};
 
 /**
  * Check if any boss battles should trigger based on current level.
