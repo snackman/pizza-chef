@@ -265,8 +265,8 @@ function App() {
       // Optional: block input when overlays/modals are up
       if (showControlsOverlay || showHighScores || showGameOver || gs.showStore) return;
 
-      // Block input during level complete and boss incoming phases
-      if (gs.levelPhase === 'complete' || gs.levelPhase === 'boss_incoming') return;
+      // Block input during level complete phase
+      if (gs.levelPhase === 'complete') return;
 
       const target = event.target as HTMLElement | null;
       const isTyping =

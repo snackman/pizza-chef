@@ -1004,28 +1004,34 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
         // Check if all required customers have been served
         if (newState.levelProgress.customersServed >= newState.levelProgress.customersRequired) {
-          const bossType = getBossForLevel(newState.level);
-          if (bossType) {
-            // Boss level - transition to boss_incoming
-            newState.levelPhase = 'boss_incoming';
-            newState.bossIncomingAlert = { endTime: now + 2000 }; // 2 second alert
-            // Clear all remaining approaching customers from the board
-            newState.customers = newState.customers.filter(c => c.served || c.leaving || c.disappointed || c.vomit);
-          } else {
-            // Non-boss level - transition to complete
-            newState.levelPhase = 'complete';
-            const rewards = calculateLevelRewards(
-              newState.levelProgress.starsLostThisLevel,
-              false,
-            );
-            newState.bank += rewards;
-            newState.levelCompleteInfo = {
-              level: newState.level,
-              customersServed: newState.levelProgress.customersServed,
-              starsLost: newState.levelProgress.starsLostThisLevel,
-              rewards,
-              bossDefeated: false,
-            };
+          // Wait for all plates to be caught/off-screen and pizzas to land before ending
+          const hasActivePlates = newState.customers.some(c => c.hasPlate && !c.leaving);
+          const hasActiveSlices = newState.pizzaSlices.length > 0;
+
+          if (!hasActivePlates && !hasActiveSlices) {
+            const bossType = getBossForLevel(newState.level);
+            if (bossType) {
+              // Boss level - transition to boss_incoming
+              newState.levelPhase = 'boss_incoming';
+              newState.bossIncomingAlert = { endTime: now + 2000 }; // 2 second alert
+              // Clear all remaining approaching customers from the board
+              newState.customers = newState.customers.filter(c => c.served || c.leaving || c.disappointed || c.vomit);
+            } else {
+              // Non-boss level - transition to complete
+              newState.levelPhase = 'complete';
+              const rewards = calculateLevelRewards(
+                newState.levelProgress.starsLostThisLevel,
+                false,
+              );
+              newState.bank += rewards;
+              newState.levelCompleteInfo = {
+                level: newState.level,
+                customersServed: newState.levelProgress.customersServed,
+                starsLost: newState.levelProgress.starsLostThisLevel,
+                rewards,
+                bossDefeated: false,
+              };
+            }
           }
         }
       } else if (newState.levelPhase === 'boss_incoming') {
