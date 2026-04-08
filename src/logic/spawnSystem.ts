@@ -107,7 +107,7 @@ export const getEffectiveSpawnRate = (level: number, bossActive: boolean): numbe
   // With the new level system, we use a simpler spawn rate
   // that ensures customers spawn at a reasonable pace within the spawn interval
   const baseRate = 5.0; // Higher base rate since we gate by interval now
-  return bossActive ? 0 : baseRate; // NO spawning during boss battles
+  return baseRate; // Customers keep spawning during boss battles
 };
 
 /**
