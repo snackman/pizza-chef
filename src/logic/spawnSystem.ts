@@ -128,10 +128,12 @@ export const trySpawnCustomer = (
     return { shouldSpawn: false };
   }
 
-  // Don't spawn if enough customers have been served for this level
-  // We use served count (not spawned) so disappointed customers don't block progress
+  // Don't spawn if enough customers have been served — unless a boss is active,
+  // in which case customers keep coming at the current level's rate
   if (customersServed !== undefined && customersRequired !== undefined && customersServed >= customersRequired) {
-    return { shouldSpawn: false };
+    if (levelPhase !== 'boss_incoming' && levelPhase !== 'boss') {
+      return { shouldSpawn: false };
+    }
   }
 
   const spawnDelay = getLevelSpawnInterval(level);
