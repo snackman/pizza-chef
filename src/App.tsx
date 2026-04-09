@@ -456,17 +456,7 @@ function App() {
               <PowerUpAlert powerUpType={gameState.powerUpAlert.type} chefLane={gameState.powerUpAlert.chefLane} />
             )}
 
-            {gameState.cleanKitchenBonusAlert && !gameState.paused && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
-                <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl shadow-2xl border-4 border-yellow-400 animate-bounce">
-                  <div className="text-2xl sm:text-3xl font-bold text-center drop-shadow-lg">
-                    ✨ Clean Kitchen Bonus! ✨
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {!gameState.gameOver && !gameState.paused && !gameState.showStore && <StreakDisplay stats={gameState.stats} />}
+            {!gameState.gameOver && !gameState.paused && !gameState.showStore && <StreakDisplay stats={gameState.stats} cleanKitchenBonus={!!gameState.cleanKitchenBonusAlert} />}
 
             {showControlsOverlay && <ControlsOverlay onClose={handleCloseControlsOverlay} />}
 
