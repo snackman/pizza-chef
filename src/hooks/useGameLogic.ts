@@ -186,6 +186,50 @@ export const useGameLogic = (gameStarted: boolean = true) => {
   }, []);
 
   /**
+   * Process Best Of streak after a customer scoring result.
+   * When at max lives, stars that would have been gained count toward a Best Of streak.
+   * Hit BEST_OF_STREAK_REQUIRED in a row -> award bonus, cash, sound, alert.
+   * Returns updated state.
+   */
+  const processBestOfStreak = useCallback((
+    state: GameState,
+    wouldHaveGained: number,
+    dogeMultiplier: number,
+    now: number
+  ): GameState => {
+    if (wouldHaveGained <= 0) return state;
+
+    let newState = { ...state };
+    newState.bestOfStreakCount = newState.bestOfStreakCount + wouldHaveGained;
+
+    // Check if we've reached the threshold (can earn multiple awards if wouldHaveGained pushes past)
+    while (newState.bestOfStreakCount >= SCORING.BEST_OF_STREAK_REQUIRED) {
+      newState.bestOfStreakCount -= SCORING.BEST_OF_STREAK_REQUIRED;
+      newState.bestOfAwardCount += 1;
+      newState.stats = {
+        ...newState.stats,
+        bestOfAwardsEarned: newState.stats.bestOfAwardsEarned + 1,
+      };
+
+      // Award bonus score (affected by doge multiplier)
+      const bonusPoints = SCORING.BEST_OF_AWARD_BONUS * dogeMultiplier;
+      newState.score += bonusPoints;
+      newState.bank += SCORING.BEST_OF_AWARD_CASH;
+
+      // Show alert overlay
+      newState.bestOfAwardAlert = { endTime: now + SCORING.BEST_OF_ALERT_DURATION };
+
+      // Play sound
+      soundManager.bestOfAward();
+
+      // Add floating score
+      newState = addFloatingScore(bonusPoints, newState.chefLane, GAME_CONFIG.CHEF_X_POSITION, newState);
+    }
+
+    return newState;
+  }, [addFloatingScore]);
+
+  /**
    * Consolidated "game over" cleanup:
    * - triggers game over sound once
    * - pauses ovens (and sets paused=true)
@@ -347,6 +391,8 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             newState = addFloatingStar(false, event.lane, 5, newState);
             // Reset clean kitchen timer
             newState.cleanKitchenStartTime = now;
+            // Reset Best Of streak on any star loss
+            newState.bestOfStreakCount = 0;
             if (newState.lives === 0) {
               newState = triggerGameOver(newState, now);
             }
@@ -372,21 +418,25 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           newState.lastStarLostReason = 'disappointed_critic';
           // Critic loses 2 stars - show one indicator with 2 stars
           newState = addFloatingStar(false, event.lane, event.position, newState, 2);
+          newState.bestOfStreakCount = 0;
         }
         if (event.type === 'STAR_LOST_NORMAL') {
           newState.lives = Math.max(0, newState.lives - 1);
           newState.lastStarLostReason = 'disappointed_customer';
           newState = addFloatingStar(false, event.lane, event.position, newState);
+          newState.bestOfStreakCount = 0;
         }
         if (event.type === 'STAR_LOST_WOOZY_NORMAL') {
           newState.lives = Math.max(0, newState.lives - 1);
           newState.lastStarLostReason = 'woozy_customer_reached';
           newState = addFloatingStar(false, event.lane, event.position, newState);
+          newState.bestOfStreakCount = 0;
         }
         if (event.type === 'STAR_LOST_STEVE') {
           newState.lives = Math.max(0, newState.lives - 1);
           newState.lastStarLostReason = 'steve_disappointed';
           newState = addFloatingStar(false, event.lane, event.position, newState);
+          newState.bestOfStreakCount = 0;
         }
         if (event.type === 'GAME_OVER' && newState.lives === 0) {
           newState = triggerGameOver(newState, now);
@@ -405,6 +455,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           newState.lives = Math.max(0, newState.lives - 1);
           newState.lastStarLostReason = 'health_inspector_failed';
           newState = addFloatingStar(false, event.lane, event.position, newState);
+          newState.bestOfStreakCount = 0;
           newState.customers = newState.customers.map(c =>
             c.healthInspector && c.leaving && c.lane === event.lane
               ? { ...c, textMessage: "Smells like smoke!", textMessageTime: now }
@@ -481,12 +532,16 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                   if (result.shouldPlayLifeSound) soundManager.lifeGained();
                   if (result.starGain) starGainsToAdd.push(result.starGain);
                 }
+                if (result.wouldHaveGained > 0) {
+                  newState = processBestOfStreak(newState, result.wouldHaveGained, dogeMultiplier, now);
+                }
               } else if (event === 'HEALTH_INSPECTOR_BRIBED') {
                 // Lose a star for trying to bribe the inspector
                 soundManager.lifeLost();
                 newState.lives = Math.max(0, newState.lives - 1);
                 newState.lastStarLostReason = 'health_inspector_bribed';
                 newState = addFloatingStar(false, currentCustomer.lane, currentCustomer.position, newState);
+                newState.bestOfStreakCount = 0;
                 if (newState.lives === 0) {
                   newState = triggerGameOver(newState, now);
                 }
@@ -515,6 +570,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                   newState.lives += result.livesToAdd;
                   if (result.shouldPlayLifeSound) soundManager.lifeGained();
                   if (result.starGain) starGainsToAdd.push(result.starGain);
+                }
+                if (result.wouldHaveGained > 0) {
+                  newState = processBestOfStreak(newState, result.wouldHaveGained, dogeMultiplier, now);
                 }
 
               } else if (event === 'WOOZY_STEP_1') {
@@ -557,6 +615,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                   if (result.shouldPlayLifeSound) soundManager.lifeGained();
                   if (result.starGain) starGainsToAdd.push(result.starGain);
                 }
+                if (result.wouldHaveGained > 0) {
+                  newState = processBestOfStreak(newState, result.wouldHaveGained, dogeMultiplier, now);
+                }
 
               } else if (event === 'WOOZY_STEP_2' || event === 'SERVED_NORMAL' || event === 'SERVED_CRITIC' || event === 'SERVED_BRIAN_DOGE') {
                 soundManager.customerServed();
@@ -575,6 +636,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                   newState.lives += result.livesToAdd;
                   if (result.shouldPlayLifeSound) soundManager.lifeGained();
                   if (result.starGain) starGainsToAdd.push(result.starGain);
+                }
+                if (result.wouldHaveGained > 0) {
+                  newState = processBestOfStreak(newState, result.wouldHaveGained, dogeMultiplier, now);
                 }
               }
             });
@@ -738,6 +802,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       // Handle life loss sounds
       if (powerUpResult.livesLost > 0) {
         soundManager.lifeLost();
+        newState.bestOfStreakCount = 0;
       }
       if (powerUpResult.shouldTriggerGameOver) {
         newState = triggerGameOver(newState, now);
@@ -840,6 +905,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
                 if (result.shouldPlayLifeSound) soundManager.lifeGained();
                 newState = addFloatingStar(true, customer.lane, customer.position, newState);
               }
+              if (result.wouldHaveGained > 0) {
+                newState = processBestOfStreak(newState, result.wouldHaveGained, dogeMultiplier, now);
+              }
 
               return { ...customer, served: true, hasPlate: false, woozy: false, frozen: false, unfrozenThisPeriod: undefined };
             }
@@ -905,6 +973,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             newState = addFloatingStar(false, i % 4, GAME_CONFIG.CHEF_X_POSITION, newState);
           }
           newState.lives = Math.max(0, newState.lives - bossResult.livesLost);
+          newState.bestOfStreakCount = 0;
           // Set boss-specific loss reason
           newState.lastStarLostReason = newState.bossBattle?.bossType === 'papaJohn'
             ? 'papajohn_minion_reached'
@@ -1095,9 +1164,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         newState.cleanKitchenBonusAlert = undefined;
       }
 
+      // Clear expired Best Of award alert
+      if (newState.bestOfAwardAlert && now >= newState.bestOfAwardAlert.endTime) {
+        newState.bestOfAwardAlert = undefined;
+      }
+
       return newState;
     });
-  }, [addFloatingScore, addFloatingStar, triggerGameOver]); // ✅ removed gameState.* and ovenSoundStates deps
+  }, [addFloatingScore, addFloatingStar, triggerGameOver, processBestOfStreak]); // ✅ removed gameState.* and ovenSoundStates deps
 
   // --- Store / Upgrades / Debug (now via storeSystem.ts) ---
 

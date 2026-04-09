@@ -34,6 +34,11 @@ const ScoreBoard: React.FC<ScoreBoardProps> = ({ gameState, onPauseClick, compac
                 />
               ))}
             </div>
+            {gameState.bestOfAwardCount > 0 && (
+              <span className="text-xs font-bold bg-amber-500 text-white px-1.5 py-0.5 rounded-full">
+                Best Of x{gameState.bestOfAwardCount}
+              </span>
+            )}
           </div>
 
           <div className="flex items-center space-x-2">

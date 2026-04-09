@@ -348,7 +348,20 @@ function App() {
                 <PowerUpAlert powerUpType={gameState.powerUpAlert.type} chefLane={gameState.powerUpAlert.chefLane} />
               )}
 
-              {!gameState.gameOver && !gameState.paused && !gameState.showStore && <StreakDisplay stats={gameState.stats} cleanKitchenBonus={!!gameState.cleanKitchenBonusAlert} />}
+              {!gameState.gameOver && !gameState.paused && !gameState.showStore && <StreakDisplay stats={gameState.stats} cleanKitchenBonus={!!gameState.cleanKitchenBonusAlert} bestOfStreak={gameState.bestOfStreakCount} />}
+
+              {gameState.bestOfAwardAlert && !gameState.paused && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
+                  <div className="bg-gradient-to-r from-amber-500 to-yellow-600 text-white px-8 py-4 rounded-xl shadow-2xl border-4 border-amber-300 animate-bounce">
+                    <div className="text-2xl sm:text-3xl font-bold text-center drop-shadow-lg">
+                      🏆 Best Of Award! 🏆
+                    </div>
+                    <div className="text-sm sm:text-base text-center mt-1 font-semibold">
+                      +5,000 pts &bull; +$25
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {showControlsOverlay && <ControlsOverlay onClose={handleCloseControlsOverlay} />}
 
@@ -456,7 +469,20 @@ function App() {
               <PowerUpAlert powerUpType={gameState.powerUpAlert.type} chefLane={gameState.powerUpAlert.chefLane} />
             )}
 
-            {!gameState.gameOver && !gameState.paused && !gameState.showStore && <StreakDisplay stats={gameState.stats} cleanKitchenBonus={!!gameState.cleanKitchenBonusAlert} />}
+            {!gameState.gameOver && !gameState.paused && !gameState.showStore && <StreakDisplay stats={gameState.stats} cleanKitchenBonus={!!gameState.cleanKitchenBonusAlert} bestOfStreak={gameState.bestOfStreakCount} />}
+
+            {gameState.bestOfAwardAlert && !gameState.paused && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
+                <div className="bg-gradient-to-r from-amber-500 to-yellow-600 text-white px-8 py-4 rounded-xl shadow-2xl border-4 border-amber-300 animate-bounce">
+                  <div className="text-2xl sm:text-3xl font-bold text-center drop-shadow-lg">
+                    🏆 Best Of Award! 🏆
+                  </div>
+                  <div className="text-sm sm:text-base text-center mt-1 font-semibold">
+                    +5,000 pts &bull; +$25
+                  </div>
+                </div>
+              </div>
+            )}
 
             {showControlsOverlay && <ControlsOverlay onClose={handleCloseControlsOverlay} />}
 

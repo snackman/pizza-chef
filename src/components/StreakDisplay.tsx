@@ -3,6 +3,7 @@ import { GameStats } from '../types/game';
 interface StreakDisplayProps {
   stats: GameStats;
   cleanKitchenBonus?: boolean;
+  bestOfStreak?: number;
 }
 
 export function getStreakMultiplier(streak: number): number {
@@ -12,11 +13,12 @@ export function getStreakMultiplier(streak: number): number {
   return 1.0 + 0.01 * streak;
 }
 
-export default function StreakDisplay({ stats, cleanKitchenBonus }: StreakDisplayProps) {
+export default function StreakDisplay({ stats, cleanKitchenBonus, bestOfStreak }: StreakDisplayProps) {
   const showCustomerStreak = stats.currentCustomerStreak >= 5;
   const showPlateStreak = stats.currentPlateStreak >= 5;
+  const showBestOf = (bestOfStreak ?? 0) > 0;
 
-  if (!showCustomerStreak && !showPlateStreak && !cleanKitchenBonus) {
+  if (!showCustomerStreak && !showPlateStreak && !cleanKitchenBonus && !showBestOf) {
     return null;
   }
 
@@ -68,6 +70,20 @@ export default function StreakDisplay({ stats, cleanKitchenBonus }: StreakDispla
               <div className="text-xs font-semibold uppercase tracking-wide">Clean Kitchen</div>
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold">Bonus!</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showBestOf && (
+        <div className="bg-gradient-to-br from-amber-400 to-yellow-600 text-white px-4 py-2 rounded-lg shadow-lg border-2 border-amber-200 animate-pulse">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">🏆</span>
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-wide">Best Of</div>
+              <div className="flex items-center gap-2">
+                <span className="text-2xl font-bold">{bestOfStreak}/5</span>
               </div>
             </div>
           </div>

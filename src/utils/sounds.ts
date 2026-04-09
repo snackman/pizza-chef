@@ -200,6 +200,18 @@ ovenReady() {
     ]);
   }
 
+  bestOfAward() {
+    // Ascending major chord fanfare - celebratory and distinct
+    this.playMultiTone([
+      { frequency: 523, delay: 0, duration: 0.15, volume: 0.3 },    // C5
+      { frequency: 659, delay: 100, duration: 0.15, volume: 0.3 },  // E5
+      { frequency: 784, delay: 200, duration: 0.15, volume: 0.3 },  // G5
+      { frequency: 1047, delay: 300, duration: 0.2, volume: 0.35 }, // C6
+      { frequency: 1319, delay: 400, duration: 0.25, volume: 0.35 },// E6
+      { frequency: 1568, delay: 500, duration: 0.35, volume: 0.3 }, // G6
+    ]);
+  }
+
   private nyanNotes: Array<{ frequency: number; delay: number; duration: number; type: OscillatorType; volume: number }> = [
     { frequency: 1046.5, delay: 0,    duration: 0.188, type: 'square', volume: 0.22 },
     { frequency: 1174.7, delay: 188,  duration: 0.095, type: 'square', volume: 0.22 },

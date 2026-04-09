@@ -96,6 +96,12 @@ export const SCORING = {
   // Clean Kitchen Bonus
   CLEAN_KITCHEN_BONUS: 1000,
   CLEAN_KITCHEN_TIME: 30000, // 30 seconds
+
+  // Best Of Award
+  BEST_OF_AWARD_BONUS: 5000,
+  BEST_OF_AWARD_CASH: 25,
+  BEST_OF_STREAK_REQUIRED: 5,
+  BEST_OF_ALERT_DURATION: 4000,
 };
 
 export const COSTS = {
@@ -320,6 +326,7 @@ export const INITIAL_GAME_STATE = {
       slow: 0,
     },
     ovenUpgradesMade: 0,
+    bestOfAwardsEarned: 0,
   },
   bossBattle: undefined,
   defeatedBossLevels: [],
@@ -337,4 +344,8 @@ export const INITIAL_GAME_STATE = {
   levelAnnouncement: undefined as { level: number; endTime: number } | undefined,
   bossIncomingAlert: undefined as { endTime: number } | undefined,
   levelCompleteInfo: undefined as { level: number; customersServed: number; starsLost: number; rewards: number; bossDefeated: boolean } | undefined,
+  // Best Of Award
+  bestOfStreakCount: 0,
+  bestOfAwardCount: 0,
+  bestOfAwardAlert: undefined as { endTime: number } | undefined,
 };

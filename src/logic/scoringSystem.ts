@@ -25,6 +25,7 @@ export interface CustomerScoringResult {
   newHappyCustomers: number;
   newStats: GameStats;
   livesToAdd: number;
+  wouldHaveGained: number;
   shouldPlayLifeSound: boolean;
   floatingScore: { points: number; lane: number; position: number };
   starGain?: { lane: number; position: number };
@@ -50,6 +51,7 @@ export const applyCustomerScoring = (
   let newHappyCustomers = state.happyCustomers;
   let newStats = state.stats;
   let livesToAdd = 0;
+  let wouldHaveGained = 0;
   let shouldPlayLifeSound = false;
   let starGain: { lane: number; position: number } | undefined;
 
@@ -75,6 +77,7 @@ export const applyCustomerScoring = (
         shouldPlayLifeSound = lifeResult.shouldPlaySound;
         starGain = { lane: customer.lane, position: customer.position };
       }
+      wouldHaveGained = lifeResult.wouldHaveGained;
     }
   }
 
@@ -84,6 +87,7 @@ export const applyCustomerScoring = (
     newHappyCustomers,
     newStats,
     livesToAdd,
+    wouldHaveGained,
     shouldPlayLifeSound,
     floatingScore: { points, lane: customer.lane, position: customer.position },
     starGain,
@@ -155,35 +159,32 @@ export const checkLifeGain = (
   dogeMultiplier: number,
   isCritic: boolean = false,
   criticPosition: number = 0
-): { livesToAdd: number; shouldPlaySound: boolean } => {
-  if (currentLives >= GAME_CONFIG.MAX_LIVES) {
-    return { livesToAdd: 0, shouldPlaySound: false };
-  }
-
-  let livesToAdd = 0;
+): { livesToAdd: number; wouldHaveGained: number; shouldPlaySound: boolean } => {
+  // Calculate potential gain regardless of current lives (for Best Of tracking)
+  let potentialGain = 0;
 
   // Critic bonus: served efficiently
   if (isCritic && criticPosition >= 50) {
-    livesToAdd += 1;
+    potentialGain += 1;
   }
 
   // Normal bonus: every 8 happy customers
-  // Note: We check if the *current* happyCustomers count triggers it.
-  // The caller should increment happyCustomers *before* calling this if the current action made them happy.
-  // HOWEVER, looking at legacy code:
-  // "if (newState.happyCustomers % 8 === 0 ...)"
-  // This implies we check the *accumulated* value.
   if (happyCustomers > 0 && happyCustomers % 8 === 0) {
-    const stars = Math.min(dogeMultiplier, GAME_CONFIG.MAX_LIVES - currentLives);
-    livesToAdd += stars;
+    potentialGain += dogeMultiplier;
+  }
+
+  if (currentLives >= GAME_CONFIG.MAX_LIVES) {
+    // At max lives - report what would have been gained for Best Of streak
+    return { livesToAdd: 0, wouldHaveGained: potentialGain, shouldPlaySound: false };
   }
 
   // Cap at max lives
-  const newTotal = Math.min(GAME_CONFIG.MAX_LIVES, currentLives + livesToAdd);
+  const newTotal = Math.min(GAME_CONFIG.MAX_LIVES, currentLives + potentialGain);
   const actualAdded = newTotal - currentLives;
 
   return {
     livesToAdd: actualAdded,
+    wouldHaveGained: 0, // Not at max, so no "would have gained" for Best Of
     shouldPlaySound: actualAdded > 0
   };
 };

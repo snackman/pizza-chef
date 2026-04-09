@@ -242,6 +242,7 @@ export interface GameStats {
     slow: number;
   };
   ovenUpgradesMade: number;
+  bestOfAwardsEarned: number;
 }
 
 export type StarLostReason =
@@ -305,4 +306,8 @@ export interface GameState {
   levelAnnouncement?: LevelAnnouncement;
   bossIncomingAlert?: BossIncomingAlert;
   levelCompleteInfo?: LevelCompleteInfo;
+  // Best Of Award
+  bestOfStreakCount: number;
+  bestOfAwardCount: number;
+  bestOfAwardAlert?: { endTime: number };
 }

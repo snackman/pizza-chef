@@ -340,6 +340,7 @@ export default function GameOverScreen({ stats, score, level, lastStarLostReason
     ctx.fillText(` ${deathMessage}`, deathStartX + emojiWidth, deathBoxCenterY + deathTextSize / 3);
 
     const awards: string[] = [];
+    if (stats.bestOfAwardsEarned > 0) awards.push(`Best Of x${stats.bestOfAwardsEarned}`);
     if (stats.longestCustomerStreak >= 10) awards.push('Streak Master');
     if (stats.customersServed >= 50) awards.push('Crowd Pleaser');
     if (stats.largestPlateStreak >= 5) awards.push('Plate Juggler');
