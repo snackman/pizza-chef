@@ -147,13 +147,12 @@ export const useGameLogic = (gameStarted: boolean = true) => {
   // Initialize level system when game starts (without announcement — that waits for controls dismiss)
   useEffect(() => {
     if (!gameStarted) return;
-    const now = Date.now();
     setGameState(prev => ({
       ...prev,
       levelProgress: {
         customersServed: 0,
         customersRequired: getCustomersForLevel(1),
-        levelStartTime: now,
+        levelStartTime: 0, // 0 signals "show announcement on first unpaused tick"
         starsLostThisLevel: 0,
       },
     }));
@@ -983,26 +982,17 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         };
       }
 
-      // Initialize levelStartTime if it's 0 (game just started)
-      if (newState.levelProgress.levelStartTime === 0) {
-        newState.levelProgress = {
-          ...newState.levelProgress,
-          levelStartTime: now,
-        };
-      }
-
       // Level phase state machine
       if (newState.levelPhase === 'playing') {
         // Trigger level 1 announcement on first unpaused tick (after controls overlay dismissed)
-        if (newState.level === 1 && !newState.levelAnnouncement && newState.levelProgress.customersServed === 0 && newState.levelProgress.levelStartTime <= now) {
-          newState.levelAnnouncement = { level: 1, endTime: now + 2000 };
+        // levelStartTime of 0 means announcement hasn't been triggered yet for this level
+        if (newState.levelAnnouncement === undefined && newState.levelProgress.levelStartTime === 0) {
+          newState.levelProgress = { ...newState.levelProgress, levelStartTime: now };
+          newState.levelAnnouncement = { level: newState.level, endTime: now + 3000 };
         }
 
-        // Show level announcement at the start of each level (first 2 seconds)
-        if (newState.levelAnnouncement && now < newState.levelAnnouncement.endTime) {
-          // Announcement still showing - don't change anything
-        } else if (newState.levelAnnouncement && now >= newState.levelAnnouncement.endTime) {
-          // Announcement finished
+        // Show level announcement for its duration
+        if (newState.levelAnnouncement && now >= newState.levelAnnouncement.endTime) {
           newState.levelAnnouncement = undefined;
         }
 
@@ -1137,7 +1127,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
           levelStartTime: Date.now(),
           starsLostThisLevel: 0,
         },
-        levelAnnouncement: { level: nextLevel, endTime: Date.now() + 2000 },
+        levelAnnouncement: { level: nextLevel, endTime: Date.now() + 3000 },
         levelCompleteInfo: undefined,
         bossIncomingAlert: undefined,
         // Clear boss battle state if any
@@ -1221,7 +1211,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         levelStartTime: Date.now(),
         starsLostThisLevel: 0,
       },
-      levelAnnouncement: { level: 1, endTime: Date.now() + 2000 },
+      levelAnnouncement: { level: 1, endTime: Date.now() + 3000 },
     });
     lastCustomerSpawnRef.current = 0;
     lastPowerUpSpawnRef.current = 0;
