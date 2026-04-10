@@ -35,7 +35,7 @@ function FloatingScore({ id, points, lane, position, onComplete }: FloatingScore
 
   const lanePosition = 15 + (lane * 22);
 
-  const color = points >= 1000 ? '#dc2626' :
+  const color = points >= 1000 ? '#16a34a' :
                 points >= 150 ? '#f59e0b' :
                 points >= 100 ? '#10b981' :
                 '#6b7280';
