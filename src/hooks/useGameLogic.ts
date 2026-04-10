@@ -1067,13 +1067,18 @@ export const useGameLogic = (gameStarted: boolean = true) => {
 
         // Check if all required customers have been served
         if (newState.levelProgress.customersServed >= newState.levelProgress.customersRequired) {
-          // Pause ovens immediately so they don't burn while waiting for plates
-          // Only pause on the first tick (check if any oven still has an active startTime without pausedAt)
-          const anyOvenActive = Object.values(newState.ovens).some(
-            (o: any) => o.startTime && !o.pausedAt
-          );
-          if (anyOvenActive) {
-            newState.ovens = calculateOvenPauseState(newState.ovens, true, now);
+          const bossLevel = !!getBossForLevel(newState.level);
+
+          // On non-boss levels, pause ovens immediately so they don't burn while
+          // waiting for plates to clear. On boss levels we keep cooking because the
+          // fight continues and the chef still needs slices.
+          if (!bossLevel) {
+            const anyOvenActive = Object.values(newState.ovens).some(
+              (o: any) => o.startTime && !o.pausedAt
+            );
+            if (anyOvenActive) {
+              newState.ovens = calculateOvenPauseState(newState.ovens, true, now);
+            }
           }
 
           // Wait for all plates to be caught/off-screen and pizzas to land before ending
