@@ -202,8 +202,12 @@ export const processHelperAction = (
   );
   // Count slices already heading to this lane (using lane buckets)
   const slicesInLane = getEntitiesInLane(sliceBuckets, currentLane).length + newSlices.filter(s => s.lane === currentLane).length;
+  // Don't throw through a power-up — slices destroy them on contact
+  const powerUpInLane = gameState.powerUps.some(
+    p => p.lane === currentLane && p.position > GAME_CONFIG.CHEF_X_POSITION
+  );
   // Only throw if there are more customers than slices already in flight
-  if (approachingCustomers.length > slicesInLane && updatedHelper.availableSlices > 0) {
+  if (approachingCustomers.length > slicesInLane && updatedHelper.availableSlices > 0 && !powerUpInLane) {
     const newSlice: PizzaSlice = {
       id: `${helper.id}-pizza-${now}-${currentLane}`,
       lane: currentLane,
