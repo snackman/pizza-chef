@@ -91,6 +91,24 @@ export const evaluateLanePriority = (
     priority += 60;
   }
 
+  // Boss battle: attack vulnerable boss or active minions in this lane
+  const bossBattle = gameState.bossBattle;
+  if (bossBattle?.active && !bossBattle.bossDefeated && helper.availableSlices > 0) {
+    // Vulnerable boss within vertical range of this lane (matches collision check)
+    if (bossBattle.bossVulnerable && Math.abs(bossBattle.bossLane - lane) < 1.2) {
+      priority += 150;
+    }
+    // Minions still on the board in this lane
+    const activeMinionsInLane = bossBattle.minions.filter(
+      m => !m.defeated && m.lane === lane && m.position > GAME_CONFIG.CHEF_X_POSITION
+    );
+    if (activeMinionsInLane.length > 0) {
+      // Closer minions = higher priority (same shape as customers)
+      const closestMinion = activeMinionsInLane.reduce((a, b) => a.position < b.position ? a : b);
+      priority += 90 + (100 - closestMinion.position) * 0.5;
+    }
+  }
+
   // Avoid clustering - reduce priority if chef or other helper is here
   if (lane === chefLane) priority -= 20;
   if (lane === otherHelperLane) priority -= 30;
@@ -194,14 +212,42 @@ export const processHelperAction = (
     return { updatedHelper, updatedOvens, newSlices, caughtPlateIds, events, statsUpdates, scoreGained };
   }
 
-  // Priority 3: Serve customers (only if needed) - using lane buckets
+  // Count slices already heading to this lane (using lane buckets)
+  const slicesInLane = getEntitiesInLane(sliceBuckets, currentLane).length + newSlices.filter(s => s.lane === currentLane).length;
+
+  // Priority 3: Attack boss battle targets (boss + minions)
+  const bossBattle = gameState.bossBattle;
+  if (bossBattle?.active && !bossBattle.bossDefeated && updatedHelper.availableSlices > 0) {
+    const bossInLane = bossBattle.bossVulnerable && Math.abs(bossBattle.bossLane - currentLane) < 1.2;
+    const minionsInLane = bossBattle.minions.filter(
+      m => !m.defeated && m.lane === currentLane && m.position > GAME_CONFIG.CHEF_X_POSITION
+    );
+    const targetsInLane = (bossInLane ? 1 : 0) + minionsInLane.length;
+    // Don't throw through a power-up — slices destroy them on contact
+    const powerUpInBossLane = gameState.powerUps.some(
+      p => p.lane === currentLane && p.position > GAME_CONFIG.CHEF_X_POSITION
+    );
+    if (targetsInLane > slicesInLane && !powerUpInBossLane) {
+      const newSlice: PizzaSlice = {
+        id: `${helper.id}-pizza-${now}-${currentLane}`,
+        lane: currentLane,
+        position: GAME_CONFIG.CHEF_X_POSITION,
+        speed: ENTITY_SPEEDS.PIZZA,
+      };
+      newSlices.push(newSlice);
+      updatedHelper.availableSlices -= 1;
+      updatedHelper.lastActionTime = now;
+      events.push({ type: 'CUSTOMER_SERVED', lane: currentLane, helper: helper.id });
+      return { updatedHelper, updatedOvens, newSlices, caughtPlateIds, events, statsUpdates, scoreGained };
+    }
+  }
+
+  // Priority 4: Serve customers (only if needed) - using lane buckets
   // Never feed a sober health inspector (he'll refuse), but tipsy inspectors are fair game
   const laneCustomers = getEntitiesInLane(customerBuckets, currentLane);
   const approachingCustomers = laneCustomers.filter(
     c => !c.served && !c.disappointed && !c.vomit && !c.leaving && (!c.healthInspector || c.inspectorTipsy) && c.position < 85
   );
-  // Count slices already heading to this lane (using lane buckets)
-  const slicesInLane = getEntitiesInLane(sliceBuckets, currentLane).length + newSlices.filter(s => s.lane === currentLane).length;
   // Don't throw through a power-up — slices destroy them on contact
   const powerUpInLane = gameState.powerUps.some(
     p => p.lane === currentLane && p.position > GAME_CONFIG.CHEF_X_POSITION
@@ -221,7 +267,7 @@ export const processHelperAction = (
     return { updatedHelper, updatedOvens, newSlices, caughtPlateIds, events, statsUpdates, scoreGained };
   }
 
-  // Priority 4: Start cooking
+  // Priority 5: Start cooking
   if (status === 'idle') {
     const upgradeLevel = gameState.ovenUpgrades[currentLane] || 0;
     const sliceCount = upgradeLevel + 1;
