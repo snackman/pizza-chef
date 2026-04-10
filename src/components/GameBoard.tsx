@@ -346,7 +346,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState, onLevelCompleteClick }
       {/* Level Start Announcement */}
       {gameState.levelAnnouncement && (
         <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
-          <div className="bg-black bg-opacity-70 text-white rounded-xl px-6 py-4 sm:px-10 sm:py-6 text-center animate-pulse">
+          <div className="bg-black bg-opacity-70 text-white rounded-xl px-6 py-4 sm:px-10 sm:py-6 text-center">
             <h2 className="text-2xl sm:text-4xl font-bold">Level {gameState.levelAnnouncement.level}</h2>
             <p className="text-sm sm:text-lg mt-1 text-gray-300">
               Serve {gameState.levelProgress.customersRequired} customers

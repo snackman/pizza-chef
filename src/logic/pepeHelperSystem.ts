@@ -73,9 +73,10 @@ export const evaluateLanePriority = (
   }
 
   // High priority: Approaching customers in this lane (if we have slices)
+  // Never feed a sober health inspector (he'll refuse), but tipsy inspectors are fair game
   const laneCustomers = getEntitiesInLane(customerBuckets, lane);
   const approachingInLane = laneCustomers.filter(
-    c => !c.served && !c.disappointed && !c.vomit && !c.leaving && !c.healthInspector && c.position < 80
+    c => !c.served && !c.disappointed && !c.vomit && !c.leaving && (!c.healthInspector || c.inspectorTipsy) && c.position < 80
   );
   if (approachingInLane.length > 0 && helper.availableSlices > 0) {
     // Closer customers = higher priority
@@ -194,9 +195,10 @@ export const processHelperAction = (
   }
 
   // Priority 3: Serve customers (only if needed) - using lane buckets
+  // Never feed a sober health inspector (he'll refuse), but tipsy inspectors are fair game
   const laneCustomers = getEntitiesInLane(customerBuckets, currentLane);
   const approachingCustomers = laneCustomers.filter(
-    c => !c.served && !c.disappointed && !c.vomit && !c.leaving && !c.healthInspector && c.position < 85
+    c => !c.served && !c.disappointed && !c.vomit && !c.leaving && (!c.healthInspector || c.inspectorTipsy) && c.position < 85
   );
   // Count slices already heading to this lane (using lane buckets)
   const slicesInLane = getEntitiesInLane(sliceBuckets, currentLane).length + newSlices.filter(s => s.lane === currentLane).length;
