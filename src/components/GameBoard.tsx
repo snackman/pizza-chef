@@ -345,7 +345,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState, onLevelCompleteClick }
 
       {/* Level Start Announcement */}
       {gameState.levelAnnouncement && (
-        <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+        <div className="absolute inset-0 flex items-center justify-center z-[55] pointer-events-none">
           <div className="bg-black bg-opacity-70 text-white rounded-xl px-6 py-4 sm:px-10 sm:py-6 text-center">
             <h2 className="text-2xl sm:text-4xl font-bold">Level {gameState.levelAnnouncement.level}</h2>
             <p className="text-sm sm:text-lg mt-1 text-gray-300">
@@ -357,7 +357,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState, onLevelCompleteClick }
 
       {/* Boss Incoming Alert */}
       {gameState.bossIncomingAlert && (
-        <div className="absolute inset-x-0 top-2 sm:top-4 flex items-start justify-center z-30 pointer-events-none">
+        <div className="absolute inset-x-0 top-2 sm:top-4 flex items-start justify-center z-[55] pointer-events-none">
           <div className="bg-red-900 bg-opacity-90 text-white rounded-xl px-6 py-3 sm:px-10 sm:py-5 text-center animate-bounce border-4 border-red-500">
             <h2 className="text-2xl sm:text-4xl font-bold text-red-300">BOSS INCOMING!</h2>
           </div>
