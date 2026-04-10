@@ -880,6 +880,13 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         // 3. Process Customer Hits
         const hitCustomerSet = new Set(collisionResult.hitCustomerIds);
 
+        // Defer newState-reassigning side effects until after the map completes.
+        // Reassigning newState inside the .map() callback would cause the map
+        // result to be written to the stale newState reference captured by the
+        // LHS, leaving the live newState with the un-served customers array.
+        const nyanStarGains: Array<{ lane: number; position: number }> = [];
+        const nyanBestOfGains: number[] = [];
+
         if (hitCustomerSet.size > 0) {
           newState.customers = newState.customers.map(customer => {
             if (hitCustomerSet.has(customer.id)) {
@@ -903,10 +910,10 @@ export const useGameLogic = (gameStarted: boolean = true) => {
               if (result.livesToAdd > 0) {
                 newState.lives += result.livesToAdd;
                 if (result.shouldPlayLifeSound) soundManager.lifeGained();
-                newState = addFloatingStar(true, customer.lane, customer.position, newState);
+                nyanStarGains.push({ lane: customer.lane, position: customer.position });
               }
               if (result.wouldHaveGained > 0) {
-                newState = processBestOfStreak(newState, result.wouldHaveGained, dogeMultiplier, now);
+                nyanBestOfGains.push(result.wouldHaveGained);
               }
 
               return { ...customer, served: true, hasPlate: false, woozy: false, frozen: false, unfrozenThisPeriod: undefined };
@@ -914,6 +921,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
             return customer;
           });
         }
+
+        // Apply deferred side effects now that newState.customers is settled.
+        nyanStarGains.forEach(({ lane, position }) => {
+          newState = addFloatingStar(true, lane, position, newState);
+        });
+        nyanBestOfGains.forEach(wouldHaveGained => {
+          newState = processBestOfStreak(newState, wouldHaveGained, dogeMultiplier, now);
+        });
 
         // 4. Process Minion Hits
         const hitMinionSet = new Set(collisionResult.hitMinionIds);
