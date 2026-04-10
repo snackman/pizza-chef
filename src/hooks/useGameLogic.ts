@@ -1069,14 +1069,14 @@ export const useGameLogic = (gameStarted: boolean = true) => {
         if (newState.levelProgress.customersServed >= newState.levelProgress.customersRequired) {
           const bossLevel = !!getBossForLevel(newState.level);
 
-          // On non-boss levels, pause ovens immediately so they don't burn while
+          // On non-boss levels, pause any cooking ovens so they don't burn while
           // waiting for plates to clear. On boss levels we keep cooking because the
           // fight continues and the chef still needs slices.
           if (!bossLevel) {
-            const anyOvenActive = Object.values(newState.ovens).some(
-              (o: any) => o.startTime && !o.pausedAt
+            const needsPause = Object.values(newState.ovens).some(
+              (o: any) => o.cooking && !o.burned && o.pausedElapsed === undefined
             );
-            if (anyOvenActive) {
+            if (needsPause) {
               newState.ovens = calculateOvenPauseState(newState.ovens, true, now);
             }
           }
@@ -1129,6 +1129,13 @@ export const useGameLogic = (gameStarted: boolean = true) => {
       } else if (newState.levelPhase === 'boss') {
         // Boss battle in progress - check if boss is defeated
         if (newState.bossBattle && newState.bossBattle.bossDefeated) {
+          // Pause any cooking ovens so they don't burn during the complete/store screens
+          const needsPause = Object.values(newState.ovens).some(
+            (o: any) => o.cooking && !o.burned && o.pausedElapsed === undefined
+          );
+          if (needsPause) {
+            newState.ovens = calculateOvenPauseState(newState.ovens, true, now);
+          }
           newState.levelPhase = 'complete';
           const rewards = calculateLevelRewards(
             newState.levelProgress.starsLostThisLevel,
@@ -1200,13 +1207,18 @@ export const useGameLogic = (gameStarted: boolean = true) => {
   const closeStore = useCallback(() => {
     setGameState(prev => {
       const closed = closeStoreStore(prev);
+      const now = Date.now();
       // Advance to next level when store closes
       const nextLevel = closed.level + 1;
       const nextRequired = getCustomersForLevel(nextLevel);
       // Reset the spawned counter for the new level
       customersSpawnedThisLevelRef.current = 0;
+      // Unpause any ovens that were paused for the level transition so they resume
+      // cleanly on the new level (preserves any in-flight cooking progress)
+      const resumedOvens = calculateOvenPauseState(closed.ovens, false, now);
       return {
         ...closed,
+        ovens: resumedOvens,
         level: nextLevel,
         levelPhase: 'playing' as LevelPhase,
         levelProgress: {
