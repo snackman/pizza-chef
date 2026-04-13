@@ -73,18 +73,20 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState, onLevelCompleteClick, 
   const getOvenStatus = (lane: number) => {
     const oven = gameState.ovens[lane];
     const speedUpgrade = gameState.ovenSpeedUpgrades[lane] || 0;
-    const baseStatus = getOvenDisplayStatus(oven, speedUpgrade);
+    // Use snapshot time during replay so ovens don't keep ticking with real time
+    const now = replayMode && 'snapshotTime' in gameState ? gameState.snapshotTime : Date.now();
+    const baseStatus = getOvenDisplayStatus(oven, speedUpgrade, now);
 
     // Add visual enhancements for GameBoard display
     if (baseStatus === 'cleaning') {
-      const cleaningElapsed = Date.now() - oven.cleaningStartTime;
+      const cleaningElapsed = now - oven.cleaningStartTime;
       const halfCleaning = OVEN_CONFIG.CLEANING_TIME / 2;
       return cleaningElapsed < halfCleaning ? 'extinguishing' : 'sweeping';
     }
 
     if (baseStatus === 'warning') {
       // Blinking effect for warning state
-      const elapsed = oven.pausedElapsed !== undefined ? oven.pausedElapsed : Date.now() - oven.startTime;
+      const elapsed = oven.pausedElapsed !== undefined ? oven.pausedElapsed : now - oven.startTime;
       const warningElapsed = elapsed - OVEN_CONFIG.WARNING_TIME;
       const blinkCycle = Math.floor(warningElapsed / TIMINGS.WARNING_BLINK_INTERVAL);
       return blinkCycle % 2 === 0 ? 'warning-fire' : 'warning-pizza';
@@ -136,8 +138,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState, onLevelCompleteClick, 
               </div>
             )}
             <div className="relative" style={{ zIndex: 10 }}>
-              {oven.slimeDisabledUntil && Date.now() < oven.slimeDisabledUntil && oven.slimeCleaningStartTime ? '🧹' :
-               oven.slimeDisabledUntil && Date.now() < oven.slimeDisabledUntil ? '🧀' :
+              {oven.slimeDisabledUntil && (replayMode && 'snapshotTime' in gameState ? gameState.snapshotTime : Date.now()) < oven.slimeDisabledUntil && oven.slimeCleaningStartTime ? '🧹' :
+               oven.slimeDisabledUntil && (replayMode && 'snapshotTime' in gameState ? gameState.snapshotTime : Date.now()) < oven.slimeDisabledUntil ? '🧀' :
                ovenStatus === 'burned' ? '💀' :
                ovenStatus === 'extinguishing' ? '🧯' :
                ovenStatus === 'sweeping' ? '🧹' :
@@ -155,7 +157,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState, onLevelCompleteClick, 
       {/* Chef (no scale(15), positioned directly on board) */}
       {/* Hide chef when paused (but show game over chef or replay chef) */}
       {!gameState.nyanSweep?.active && (replayMode || !gameState.paused || gameState.gameOver) && (() => {
-        const isSlimed = !!(gameState.chefSlowedUntil && Date.now() < gameState.chefSlowedUntil);
+        const nowMs = replayMode && 'snapshotTime' in gameState ? gameState.snapshotTime : Date.now();
+        const isSlimed = !!(gameState.chefSlowedUntil && nowMs < gameState.chefSlowedUntil);
         return (
         <div
           className="absolute flex items-center justify-center"

@@ -271,7 +271,7 @@ export type GameStateSnapshot = Pick<GameState,
   | 'levelCompleteInfo' | 'gameOver' | 'paused'
   | 'chefSlowedUntil' | 'powerUpAlert' | 'bestOfAwardAlert'
   | 'ovenSpeedUpgrades'
->;
+> & { snapshotTime: number };
 
 export interface GameState {
   customers: Customer[];

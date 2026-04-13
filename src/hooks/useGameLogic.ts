@@ -1469,6 +1469,7 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     if (gameState.gameOver || gameState.paused || gameState.showStore) return;
 
     const snapshot: GameStateSnapshot = {
+      snapshotTime: Date.now(),
       customers: gameState.customers,
       pizzaSlices: gameState.pizzaSlices,
       emptyPlates: gameState.emptyPlates,
