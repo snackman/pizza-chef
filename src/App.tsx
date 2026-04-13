@@ -11,8 +11,10 @@ import StreakDisplay from './components/StreakDisplay';
 import DebugPanel from './components/DebugPanel';
 import ControlsOverlay from './components/ControlsOverlay';
 import PauseMenu from './components/PauseMenu';
+import DeathReplayOverlay from './components/DeathReplayOverlay';
 import { useGameLogic } from './hooks/useGameLogic';
 import { useAssetPreloader } from './hooks/useAssetPreloader';
+import { GameStateSnapshot } from './types/game';
 import { bg } from './lib/assets';
 import { soundManager } from './utils/sounds';
 
@@ -32,6 +34,12 @@ function App() {
   const [marbleTop, setMarbleTop] = useState(0);
   const gameBoardRef = useRef<HTMLDivElement>(null);
   const SHOW_DEBUG = false;
+
+  // Death replay state
+  const [deathReplayActive, setDeathReplayActive] = useState(false);
+  const [replayFrames, setReplayFrames] = useState<GameStateSnapshot[]>([]);
+  const [replayFrameIndex, setReplayFrameIndex] = useState(0);
+  const replayIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Preload game assets
   const { progress: assetProgress, isComplete: assetsReady, failedAssets } = useAssetPreloader();
@@ -59,6 +67,7 @@ function App() {
     hireWorker,
     debugActivatePowerUp,
     openLevelStore,
+    getReplayFrames,
   } = useGameLogic(gameStarted);
 
   // Custom pause handler - shows pause menu overlay
@@ -99,12 +108,84 @@ function App() {
     actionsRef.current = { servePizza, moveChef, useOven, cleanOven, handlePauseToggle, resetGame };
   }, [servePizza, moveChef, useOven, cleanOven, handlePauseToggle, resetGame]);
 
+  // When game over triggers, start death replay instead of immediately showing game over screen
   useEffect(() => {
-    if (gameState.gameOver && !showGameOver && !showHighScores) {
-      setShowGameOver(true);
+    if (gameState.gameOver && !showGameOver && !showHighScores && !deathReplayActive) {
       setShowPauseMenu(false);
+      const frames = getReplayFrames();
+      if (frames.length > 0) {
+        // Start death replay
+        setReplayFrames(frames);
+        setReplayFrameIndex(0);
+        setDeathReplayActive(true);
+      } else {
+        // No frames recorded, skip straight to game over
+        setShowGameOver(true);
+      }
     }
-  }, [gameState.gameOver, showGameOver, showHighScores]);
+  }, [gameState.gameOver, showGameOver, showHighScores, deathReplayActive, getReplayFrames]);
+
+  // Death replay interval - advance frames at 150ms (3x slowmo of 50ms tick)
+  useEffect(() => {
+    if (!deathReplayActive || replayFrames.length === 0) return;
+
+    replayIntervalRef.current = setInterval(() => {
+      setReplayFrameIndex(prev => {
+        const next = prev + 1;
+        if (next >= replayFrames.length) {
+          // Replay finished - transition to game over screen
+          setDeathReplayActive(false);
+          setShowGameOver(true);
+          setReplayFrames([]);
+          return prev;
+        }
+        return next;
+      });
+    }, 150);
+
+    return () => {
+      if (replayIntervalRef.current) {
+        clearInterval(replayIntervalRef.current);
+        replayIntervalRef.current = null;
+      }
+    };
+  }, [deathReplayActive, replayFrames.length]);
+
+  // Skip replay handler
+  const skipReplay = useCallback(() => {
+    if (!deathReplayActive) return;
+    if (replayIntervalRef.current) {
+      clearInterval(replayIntervalRef.current);
+      replayIntervalRef.current = null;
+    }
+    setDeathReplayActive(false);
+    setShowGameOver(true);
+    setReplayFrames([]);
+  }, [deathReplayActive]);
+
+  // Listen for click/tap/keypress to skip replay
+  useEffect(() => {
+    if (!deathReplayActive) return;
+
+    const handleSkip = (e: Event) => {
+      e.preventDefault();
+      skipReplay();
+    };
+
+    // Small delay so the key that caused game over doesn't immediately skip
+    const timer = setTimeout(() => {
+      window.addEventListener('keydown', handleSkip);
+      window.addEventListener('mousedown', handleSkip);
+      window.addEventListener('touchstart', handleSkip);
+    }, 300);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('keydown', handleSkip);
+      window.removeEventListener('mousedown', handleSkip);
+      window.removeEventListener('touchstart', handleSkip);
+    };
+  }, [deathReplayActive, skipReplay]);
 
   // Close pause menu when game is unpaused externally
   useEffect(() => {
@@ -223,10 +304,10 @@ function App() {
   }, [isMobile, gameState]);
 
   // Track menu state for space bar blocking
-  const menuStateRef = useRef({ showSplash, showGameOver, showHighScores, showControlsOverlay, showPauseMenu, showStore: gameState.showStore });
+  const menuStateRef = useRef({ showSplash, showGameOver, showHighScores, showControlsOverlay, showPauseMenu, showStore: gameState.showStore, deathReplayActive });
   useEffect(() => {
-    menuStateRef.current = { showSplash, showGameOver, showHighScores, showControlsOverlay, showPauseMenu, showStore: gameState.showStore };
-  }, [showSplash, showGameOver, showHighScores, showControlsOverlay, showPauseMenu, gameState.showStore]);
+    menuStateRef.current = { showSplash, showGameOver, showHighScores, showControlsOverlay, showPauseMenu, showStore: gameState.showStore, deathReplayActive };
+  }, [showSplash, showGameOver, showHighScores, showControlsOverlay, showPauseMenu, gameState.showStore, deathReplayActive]);
 
   // Prevent space bar from triggering button clicks when menus are showing
   useEffect(() => {
@@ -240,8 +321,8 @@ function App() {
       }
 
       // Block space bar if any menu/overlay is showing
-      const { showSplash, showGameOver, showHighScores, showControlsOverlay, showPauseMenu, showStore } = menuStateRef.current;
-      if (showSplash || showGameOver || showHighScores || showControlsOverlay || showPauseMenu || showStore) {
+      const { showSplash, showGameOver, showHighScores, showControlsOverlay, showPauseMenu, showStore, deathReplayActive } = menuStateRef.current;
+      if (showSplash || showGameOver || showHighScores || showControlsOverlay || showPauseMenu || showStore || deathReplayActive) {
         event.preventDefault();
         event.stopPropagation();
       }
@@ -254,7 +335,7 @@ function App() {
     };
   }, []);
 
-  // ✅ Stable keyboard listener (no re-bind every tick)
+  // Stable keyboard listener (no re-bind every tick)
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const gs = gameStateRef.current;
@@ -342,53 +423,69 @@ function App() {
               className="relative w-full max-h-[calc(100vh-36px)] aspect-[5/3] z-30"
               style={{ maxWidth: 'calc((100vh - 36px) * 5 / 3)' }}
             >
-              <GameBoard gameState={gameState} onLevelCompleteClick={openLevelStore} />
-
-              {gameState.powerUpAlert && !gameState.paused && (
-                <PowerUpAlert powerUpType={gameState.powerUpAlert.type} chefLane={gameState.powerUpAlert.chefLane} />
-              )}
-
-              {!gameState.gameOver && !gameState.paused && !gameState.showStore && <StreakDisplay stats={gameState.stats} cleanKitchenBonus={!!gameState.cleanKitchenBonusAlert} bestOfStreak={gameState.bestOfStreakCount} />}
-
-              {gameState.bestOfAwardAlert && !gameState.paused && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
-                  <div className="bg-gradient-to-r from-amber-500 to-yellow-600 text-white px-8 py-4 rounded-xl shadow-2xl border-4 border-amber-300 animate-bounce">
-                    <div className="text-2xl sm:text-3xl font-bold text-center drop-shadow-lg">
-                      🏆 Best Of Award! 🏆
-                    </div>
-                    <div className="text-sm sm:text-base text-center mt-1 font-semibold">
-                      +5,000 pts &bull; +$25
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {showControlsOverlay && <ControlsOverlay onClose={handleCloseControlsOverlay} />}
-
-              {!gameState.gameOver && !showControlsOverlay && (
-                <PauseMenu
-                  isVisible={showPauseMenu}
-                  isMuted={isMuted}
-                  onResume={handlePauseResume}
-                  onReset={handlePauseReset}
-                  onToggleMute={handlePauseToggleMute}
-                  onShowScores={handlePauseShowScores}
-                  onShowHelp={handlePauseShowHelp}
-                />
-              )}
-
-              {gameState.showStore && (
-                <div className="absolute inset-0 bg-black bg-opacity-75 flex items-start justify-center rounded-lg z-[60] pt-2">
-                  <ItemStore
-                    gameState={gameState}
-                    onUpgradeOven={upgradeOven}
-                    onUpgradeOvenSpeed={upgradeOvenSpeed}
-                    onBribeReviewer={bribeReviewer}
-                    onBuyPowerUp={buyPowerUp}
-                    onHireWorker={hireWorker}
-                    onClose={closeStore}
+              {/* During death replay, show replay frames through GameBoard */}
+              {deathReplayActive && replayFrames.length > 0 ? (
+                <>
+                  <GameBoard
+                    gameState={replayFrames[replayFrameIndex]}
+                    replayMode={true}
                   />
-                </div>
+                  <DeathReplayOverlay
+                    frameIndex={replayFrameIndex}
+                    totalFrames={replayFrames.length}
+                  />
+                </>
+              ) : (
+                <>
+                  <GameBoard gameState={gameState} onLevelCompleteClick={openLevelStore} />
+
+                  {gameState.powerUpAlert && !gameState.paused && (
+                    <PowerUpAlert powerUpType={gameState.powerUpAlert.type} chefLane={gameState.powerUpAlert.chefLane} />
+                  )}
+
+                  {!gameState.gameOver && !gameState.paused && !gameState.showStore && <StreakDisplay stats={gameState.stats} cleanKitchenBonus={!!gameState.cleanKitchenBonusAlert} bestOfStreak={gameState.bestOfStreakCount} />}
+
+                  {gameState.bestOfAwardAlert && !gameState.paused && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
+                      <div className="bg-gradient-to-r from-amber-500 to-yellow-600 text-white px-8 py-4 rounded-xl shadow-2xl border-4 border-amber-300 animate-bounce">
+                        <div className="text-2xl sm:text-3xl font-bold text-center drop-shadow-lg">
+                          Best Of Award!
+                        </div>
+                        <div className="text-sm sm:text-base text-center mt-1 font-semibold">
+                          +5,000 pts &bull; +$25
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {showControlsOverlay && <ControlsOverlay onClose={handleCloseControlsOverlay} />}
+
+                  {!gameState.gameOver && !showControlsOverlay && (
+                    <PauseMenu
+                      isVisible={showPauseMenu}
+                      isMuted={isMuted}
+                      onResume={handlePauseResume}
+                      onReset={handlePauseReset}
+                      onToggleMute={handlePauseToggleMute}
+                      onShowScores={handlePauseShowScores}
+                      onShowHelp={handlePauseShowHelp}
+                    />
+                  )}
+
+                  {gameState.showStore && (
+                    <div className="absolute inset-0 bg-black bg-opacity-75 flex items-start justify-center rounded-lg z-[60] pt-2">
+                      <ItemStore
+                        gameState={gameState}
+                        onUpgradeOven={upgradeOven}
+                        onUpgradeOvenSpeed={upgradeOvenSpeed}
+                        onBribeReviewer={bribeReviewer}
+                        onBuyPowerUp={buyPowerUp}
+                        onHireWorker={hireWorker}
+                        onClose={closeStore}
+                      />
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -463,53 +560,69 @@ function App() {
             ref={gameBoardRef}
             className={`relative w-full ${isMobile ? '' : 'max-w-6xl'} aspect-[5/3] z-30`}
           >
-            <GameBoard gameState={gameState} onLevelCompleteClick={openLevelStore} />
-
-            {gameState.powerUpAlert && !gameState.paused && (
-              <PowerUpAlert powerUpType={gameState.powerUpAlert.type} chefLane={gameState.powerUpAlert.chefLane} />
-            )}
-
-            {!gameState.gameOver && !gameState.paused && !gameState.showStore && <StreakDisplay stats={gameState.stats} cleanKitchenBonus={!!gameState.cleanKitchenBonusAlert} bestOfStreak={gameState.bestOfStreakCount} />}
-
-            {gameState.bestOfAwardAlert && !gameState.paused && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
-                <div className="bg-gradient-to-r from-amber-500 to-yellow-600 text-white px-8 py-4 rounded-xl shadow-2xl border-4 border-amber-300 animate-bounce">
-                  <div className="text-2xl sm:text-3xl font-bold text-center drop-shadow-lg">
-                    🏆 Best Of Award! 🏆
-                  </div>
-                  <div className="text-sm sm:text-base text-center mt-1 font-semibold">
-                    +5,000 pts &bull; +$25
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {showControlsOverlay && <ControlsOverlay onClose={handleCloseControlsOverlay} />}
-
-            {!gameState.gameOver && !showControlsOverlay && (
-              <PauseMenu
-                isVisible={showPauseMenu}
-                isMuted={isMuted}
-                onResume={handlePauseResume}
-                onReset={handlePauseReset}
-                onToggleMute={handlePauseToggleMute}
-                onShowScores={handlePauseShowScores}
-                onShowHelp={handlePauseShowHelp}
-              />
-            )}
-
-            {gameState.showStore && (
-              <div className="absolute inset-0 bg-black bg-opacity-75 flex items-start justify-center rounded-lg z-[60] pt-2">
-                <ItemStore
-                  gameState={gameState}
-                  onUpgradeOven={upgradeOven}
-                  onUpgradeOvenSpeed={upgradeOvenSpeed}
-                  onBribeReviewer={bribeReviewer}
-                  onBuyPowerUp={buyPowerUp}
-                  onHireWorker={hireWorker}
-                  onClose={closeStore}
+            {/* During death replay, show replay frames through GameBoard */}
+            {deathReplayActive && replayFrames.length > 0 ? (
+              <>
+                <GameBoard
+                  gameState={replayFrames[replayFrameIndex]}
+                  replayMode={true}
                 />
-              </div>
+                <DeathReplayOverlay
+                  frameIndex={replayFrameIndex}
+                  totalFrames={replayFrames.length}
+                />
+              </>
+            ) : (
+              <>
+                <GameBoard gameState={gameState} onLevelCompleteClick={openLevelStore} />
+
+                {gameState.powerUpAlert && !gameState.paused && (
+                  <PowerUpAlert powerUpType={gameState.powerUpAlert.type} chefLane={gameState.powerUpAlert.chefLane} />
+                )}
+
+                {!gameState.gameOver && !gameState.paused && !gameState.showStore && <StreakDisplay stats={gameState.stats} cleanKitchenBonus={!!gameState.cleanKitchenBonusAlert} bestOfStreak={gameState.bestOfStreakCount} />}
+
+                {gameState.bestOfAwardAlert && !gameState.paused && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
+                    <div className="bg-gradient-to-r from-amber-500 to-yellow-600 text-white px-8 py-4 rounded-xl shadow-2xl border-4 border-amber-300 animate-bounce">
+                      <div className="text-2xl sm:text-3xl font-bold text-center drop-shadow-lg">
+                        Best Of Award!
+                      </div>
+                      <div className="text-sm sm:text-base text-center mt-1 font-semibold">
+                        +5,000 pts &bull; +$25
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {showControlsOverlay && <ControlsOverlay onClose={handleCloseControlsOverlay} />}
+
+                {!gameState.gameOver && !showControlsOverlay && (
+                  <PauseMenu
+                    isVisible={showPauseMenu}
+                    isMuted={isMuted}
+                    onResume={handlePauseResume}
+                    onReset={handlePauseReset}
+                    onToggleMute={handlePauseToggleMute}
+                    onShowScores={handlePauseShowScores}
+                    onShowHelp={handlePauseShowHelp}
+                  />
+                )}
+
+                {gameState.showStore && (
+                  <div className="absolute inset-0 bg-black bg-opacity-75 flex items-start justify-center rounded-lg z-[60] pt-2">
+                    <ItemStore
+                      gameState={gameState}
+                      onUpgradeOven={upgradeOven}
+                      onUpgradeOvenSpeed={upgradeOvenSpeed}
+                      onBribeReviewer={bribeReviewer}
+                      onBuyPowerUp={buyPowerUp}
+                      onHireWorker={hireWorker}
+                      onClose={closeStore}
+                    />
+                  </div>
+                )}
+              </>
             )}
           </div>
 

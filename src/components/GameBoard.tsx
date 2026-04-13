@@ -9,7 +9,7 @@ import FloatingScore from './FloatingScore';
 import FloatingStar from './FloatingStar';
 import Boss from './Boss';
 import PepeHelpers from './PepeHelpers';
-import { GameState } from '../types/game';
+import { GameState, GameStateSnapshot } from '../types/game';
 import { sprite, bg } from '../lib/assets';
 import { getOvenDisplayStatus } from '../logic/ovenSystem';
 import { OVEN_CONFIG, TIMINGS } from '../lib/constants';
@@ -21,11 +21,12 @@ const nyanChefImg = sprite("nyan-chef.png");
 const pizzaShopBg = bg("pizza-shop-background.webp");
 
 interface GameBoardProps {
-  gameState: GameState;
+  gameState: GameState | GameStateSnapshot;
   onLevelCompleteClick?: () => void;
+  replayMode?: boolean;
 }
 
-const GameBoard: React.FC<GameBoardProps> = ({ gameState, onLevelCompleteClick }) => {
+const GameBoard: React.FC<GameBoardProps> = ({ gameState, onLevelCompleteClick, replayMode }) => {
   const lanes = [0, 1, 2, 3];
   const [completedScores, setCompletedScores] = useState<Set<string>>(new Set());
   const [completedStars, setCompletedStars] = useState<Set<string>>(new Set());
@@ -151,22 +152,22 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState, onLevelCompleteClick }
         );
       })}
 
-      {/* ✅ Chef (no scale(15), positioned directly on board) */}
-      {/* Hide chef when paused (but show game over chef) */}
-      {!gameState.nyanSweep?.active && (!gameState.paused || gameState.gameOver) && (() => {
+      {/* Chef (no scale(15), positioned directly on board) */}
+      {/* Hide chef when paused (but show game over chef or replay chef) */}
+      {!gameState.nyanSweep?.active && (replayMode || !gameState.paused || gameState.gameOver) && (() => {
         const isSlimed = !!(gameState.chefSlowedUntil && Date.now() < gameState.chefSlowedUntil);
         return (
         <div
           className="absolute flex items-center justify-center"
           style={{
-            left: '5%', // adjust if you want him closer/farther from ovens
+            left: '5%',
             top: `${gameState.chefLane * 25 + 13}%`,
             width: '10%',
             aspectRatio: '1 / 1',
-            transform: 'translate3d(0, -50%, 0)', // center on lane
+            transform: 'translate3d(0, -50%, 0)',
             zIndex: gameState.gameOver ? 19 : 10,
-            willChange: 'transform',
-            transition: isSlimed ? 'top 300ms ease-in-out' : 'top 150ms ease-out',
+            willChange: replayMode ? undefined : 'transform',
+            transition: replayMode ? 'none' : (isSlimed ? 'top 300ms ease-in-out' : 'top 150ms ease-out'),
           }}
         >
           <img
@@ -302,8 +303,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState, onLevelCompleteClick }
         <Boss bossBattle={gameState.bossBattle} />
       )}
 
-      {/* Floating score indicators */}
-      {activeFloatingScores.map((floatingScore) => (
+      {/* Floating score indicators (hidden during replay - they rely on CSS animations) */}
+      {!replayMode && activeFloatingScores.map((floatingScore) => (
         <FloatingScore
           key={floatingScore.id}
           id={floatingScore.id}
@@ -314,8 +315,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState, onLevelCompleteClick }
         />
       ))}
 
-      {/* Floating star indicators */}
-      {activeFloatingStars.map((floatingStar) => (
+      {/* Floating star indicators (hidden during replay) */}
+      {!replayMode && activeFloatingStars.map((floatingStar) => (
         <FloatingStar
           key={floatingStar.id}
           id={floatingStar.id}
@@ -364,8 +365,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState, onLevelCompleteClick }
         </div>
       )}
 
-      {/* Level Complete Overlay */}
-      {gameState.levelPhase === 'complete' && gameState.levelCompleteInfo && (
+      {/* Level Complete Overlay (hidden during replay) */}
+      {!replayMode && gameState.levelPhase === 'complete' && gameState.levelCompleteInfo && (
         <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 60 }}>
           <div className="bg-black bg-opacity-80 absolute inset-0" />
           <div className="relative bg-gradient-to-b from-green-600 to-green-800 text-white rounded-xl px-6 py-4 sm:px-10 sm:py-6 text-center shadow-2xl max-w-sm mx-4" style={{ zIndex: 61 }}>

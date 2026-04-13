@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   GameState,
+  GameStateSnapshot,
   PizzaSlice,
   GameStats,
   PowerUpType,
@@ -138,6 +139,16 @@ export const useGameLogic = (gameStarted: boolean = true) => {
   const ovenSoundStatesRef = useRef<{ [key: number]: OvenSoundState }>({ ...DEFAULT_OVEN_SOUND_STATES });
 
   const prevShowStoreRef = useRef(false);
+
+  /**
+   * Death replay ring buffer - stores 60 snapshots (3 seconds at 50ms/tick).
+   * Each snapshot is a reference copy of the visual GameState fields.
+   * Since the game creates new arrays/objects each tick (immutable pattern),
+   * storing references is safe.
+   */
+  const REPLAY_BUFFER_SIZE = 60;
+  const replayBufferRef = useRef<GameStateSnapshot[]>([]);
+  const replayBufferIndexRef = useRef(0);
 
   // Initialize boss collision masks (fire and forget)
   useEffect(() => {
@@ -1333,6 +1344,9 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     customersSpawnedThisLevelRef.current = 0;
     // ✅ reset ref (no render)
     ovenSoundStatesRef.current = { ...DEFAULT_OVEN_SOUND_STATES };
+    // Reset replay buffer
+    replayBufferRef.current = [];
+    replayBufferIndexRef.current = 0;
   }, []);
 
   const togglePause = useCallback(() => {
@@ -1447,6 +1461,71 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     });
   }, [updateGame]);
 
+  // --- 2b. REPLAY SNAPSHOT RECORDING ---
+  // Record a GameState snapshot every tick for death replay.
+  // Placed as a useEffect on gameState so it captures the final render-state
+  // after both updateGame and spawning have run.
+  useEffect(() => {
+    if (gameState.gameOver || gameState.paused || gameState.showStore) return;
+
+    const snapshot: GameStateSnapshot = {
+      customers: gameState.customers,
+      pizzaSlices: gameState.pizzaSlices,
+      emptyPlates: gameState.emptyPlates,
+      droppedPlates: gameState.droppedPlates,
+      powerUps: gameState.powerUps,
+      chefLane: gameState.chefLane,
+      ovens: gameState.ovens,
+      availableSlices: gameState.availableSlices,
+      fallingPizza: gameState.fallingPizza,
+      nyanSweep: gameState.nyanSweep,
+      pepeHelpers: gameState.pepeHelpers,
+      hiredWorker: gameState.hiredWorker,
+      bossBattle: gameState.bossBattle,
+      floatingScores: gameState.floatingScores,
+      floatingStars: gameState.floatingStars,
+      activePowerUps: gameState.activePowerUps,
+      starPowerActive: gameState.starPowerActive,
+      levelPhase: gameState.levelPhase,
+      levelProgress: gameState.levelProgress,
+      levelAnnouncement: gameState.levelAnnouncement,
+      bossIncomingAlert: gameState.bossIncomingAlert,
+      levelCompleteInfo: gameState.levelCompleteInfo,
+      gameOver: gameState.gameOver,
+      paused: gameState.paused,
+      chefSlowedUntil: gameState.chefSlowedUntil,
+      powerUpAlert: gameState.powerUpAlert,
+      bestOfAwardAlert: gameState.bestOfAwardAlert,
+      ovenSpeedUpgrades: gameState.ovenSpeedUpgrades,
+    };
+
+    const idx = replayBufferIndexRef.current % REPLAY_BUFFER_SIZE;
+    replayBufferRef.current[idx] = snapshot;
+    replayBufferIndexRef.current++;
+  }, [gameState]);
+
+  // Return replay frames in chronological order
+  const getReplayFrames = useCallback((): GameStateSnapshot[] => {
+    const buffer = replayBufferRef.current;
+    const totalWritten = replayBufferIndexRef.current;
+    const count = Math.min(totalWritten, REPLAY_BUFFER_SIZE);
+
+    if (count === 0) return [];
+
+    const frames: GameStateSnapshot[] = [];
+    // If buffer hasn't wrapped yet, just return in order
+    if (totalWritten <= REPLAY_BUFFER_SIZE) {
+      return buffer.slice(0, count);
+    }
+
+    // Buffer has wrapped - read from oldest to newest
+    const startIdx = totalWritten % REPLAY_BUFFER_SIZE;
+    for (let i = 0; i < count; i++) {
+      frames.push(buffer[(startIdx + i) % REPLAY_BUFFER_SIZE]);
+    }
+    return frames;
+  }, []);
+
   // --- 3. KEEP REF UPDATED ---
   useEffect(() => {
     latestTickRef.current = tick;
@@ -1511,5 +1590,6 @@ export const useGameLogic = (gameStarted: boolean = true) => {
     hireWorker,
     debugActivatePowerUp,
     openLevelStore,
+    getReplayFrames,
   };
 };

@@ -260,6 +260,19 @@ export type StarLostReason =
   | 'papajohn_minion_reached'
   | 'dominos_minion_reached';
 
+// Snapshot type for death replay - contains only the visual fields GameBoard needs
+export type GameStateSnapshot = Pick<GameState,
+  | 'customers' | 'pizzaSlices' | 'emptyPlates' | 'droppedPlates'
+  | 'powerUps' | 'chefLane' | 'ovens' | 'availableSlices'
+  | 'fallingPizza' | 'nyanSweep' | 'pepeHelpers' | 'hiredWorker'
+  | 'bossBattle' | 'floatingScores' | 'floatingStars'
+  | 'activePowerUps' | 'starPowerActive' | 'levelPhase'
+  | 'levelProgress' | 'levelAnnouncement' | 'bossIncomingAlert'
+  | 'levelCompleteInfo' | 'gameOver' | 'paused'
+  | 'chefSlowedUntil' | 'powerUpAlert' | 'bestOfAwardAlert'
+  | 'ovenSpeedUpgrades'
+>;
+
 export interface GameState {
   customers: Customer[];
   pizzaSlices: PizzaSlice[];
