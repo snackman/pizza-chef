@@ -92,7 +92,7 @@ const Customer: React.FC<CustomerProps> = ({ customer, boardWidth, boardHeight }
           transition: 'transform 100ms linear',
         }}
       >
-        <div style={customer.woozy ? { animation: 'woozy-wobble 0.6s ease-in-out infinite' } : undefined}>
+        <div className="w-full h-full" style={customer.woozy ? { animation: 'woozy-wobble 0.6s ease-in-out infinite' } : undefined}>
           {display.type === 'image' ? (
             <img
               key={display.value}
