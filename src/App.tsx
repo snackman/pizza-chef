@@ -112,8 +112,16 @@ function App() {
   useEffect(() => {
     if (gameState.gameOver && !showGameOver && !showHighScores && !deathReplayActive) {
       setShowPauseMenu(false);
-      // Death replay disabled for now — skip straight to game over
-      setShowGameOver(true);
+      const frames = getReplayFrames();
+      if (frames.length > 0) {
+        // Start death replay
+        setReplayFrames(frames);
+        setReplayFrameIndex(0);
+        setDeathReplayActive(true);
+      } else {
+        // No frames recorded, skip straight to game over
+        setShowGameOver(true);
+      }
     }
   }, [gameState.gameOver, showGameOver, showHighScores, deathReplayActive, getReplayFrames]);
 
