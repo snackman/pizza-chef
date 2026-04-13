@@ -23,6 +23,10 @@ export const checkSliceCustomerCollision = (
     if (customer.served || customer.disappointed || customer.vomit || customer.leaving) {
         return false;
     }
+    // Sober health inspectors reject pizza — slices pass through them
+    if (customer.healthInspector && !customer.inspectorTipsy) {
+        return false;
+    }
     return customer.lane === slice.lane && Math.abs(customer.position - slice.position) < threshold;
 };
 
