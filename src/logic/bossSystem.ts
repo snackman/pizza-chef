@@ -108,8 +108,7 @@ export const createWaveMinions = (waveNumber: number, now: number, minionsPerWav
     let minionSprite: string | undefined;
 
     if (isChuckECheese) {
-      const baseSpeed = ENTITY_SPEEDS.MINION * CHUCK_E_CHEESE_CONFIG.KID_SPEED_MULTIPLIER * Math.pow(CHUCK_E_CHEESE_CONFIG.WAVE_SPEED_MULTIPLIER, waveNumber - 1);
-      speed = baseSpeed * (1 + (Math.random() * 2 - 1) * CHUCK_E_CHEESE_CONFIG.SPEED_VARIANCE);
+      speed = CHUCK_E_CHEESE_CONFIG.KID_WAVE_SPEEDS[Math.min(waveNumber - 1, CHUCK_E_CHEESE_CONFIG.KID_WAVE_SPEEDS.length - 1)];
       minionSprite = sprite(`kid-${Math.floor(Math.random() * CHUCK_E_CHEESE_CONFIG.KID_SPRITE_COUNT) + 1}.png`);
     }
 
@@ -267,7 +266,7 @@ export const updateMinionPositions = (minions: BossMinion[], iceCreamActive?: bo
   return minions.map(minion => {
     if (minion.defeated) return minion;
     // Kids run faster when ice cream is out
-    const speedMultiplier = iceCreamActive && minion.sprite ? CHUCK_E_CHEESE_CONFIG.KID_ICE_CREAM_SPEED_MULTIPLIER / CHUCK_E_CHEESE_CONFIG.KID_SPEED_MULTIPLIER : 1;
+    const speedMultiplier = iceCreamActive && minion.sprite ? (minion.speed + CHUCK_E_CHEESE_CONFIG.KID_ICE_CREAM_SPEED_BONUS) / minion.speed : 1;
     return { ...minion, position: minion.position - minion.speed * speedMultiplier };
   });
 };
