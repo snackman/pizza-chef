@@ -92,25 +92,27 @@ const Customer: React.FC<CustomerProps> = ({ customer, boardWidth, boardHeight }
           transition: 'transform 100ms linear',
         }}
       >
-        {display.type === 'image' ? (
-          <img
-            key={display.value}
-            src={display.value}
-            alt={display.alt}
-            className="w-full h-full object-contain"
-            style={{
-              transform: customer.brianNyaned
-                ? 'scale(2)'
-                : customer.flipped
-                  ? 'scaleX(-1)'
-                  : 'none',
-            }}
-          />
-        ) : (
-          <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
-            {display.value}
-          </div>
-        )}
+        <div style={customer.woozy ? { animation: 'woozy-wobble 0.6s ease-in-out infinite' } : undefined}>
+          {display.type === 'image' ? (
+            <img
+              key={display.value}
+              src={display.value}
+              alt={display.alt}
+              className="w-full h-full object-contain"
+              style={{
+                transform: customer.brianNyaned
+                  ? 'scale(2)'
+                  : customer.flipped
+                    ? 'scaleX(-1)'
+                    : 'none',
+              }}
+            />
+          ) : (
+            <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
+              {display.value}
+            </div>
+          )}
+        </div>
       </div>
 
       {customer.textMessage && (
