@@ -75,10 +75,14 @@ export const evaluateLanePriority = (
   // High priority: Approaching customers in this lane (if we have slices)
   // Never feed a sober health inspector (he'll refuse), but tipsy inspectors are fair game
   const laneCustomers = getEntitiesInLane(customerBuckets, lane);
+  const soberInspector = laneCustomers.some(
+    c => c.healthInspector && !c.inspectorTipsy && !c.served && !c.leaving
+  );
   const approachingInLane = laneCustomers.filter(
     c => !c.served && !c.disappointed && !c.vomit && !c.leaving && (!c.healthInspector || c.inspectorTipsy) && c.position < 80
   );
-  if (approachingInLane.length > 0 && helper.availableSlices > 0) {
+  // Don't prioritize throwing into lanes with a sober inspector — slice will hit him
+  if (approachingInLane.length > 0 && helper.availableSlices > 0 && !soberInspector) {
     // Closer customers = higher priority
     const closestCustomer = approachingInLane.reduce((a, b) => a.position < b.position ? a : b);
     priority += 80 + (100 - closestCustomer.position);
@@ -248,12 +252,16 @@ export const processHelperAction = (
   const approachingCustomers = laneCustomers.filter(
     c => !c.served && !c.disappointed && !c.vomit && !c.leaving && (!c.healthInspector || c.inspectorTipsy) && c.position < 85
   );
+  // Don't throw if a sober health inspector is in the lane — slice will hit him first
+  const soberInspectorInLane = laneCustomers.some(
+    c => c.healthInspector && !c.inspectorTipsy && !c.served && !c.leaving
+  );
   // Don't throw through a power-up — slices destroy them on contact
   const powerUpInLane = gameState.powerUps.some(
     p => p.lane === currentLane && p.position > GAME_CONFIG.CHEF_X_POSITION
   );
   // Only throw if there are more customers than slices already in flight
-  if (approachingCustomers.length > slicesInLane && updatedHelper.availableSlices > 0 && !powerUpInLane) {
+  if (approachingCustomers.length > slicesInLane && updatedHelper.availableSlices > 0 && !powerUpInLane && !soberInspectorInLane) {
     const newSlice: PizzaSlice = {
       id: `${helper.id}-pizza-${now}-${currentLane}`,
       lane: currentLane,
